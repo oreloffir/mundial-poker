@@ -1,0 +1,355 @@
+@import 'tailwindcss';
+
+:root {
+  --bg-deep: #050a18;
+  --bg-card: #0d1424;
+  --bg-card-hover: #111b33;
+  --surface: #141e35;
+  --gold: #d4a843;
+  --gold-bright: #f0cc5b;
+  --gold-dim: #8a6d1b;
+  --green-pitch: #1a6e3a;
+  --green-light: #27ae60;
+  --green-glow: #2ecc71;
+  --red: #e74c3c;
+  --blue: #3498db;
+  --purple: #9b59b6;
+  --cyan: #00d2ff;
+  --text: #f0f0f0;
+  --text-dim: #8899b0;
+  --text-muted: #556680;
+  --border: rgba(212, 168, 67, 0.15);
+  --glow: rgba(212, 168, 67, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-deep);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Typography */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Glow effects */
+.gold-glow {
+  text-shadow:
+    0 0 20px rgba(212, 168, 67, 0.4),
+    0 0 40px rgba(212, 168, 67, 0.2);
+}
+
+.gold-glow-subtle {
+  text-shadow: 0 0 12px rgba(212, 168, 67, 0.3);
+}
+
+/* Card surface styles matching landing page */
+.wpc-card {
+  background: linear-gradient(145deg, var(--bg-card), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.wpc-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.wpc-card:hover {
+  border-color: var(--gold-dim);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.wpc-card:hover::before {
+  opacity: 1;
+}
+
+/* Section label style from landing */
+.wpc-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wpc-label::before {
+  content: '';
+  width: 30px;
+  height: 2px;
+  background: var(--gold);
+  display: inline-block;
+}
+
+/* Button styles matching landing */
+.wpc-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+  color: #000;
+  box-shadow: 0 8px 30px rgba(212, 168, 67, 0.3);
+  font-family: 'Inter', sans-serif;
+}
+
+.wpc-btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(212, 168, 67, 0.45);
+}
+
+.wpc-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.wpc-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.wpc-btn-ghost:hover {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  background: rgba(212, 168, 67, 0.05);
+}
+
+/* Nav bar matching landing */
+.wpc-nav {
+  background: rgba(5, 10, 24, 0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Input focus */
+input:focus {
+  outline: none;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 1px var(--gold-dim);
+}
+
+input {
+  background: var(--bg-deep);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+/* ============ GAME ANIMATIONS ============ */
+
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.05);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.9);
+  }
+}
+
+@keyframes pot-flash {
+  0%,
+  100% {
+    color: var(--gold);
+    text-shadow: none;
+  }
+  50% {
+    color: #fff;
+    text-shadow:
+      0 0 12px var(--gold),
+      0 0 24px var(--gold);
+  }
+}
+
+@keyframes chip-fly {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(var(--chip-dx), var(--chip-dy)) scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--chip-dx), var(--chip-dy)) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes card-deal {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes tile-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes card-flip {
+  0% {
+    transform: perspective(600px) rotateY(90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(600px) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes score-tick {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes gold-burst {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 168, 67, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(212, 168, 67, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 168, 67, 0);
+  }
+}
+
+@keyframes score-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pot-to-winner {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(var(--win-dx), var(--win-dy)) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--win-dx), var(--win-dy)) scale(0.3);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
