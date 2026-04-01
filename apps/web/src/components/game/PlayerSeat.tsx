@@ -281,6 +281,7 @@ export function PlayerSeat({
       {blindPosition && (
         <div className="flex justify-center mt-1">
           <span
+            data-testid={blindPosition === 'SB' ? 'sb-badge' : 'bb-badge'}
             className="text-[10px] font-bold px-1.5 py-0.5 rounded"
             style={
               blindPosition === 'SB'
@@ -352,6 +353,7 @@ export function PlayerSeat({
 
       {isFolded && !player.isEliminated && !inShowdown && (
         <span
+          data-testid="folded-indicator"
           className="text-[8px] font-bold uppercase tracking-wider"
           style={{ color: 'var(--red)', opacity: 0.6 }}
         >

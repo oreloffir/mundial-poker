@@ -15,6 +15,7 @@ export interface BetPromptPayload {
   readonly chips: number
   readonly allowedActions: readonly BetAction[]
   readonly timeoutMs: number
+  readonly promptedAt: number
 }
 
 export interface BetUpdatePayload {
@@ -24,6 +25,7 @@ export interface BetUpdatePayload {
   readonly pot: number
   readonly currentBet: number
   readonly chips: number
+  readonly autoAction?: boolean
 }
 
 export interface RoundResultsPayload {
@@ -86,6 +88,7 @@ export interface ServerToClientEvents {
     readonly amount: number
     readonly type: 'SB' | 'BB'
   }) => void
+  'players:update': (players: readonly { readonly userId: string; readonly chips: number }[]) => void
   error: (payload: { readonly code: string; readonly message: string }) => void
 }
 

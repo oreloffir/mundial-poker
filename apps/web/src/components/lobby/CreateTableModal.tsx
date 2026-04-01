@@ -165,11 +165,17 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
               </label>
               <input
                 id="bigBlind"
+                data-testid="big-blind-input"
                 type="number"
                 value={bigBlind}
                 readOnly
-                disabled
-                className="w-full px-4 py-3 rounded-xl text-sm opacity-50 cursor-not-allowed"
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  color: 'var(--text-dim)',
+                  cursor: 'default',
+                }}
               />
             </div>
           </div>
@@ -181,7 +187,7 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
           )}
 
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Big blind is automatically set to 2× small blind.
+            Always 2× the small blind
           </p>
 
           <div className="flex gap-3 pt-2">

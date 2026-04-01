@@ -9,6 +9,7 @@ interface BetPrompt {
   readonly chips: number
   readonly allowedActions: readonly string[]
   readonly timeoutMs: number
+  readonly promptedAt?: number
 }
 
 interface BettingControlsProps {
@@ -30,9 +31,9 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
   useEffect(() => {
     setRaiseAmount(prompt.minimumBet)
     setRaiseExpanded(false)
-    startTimeRef.current = Date.now()
+    startTimeRef.current = prompt.promptedAt ?? Date.now()
     setTimeLeft(prompt.timeoutMs)
-  }, [prompt.minimumBet, prompt.timeoutMs])
+  }, [prompt.minimumBet, prompt.timeoutMs, prompt.promptedAt])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -107,7 +108,7 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
   )
 
   const timerBar = (
-    <div className="flex items-center gap-2 flex-1 min-w-0">
+    <div data-testid="bet-timer" className="flex items-center gap-2 flex-1 min-w-0">
       <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
         <div
           className="h-full rounded-full transition-all duration-100"
@@ -135,6 +136,7 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
         return (
           <button
             key={denom}
+            data-testid={`chip-denomination-${denom}`}
             onClick={() => handleChipPress(denom)}
             disabled={wouldExceed}
             className="relative flex items-center justify-center transition-all duration-100"

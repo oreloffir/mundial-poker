@@ -54,6 +54,7 @@ export function useGameSocket(tableId: string) {
             chips: number
             allowedActions: string[]
             timeoutMs: number
+            promptedAt?: number
           }
           waitingForResults: boolean
         }
@@ -90,6 +91,7 @@ export function useGameSocket(tableId: string) {
             chips: ri.betPrompt.chips,
             allowedActions: ri.betPrompt.allowedActions,
             timeoutMs: ri.betPrompt.timeoutMs,
+            promptedAt: ri.betPrompt.promptedAt ?? Date.now(),
           })
         }
         if (ri.waitingForResults) {
@@ -152,9 +154,10 @@ export function useGameSocket(tableId: string) {
     })
 
     socket.on('bet:prompt', (payload) => {
+      const promptTime = payload.promptedAt ?? Date.now()
       store.getState().setActiveTurn({
         userId: payload.userId,
-        startedAt: Date.now(),
+        startedAt: promptTime,
         timeoutMs: payload.timeoutMs,
       })
       if (payload.userId === userId) {
@@ -166,6 +169,7 @@ export function useGameSocket(tableId: string) {
           chips: payload.chips,
           allowedActions: payload.allowedActions,
           timeoutMs: payload.timeoutMs,
+          promptedAt: promptTime,
         })
       }
     })
@@ -228,8 +232,7 @@ export function useGameSocket(tableId: string) {
     socket.on('players:update', (playerChips) => {
       const table = store.getState().table
       if (table) {
-        const updates = playerChips as { userId: string; chips: number }[]
-        const chipMap = new Map(updates.map((u) => [u.userId, u.chips]))
+        const chipMap = new Map(playerChips.map((u) => [u.userId, u.chips]))
         store.getState().setTable({
           ...table,
           players: table.players.map((p) => {

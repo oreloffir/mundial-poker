@@ -47,7 +47,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         return (
           <div
             key={f.id}
-            data-testid={finished ? 'fixture-scored' : 'fixture-pending'}
+            data-testid={`fixture-card-${index}`}
             className="flex flex-col items-center rounded-xl overflow-hidden"
             style={{
               background: finished ? 'rgba(13, 20, 36, 0.55)' : 'rgba(13, 20, 36, 0.4)',

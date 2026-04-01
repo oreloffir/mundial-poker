@@ -70,6 +70,7 @@ function PotDisplay({
       </div>
       <span
         key={potFlashKey}
+        data-testid="pot-total"
         className="font-outfit font-extrabold text-base"
         style={{
           color: 'var(--gold-bright)',
@@ -315,6 +316,7 @@ export function PokerTable({
             return (
               <div
                 key={index}
+                data-testid={`player-seat-${index}`}
                 className="absolute z-10"
                 style={{
                   ...style,
