@@ -545,12 +545,13 @@ The game view is desktop-only. All dimensions are hardcoded pixels with zero med
 - Badge border flashes green on chip increase, red on chip decrease — existing animation behavior preserved
 - Changes in: `apps/web/src/components/game/PlayerSeat.tsx`
 
-#### J4 — Display Blind Position Badges ✅ (stubbed — waiting on Soni S1)
-- `gameStore.ts`: added `sbSeatIndex: number | null` and `bbSeatIndex: number | null` to state; `setBlindPositions(sb, bb)` setter added; both fields cleared in `resetRoundState()` and `reset()`
-- Currently hardcoded to `sbSeatIndex: 1, bbSeatIndex: 2` per the sprint plan — visually complete and testable
-- `PlayerSeat.tsx`: new `blindPosition?: 'SB' | 'BB' | null` prop renders a styled badge — blue pill for SB, gold pill for BB — positioned below the avatar
-- `PokerTable.tsx`: reads both indices from the store, derives `blindPosition` per seat, passes prop to `PlayerSeat`
-- **To wire real data (when Soni's S1 merges):** in `useGameSocket.ts` `round:start` handler, extract `sbSeatIndex` and `bbSeatIndex` from the payload and call `store.getState().setBlindPositions(payload.sbSeatIndex, payload.bbSeatIndex)`
+#### J4 — Display Blind Position Badges ✅ (fully wired — Soni S1 merged)
+- `gameStore.ts`: `sbSeatIndex`/`bbSeatIndex` in state; `setBlindPositions(sb, bb)` setter; both cleared in `resetRoundState()` and `reset()`; removed hardcoded stub values
+- `PlayerSeat.tsx`: `blindPosition?: 'SB' | 'BB' | null` prop renders blue pill (SB) or gold pill (BB) below the avatar
+- `PokerTable.tsx`: derives `blindPosition` per seat from store indices, passes prop to `PlayerSeat`
+- `useGameSocket.ts` `round:start` handler: reads `payload.sbSeatIndex` and `payload.bbSeatIndex` directly in the atomic `store.setState()` call — badges update in the same render tick as the new round
+- `blinds:posted` listener: wired to `setPlayerAction(userId, { action: 'CALL', amount })` so the chip-change badge animation plays on the SB and BB poster's seat when blinds are deducted
+- `socket-events.ts`: added `blinds:posted` event type to `ServerToClientEvents`
 
 #### J5 — Stale Cards Cleanup Between Rounds ✅
 - Root cause: `resetRoundState()` only cleared betting state — `fixtures`, `myHand`, `showdownResults`, `foldedPlayerIds`, `playerActions` were never wiped on `round:start`, causing stale data to linger for one or more render frames
@@ -569,8 +570,7 @@ The game view is desktop-only. All dimensions are hardcoded pixels with zero med
 
 ### Blocked
 
-#### J4 — Real blind data from socket
-Waiting on **Soni's S1** to deliver `sbSeatIndex` / `bbSeatIndex` in the `round:start` socket event. Stub is live and visually complete. One-line wiring needed once S1 merges.
+_Nothing blocked. All sprint tasks complete._
 
 ---
 
@@ -578,4 +578,4 @@ Waiting on **Soni's S1** to deliver `sbSeatIndex` / `bbSeatIndex` in the `round:
 
 - J1 + J2 + J5 were all symptoms of the same root cause — scattered `set()` calls in `round:start`. The atomic rewrite fixes all three and makes future `round:start` changes easier to reason about.
 - The `players:update` socket event in `useGameSocket.ts` has a pre-existing TypeScript error (event name not in `ServerToClientEvents` type). Not introduced by this sprint — flagging for awareness.
-- J4 blind badges are fully styled and functional with hardcoded data — Soni can unblock this with a single call to `setBlindPositions()` in the socket hook.
+- J4 is now fully wired to Soni's S1 data — `sbSeatIndex`/`bbSeatIndex` read from `round:start` payload atomically, `blinds:posted` triggers chip-change animation on blind posters.
