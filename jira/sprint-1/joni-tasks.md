@@ -805,17 +805,20 @@ Player can't see their hand, chip count, or blind badge while betting.
 ### Completed
 
 #### J10 — Mobile Betting Controls: Collapsible Drawer ✅
-- **Strategy:** Two CSS-controlled render sections (`.betting-desktop-only` / `.betting-mobile-only`) sharing all state and chip/preset JSX variables. `@media (max-height: 500px) and (orientation: landscape)` swaps which section is visible. Desktop code path is completely unchanged.
-- **Compact bar (~44px):** Single row — Fold / Check / Call / Raise▲ toggle / timer text. All In shown here when allowed without RAISE. Fold/Check/Call fire `onAction` immediately. `.betting-bar-wrapper` class removes `py-3` padding from the GameTable wrapper on mobile so the bar is exactly 44px.
-- **Expanded drawer:** `max-height: 0→320px` + `opacity: 0→1` transition (200ms ease-out). Opens on "Raise ▲" tap.
-  - Row 1: hand preview — player's 2 team cards at 36×50px (flag + code) + chip count pill. Player sees their hand while building the raise.
-  - Row 2: chip denomination row (reused from J9 via shared JSX variable)
-  - Row 3: preset row (reused from J9 via shared JSX variable)
-  - Row 4: "Raise to: {amount}" + Raise confirm button + ✕ Cancel + timer text
-  - Cancel resets `raiseAmount` to `minimumBet` and collapses; submitting raise collapses before firing `onAction`
-- **New props:** `myHand?: readonly TeamCard[] | null` and `myChips?: number` — passed from `GameTable.tsx` where both are already available
-- `raiseExpanded` resets to `false` in the `useEffect` that watches `prompt.minimumBet / prompt.timeoutMs` (new turn starts → drawer closes)
-- Commit: `feat: mobile betting drawer with collapsible raise panel`
+- **Strategy (updated by Doni):** Replaced dual-layout (`.betting-desktop-only` / `.betting-mobile-only`) with a single unified layout that works at all viewport sizes. Dead CSS classes removed from `index.css`.
+- **Unified layout — 3 layers:**
+  - **Info row:** player's mini hand cards (28×38px, inline) + chip count pill + vertical divider + timer bar. Always visible.
+  - **Action row:** Fold · Check/Call · Raise ▲ toggle · All In. Always visible. Raise button lights up gold when expanded.
+  - **Raise drawer:** `max-height: 0→200px` + `opacity: 0→1` transition (220ms ease-out). Slides up above the action row when Raise ▲ is tapped.
+    - Row 1: chip denomination row (shared JSX variable from J9)
+    - Row 2: preset row (shared JSX variable from J9)
+    - Row 3: "Raise to: {amount}" + Raise confirm button + ✕ Cancel
+- **Collapsed height:** ~88px. **Expanded:** ~185px. Was ~200px permanently before.
+- **`PokerChip` component:** New reusable SVG (`components/shared/PokerChip.tsx`) — gold/navy chip with football panel pattern and MP monogram. Used in chip row buttons, chip badge in info row, PlayerSeat balance, and PokerTable pot display.
+- **`GameTable.tsx`:** `py-3→py-2`, `max-w-2xl→max-w-xl`, added `WebkitBackdropFilter` for Safari, tightened border opacity to `rgba(212,168,67,0.12)`.
+- **BB read-only:** BB input in `CreateTableModal` is now `readOnly` + `disabled` (greyed out). `handleBigBlindChange` removed. BB always auto-fills as `sb * 2`. Validation simplified.
+- `raiseExpanded` resets to `false` when new turn starts (watches `prompt.minimumBet / prompt.timeoutMs`)
+- Commit: `feat: unified betting controls with collapsible raise drawer and PokerChip component`
 
 #### J9 — Redesign Betting Controls (Chip Stack + Presets) ✅
 - Removed slider from RAISE section entirely
@@ -825,7 +828,7 @@ Player can't see their hand, chip count, or blind badge while betting.
 - Raise button disabled (`opacity-30`) when `raiseAmount < minimumBet`; shows "Raise (All In)" when at chip cap
 - Fold / Check / Call / All In action buttons and timer bar completely unchanged
 - CSS vars added: `--chip-btn-size`, `--chip-btn-font-size`, `--preset-padding`, `--preset-font-size` — all override in `@media (max-height: 500px) and (orientation: landscape)`
-- **J6-BUG-01 fixed:** `handleBigBlindChange` now immediately shows "Big blind must be at least 2" when `bb < 2` (previously cleared the error silently)
+- **J6-BUG-01 (revised per Orel):** BB field is now `readOnly` / `disabled` — greyed out, not editable. BB always auto-fills as `sb * 2` via `handleSmallBlindChange`. `handleBigBlindChange` removed entirely. `validateBlinds` simplified: only validates SB ≥ 1 and BB < starting chips. "BB must equal 2x SB" error path removed (impossible by design).
 - **J6-BUG-02 fixed:** `handleSmallBlindChange` now immediately shows "Small blind must be at least 1" when `sb < 1` (previously cleared the error without setting a new one)
 - **J2-TESTID:** `data-testid="round-counter"` added to round number `<span>` in `GameTable.tsx`
 - **J3-TESTID:** `data-testid="seat-balance-{player.seatIndex}"` added to chip badge div in `PlayerSeat.tsx`

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import type { TablePlayer, ShowdownResult, TeamCard } from '@wpc/shared'
+import { PokerChip } from '@/components/shared/PokerChip'
 
 interface PlayerAction {
   readonly action: string
@@ -314,14 +315,7 @@ export function PlayerSeat({
           }}
         >
           {/* Chip icon */}
-          <div
-            className="w-3 h-3 rounded-full flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, var(--gold-bright), var(--gold-dim))',
-              border: '1.5px solid var(--gold-bright)',
-              boxShadow: '0 0 6px rgba(212,168,67,0.4)',
-            }}
-          />
+          <PokerChip size={14} style={{ flexShrink: 0, filter: 'drop-shadow(0 0 4px rgba(212,168,67,0.4))' }} />
           <span
             className="font-outfit font-black text-xs leading-none"
             style={{

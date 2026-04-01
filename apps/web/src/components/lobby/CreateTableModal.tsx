@@ -26,27 +26,11 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
     }
   }
 
-  const handleBigBlindChange = (value: string) => {
-    setBigBlind(value)
-    const bb = parseInt(value, 10)
-    if (isNaN(bb) || bb < 2) {
-      setBlindError('Big blind must be at least 2')
-    } else if (bb % 2 !== 0) {
-      setBlindError('Big blind must be exactly 2× small blind')
-    } else {
-      setBlindError(null)
-      setSmallBlind(String(bb / 2))
-    }
-  }
-
   const validateBlinds = (): string | null => {
     const sb = parseInt(smallBlind, 10)
-    const bb = parseInt(bigBlind, 10)
     const chips = parseInt(startingChips, 10)
     if (!Number.isInteger(sb) || sb < 1) return 'Small blind must be a positive integer'
-    if (!Number.isInteger(bb) || bb < 2) return 'Big blind must be at least 2'
-    if (bb !== sb * 2) return 'Big blind must be exactly 2× small blind'
-    if (bb >= chips) return 'Big blind must be less than starting chips'
+    if (sb * 2 >= chips) return 'Big blind must be less than starting chips'
     return null
   }
 
@@ -183,10 +167,9 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
                 id="bigBlind"
                 type="number"
                 value={bigBlind}
-                onChange={(e) => handleBigBlindChange(e.target.value)}
-                required
-                min={2}
-                className="w-full px-4 py-3 rounded-xl text-sm"
+                readOnly
+                disabled
+                className="w-full px-4 py-3 rounded-xl text-sm opacity-50 cursor-not-allowed"
               />
             </div>
           </div>

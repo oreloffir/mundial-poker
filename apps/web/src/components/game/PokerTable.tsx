@@ -3,6 +3,7 @@ import type { TablePlayer, ShowdownResult, TeamCard } from '@wpc/shared'
 import { useGameStore } from '@/stores/gameStore'
 import { PlayerSeat } from './PlayerSeat'
 import { FixtureBoard } from './FixtureBoard'
+import { PokerChip } from '@/components/shared/PokerChip'
 
 interface ActiveTurn {
   readonly userId: string
@@ -57,13 +58,12 @@ function PotDisplay({
     >
       <div className="flex -space-x-1.5">
         {Array.from({ length: chipCount }).map((_, i) => (
-          <div
+          <PokerChip
             key={i}
-            className="w-5 h-5 rounded-full shadow-lg"
+            size={20}
             style={{
-              background: 'linear-gradient(to bottom, var(--gold-bright), var(--gold-dim))',
-              border: '2px solid var(--gold-bright)',
               transform: `rotate(${(i - 2) * 12}deg)`,
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
             }}
           />
         ))}

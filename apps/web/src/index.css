@@ -409,13 +409,6 @@ input {
     display: none !important;
   }
 
-  /* Betting controls layout switching */
-  .betting-desktop-only {
-    display: none !important;
-  }
-  .betting-mobile-only {
-    display: flex !important;
-  }
   .betting-bar-wrapper {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
@@ -425,14 +418,6 @@ input {
     width: min(85vw, calc((100vh - 36px) * 1.6)) !important;
     max-height: calc(100vh - 36px) !important;
   }
-}
-
-/* Betting controls — desktop defaults (overridden above for mobile landscape) */
-.betting-desktop-only {
-  display: block;
-}
-.betting-mobile-only {
-  display: none;
 }
 
 /* Portrait orientation hint — hidden by default, shown on portrait mobile */
