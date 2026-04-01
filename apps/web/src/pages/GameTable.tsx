@@ -206,15 +206,20 @@ export function GameTable() {
       {/* Bottom betting controls - floating */}
       {myTurn && betPrompt && (
         <div
-          className="absolute bottom-0 left-0 right-0 z-30 px-4 py-3"
+          className="absolute bottom-0 left-0 right-0 z-30 px-4 py-3 betting-bar-wrapper"
           style={{
-            background: 'rgba(5,10,24,0.7)',
+            background: 'rgba(5,10,24,0.85)',
             backdropFilter: 'blur(16px)',
             borderTop: '1px solid var(--border)',
           }}
         >
           <div className="max-w-2xl mx-auto">
-            <BettingControls prompt={betPrompt} onAction={sendBetAction} />
+            <BettingControls
+              prompt={betPrompt}
+              onAction={sendBetAction}
+              myHand={myHand}
+              myChips={myPlayer?.chips}
+            />
           </div>
         </div>
       )}
