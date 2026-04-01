@@ -644,14 +644,178 @@ When RAISE is **not** allowed (e.g., only CHECK/FOLD/CALL), the chip row and pre
 
 ---
 
+## J10 — Mobile Betting Controls: Collapsible Drawer
+
+**Priority:** High (mobile UX is broken — controls cover player's hand)
+**Branch:** `feat/mobile-betting-drawer`
+**Deadline:** April 4
+
+### Context
+
+On mobile landscape (375px height), the betting controls bar sits `absolute bottom-0` and stacks up to 5 rows of content (timer + action buttons + chip denominations + presets + raise total). This eats ~150-180px — nearly **half the viewport** — and sits directly on top of seat 0 (the player's own seat). The player literally cannot see their own cards while deciding what to bet. The chip denomination buttons from J9 also look cramped at 28px on mobile. This is a critical mobile UX issue.
+
+### Current behavior (mobile landscape)
+
+```
+┌─ top bar (36px) ─────────────────────────────┐
+│                                               │
+│          [ table with 5 seats ]               │
+│     seat 0 (YOU) is at bottom center          │
+│                                               │
+├─ betting controls (~150-180px) ───────────────┤
+│  [timer bar]                                  │
+│  [Fold] [Check] [Call]        [All In]        │  ← covers seat 0
+│  [5] [10] [25] [50] [100] [200] ↩ Clear      │  ← covers your cards
+│  [Min] [½ Pot] [Pot] [All In]                 │  ← covers your chips
+│  Raise to: 150  [RAISE]                       │
+└───────────────────────────────────────────────┘
+```
+
+Player can't see their hand, chip count, or blind badge while betting.
+
+### Expected behavior (mobile landscape)
+
+**When it's NOT your turn:** Nothing at the bottom. Full table visible.
+
+**When it IS your turn — default state (compact bar, ~44px):**
+
+```
+┌─ top bar (36px) ─────────────────────────────┐
+│                                               │
+│          [ table with 5 seats ]               │
+│     seat 0 fully visible with cards           │
+│                                               │
+├─ compact bar (~44px) ─────────────────────────┤
+│  [Fold] [Check/Call 10]   [Raise ▲]  12s     │
+└───────────────────────────────────────────────┘
+```
+
+- Single row: Fold, Check or Call (with amount), and a "Raise ▲" toggle button
+- Timer countdown integrated as text (not a full bar — save vertical space)
+- Tapping Fold or Check/Call submits immediately (same as now)
+- Tapping "Raise ▲" expands the drawer
+
+**When "Raise ▲" is tapped — expanded drawer:**
+
+```
+┌─ top bar (36px) ─────────────────────────────┐
+│                                               │
+│          [ table — upper portion visible ]    │
+│                                               │
+├─ expanded drawer ─────────────────────────────┤
+│  Your hand: [🇧🇷 BRA] [🇫🇷 FRA]   Chips: 490 │
+│                                               │
+│  [5] [10] [25] [50] [100] [200]   ↩ Clear    │
+│  [Min] [½ Pot] [Pot] [All In]                 │
+│                                               │
+│  Raise to: 150  [RAISE]  [✕ Cancel]    12s   │
+└───────────────────────────────────────────────┘
+```
+
+- Drawer slides up with a smooth 200ms transition
+- **Row 1: Your hand + chips** — show the player's 2 team cards (mini format: flag + code) and current chip count. This is the key UX win: you can see your cards WHILE building your raise.
+- **Row 2: Chip denominations** — same as J9 but now has room to breathe
+- **Row 3: Presets** — same as J9
+- **Row 4: Raise total + confirm + cancel** — "Cancel" collapses back to compact bar
+- Timer shows as text countdown in the confirm row
+
+### Requirements
+
+1. **This is mobile-only.** On desktop, keep the current layout exactly as-is. Use `@media (max-height: 500px) and (orientation: landscape)` to scope all changes. Desktop BettingControls.tsx should render identically to current.
+
+2. **Compact bar (default when it's your turn):**
+   - Single `flex` row, `~44px` height
+   - Contains: Fold button, Check OR Call button (with amount), "Raise ▲" button, timer text
+   - All In button shows here too if allowed (replaces Raise)
+   - Tapping Fold/Check/Call fires `onAction()` immediately — same behavior as now
+   - "Raise ▲" is a toggle that sets local state `raiseExpanded: true`
+   - Timer as text only: `"12s"` with color coding (green >10s, gold 5-10s, red <5s)
+
+3. **Expanded drawer (when Raise ▲ is tapped):**
+   - Slides up via `max-height` transition (200ms ease-out) or `transform: translateY`
+   - **Hand preview row:** Show the player's 2 cards in compact format (flag emoji + team code, same as `FaceUpMiniCard` but smaller ~36x50px) + chip count. This requires passing `myHand` and `myChips` as new props to `BettingControls`.
+   - **Chip denomination row:** Same J9 chips, unchanged
+   - **Preset row:** Same J9 presets, unchanged
+   - **Confirm row:** "Raise to: {amount}" + Raise button + "Cancel" text button + timer text
+   - "Cancel" sets `raiseExpanded: false`, resets `raiseAmount` to `minimumBet`
+   - Submitting the raise also collapses the drawer
+
+4. **New props on BettingControls** (mobile drawer needs them):
+   ```typescript
+   interface BettingControlsProps {
+     readonly prompt: BetPrompt
+     readonly onAction: (action: BetAction, amount: number) => void
+     readonly myHand?: readonly TeamCard[] | null    // NEW — for hand preview in drawer
+     readonly myChips?: number                        // NEW — for chip display in drawer
+   }
+   ```
+   Pass these from `GameTable.tsx` where `myHand` and `myPlayer.chips` are already available.
+
+5. **Drawer background:** Same glassmorphism as current — `rgba(5,10,24,0.85)` with `backdrop-filter: blur(16px)`. Slightly more opaque than current (0.85 vs 0.7) since the drawer is taller and needs to be readable.
+
+6. **Smooth transition:** The expand/collapse should animate. Use:
+   ```css
+   .betting-drawer {
+     transition: max-height 200ms ease-out, opacity 150ms ease-out;
+   }
+   ```
+   Or `transform: translateY(100%)` → `translateY(0)` for GPU-accelerated animation.
+
+7. **Z-index:** The drawer must stay above the table but below any overlays (game over, portrait hint). Current `z-30` is fine.
+
+8. **Timer bar on desktop stays unchanged.** The full-width timer bar with progress fill only hides on mobile. On mobile, timer is text-only in both compact and expanded states.
+
+### Files to modify
+
+- `apps/web/src/components/game/BettingControls.tsx` — add mobile drawer layout with `raiseExpanded` state, compact bar, expanded view with hand preview
+- `apps/web/src/pages/GameTable.tsx` — pass `myHand` and `myPlayer?.chips` as new props to BettingControls
+- `apps/web/src/index.css` — CSS vars for drawer heights, transition classes, mobile-only overrides
+
+### Deliverables
+
+- [ ] Mobile: compact bar (~44px) shows by default when it's your turn — Fold/Check/Call + Raise toggle + timer text
+- [ ] Mobile: tapping "Raise ▲" expands drawer with hand preview + chips + presets + confirm
+- [ ] Mobile: player can see their hand cards inside the drawer while building a raise
+- [ ] Mobile: "Cancel" collapses drawer back to compact bar
+- [ ] Mobile: submitting any action (Fold/Check/Call/Raise) collapses everything
+- [ ] Mobile: smooth 200ms slide transition on expand/collapse
+- [ ] Desktop: zero changes — current layout renders identically
+- [ ] Timer countdown visible in both compact and expanded states
+- [ ] No overlap with seat 0 cards in compact bar mode
+
+### Out of scope
+
+- Redesigning the chip denomination buttons themselves (J9 styling stays)
+- Sound effects or haptic feedback
+- Swipe gestures to expand/collapse
+- Desktop layout changes of any kind
+- Changing how actions are sent to the server
+
+**Estimated effort:** 1 day
+
+---
+
 ## Sprint Progress — Joni's Delivery Log
 
 **Last updated:** April 1, 2026
-**Status:** Sprint complete — J1–J9 delivered
+**Status:** Sprint complete — J1–J10 delivered
 
 ---
 
 ### Completed
+
+#### J10 — Mobile Betting Controls: Collapsible Drawer ✅
+- **Strategy:** Two CSS-controlled render sections (`.betting-desktop-only` / `.betting-mobile-only`) sharing all state and chip/preset JSX variables. `@media (max-height: 500px) and (orientation: landscape)` swaps which section is visible. Desktop code path is completely unchanged.
+- **Compact bar (~44px):** Single row — Fold / Check / Call / Raise▲ toggle / timer text. All In shown here when allowed without RAISE. Fold/Check/Call fire `onAction` immediately. `.betting-bar-wrapper` class removes `py-3` padding from the GameTable wrapper on mobile so the bar is exactly 44px.
+- **Expanded drawer:** `max-height: 0→320px` + `opacity: 0→1` transition (200ms ease-out). Opens on "Raise ▲" tap.
+  - Row 1: hand preview — player's 2 team cards at 36×50px (flag + code) + chip count pill. Player sees their hand while building the raise.
+  - Row 2: chip denomination row (reused from J9 via shared JSX variable)
+  - Row 3: preset row (reused from J9 via shared JSX variable)
+  - Row 4: "Raise to: {amount}" + Raise confirm button + ✕ Cancel + timer text
+  - Cancel resets `raiseAmount` to `minimumBet` and collapses; submitting raise collapses before firing `onAction`
+- **New props:** `myHand?: readonly TeamCard[] | null` and `myChips?: number` — passed from `GameTable.tsx` where both are already available
+- `raiseExpanded` resets to `false` in the `useEffect` that watches `prompt.minimumBet / prompt.timeoutMs` (new turn starts → drawer closes)
+- Commit: `feat: mobile betting drawer with collapsible raise panel`
 
 #### J9 — Redesign Betting Controls (Chip Stack + Presets) ✅
 - Removed slider from RAISE section entirely
