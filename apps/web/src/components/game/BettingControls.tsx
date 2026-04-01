@@ -15,13 +15,16 @@ interface BettingControlsProps {
   readonly onAction: (action: BetAction, amount: number) => void
 }
 
+const CHIP_DENOMS = [5, 10, 25, 50, 100, 200] as const
+
 export function BettingControls({ prompt, onAction }: BettingControlsProps) {
   const [raiseAmount, setRaiseAmount] = useState(prompt.minimumBet)
   const [timeLeft, setTimeLeft] = useState(prompt.timeoutMs)
+  const [pressedChip, setPressedChip] = useState<number | null>(null)
   const startTimeRef = useRef(Date.now())
 
   useEffect(() => {
-    setRaiseAmount(Math.max(prompt.minimumBet + 1, prompt.minimumBet))
+    setRaiseAmount(prompt.minimumBet)
     startTimeRef.current = Date.now()
     setTimeLeft(prompt.timeoutMs)
   }, [prompt.minimumBet, prompt.timeoutMs])
@@ -42,8 +45,25 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
   const timerColor = timeLeft > 10000 ? 'var(--green-glow)' : timeLeft > 5000 ? 'var(--gold)' : 'var(--red)'
   const isUrgent = timeLeft > 0 && timeLeft <= 5000
 
+  const handleChipPress = (denom: number) => {
+    setRaiseAmount((prev) => Math.min(prev + denom, prompt.chips))
+    setPressedChip(denom)
+    setTimeout(() => setPressedChip(null), 100)
+  }
+
+  const presets = [
+    { label: 'Min', value: prompt.minimumBet },
+    { label: '½ Pot', value: Math.max(prompt.minimumBet, Math.floor(prompt.pot / 2)) },
+    { label: 'Pot', value: Math.min(prompt.pot, prompt.chips) },
+    { label: 'All In', value: prompt.chips },
+  ]
+
+  const raiseDisabled = raiseAmount < prompt.minimumBet
+  const raiseIsAllIn = raiseAmount >= prompt.chips
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
+      {/* Timer bar — unchanged */}
       <div className="flex items-center gap-3">
         <div
           className="flex-1 h-1 rounded-full overflow-hidden"
@@ -69,7 +89,8 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
         </span>
       </div>
 
-      <div className="flex items-center gap-2.5 flex-wrap justify-center">
+      {/* Action buttons row — Fold / Check / Call / All In unchanged */}
+      <div className="flex items-center gap-2 flex-wrap justify-center">
         {isAllowed('FOLD') && (
           <button
             onClick={() => onAction('FOLD', 0)}
@@ -118,33 +139,6 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
           </button>
         )}
 
-        {isAllowed('RAISE') && (
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={prompt.currentBet + 1}
-              max={prompt.chips}
-              step={Math.max(1, Math.floor(prompt.minimumBet / 2))}
-              value={raiseAmount}
-              onChange={(e) => setRaiseAmount(parseInt(e.target.value, 10))}
-              style={{ width: 'var(--slider-w)', accentColor: 'var(--gold)' }}
-            />
-            <button
-              onClick={() => onAction('RAISE', raiseAmount)}
-              className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-2px]"
-              style={{
-                padding: 'var(--btn-padding)',
-                fontSize: 'var(--btn-font-size)',
-                background: 'rgba(212,168,67,0.1)',
-                color: 'var(--gold)',
-                border: '1px solid rgba(212,168,67,0.3)',
-              }}
-            >
-              Raise {raiseAmount}
-            </button>
-          </div>
-        )}
-
         {isAllowed('ALL_IN') && (
           <button
             onClick={() => onAction('ALL_IN', prompt.chips)}
@@ -155,6 +149,109 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
           </button>
         )}
       </div>
+
+      {/* Chip stack + raise section — only when RAISE is allowed */}
+      {isAllowed('RAISE') && (
+        <div className="space-y-1.5 pt-0.5">
+          {/* Chip denomination row */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            {CHIP_DENOMS.map((denom) => {
+              const wouldExceed = raiseAmount + denom > prompt.chips
+              const isPressed = pressedChip === denom
+              return (
+                <button
+                  key={denom}
+                  onClick={() => handleChipPress(denom)}
+                  disabled={wouldExceed}
+                  className="rounded-full font-bold flex items-center justify-center transition-all duration-100"
+                  style={{
+                    width: 'var(--chip-btn-size)',
+                    height: 'var(--chip-btn-size)',
+                    fontSize: 'var(--chip-btn-font-size)',
+                    background: 'rgba(5,10,24,0.85)',
+                    border: wouldExceed
+                      ? '1px solid rgba(212,168,67,0.15)'
+                      : '1px solid rgba(212,168,67,0.5)',
+                    color: wouldExceed ? 'rgba(212,168,67,0.25)' : 'var(--gold-bright)',
+                    boxShadow: wouldExceed ? 'none' : '0 0 8px rgba(212,168,67,0.15)',
+                    transform: isPressed ? 'scale(0.88)' : undefined,
+                    cursor: wouldExceed ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {denom}
+                </button>
+              )
+            })}
+            <button
+              onClick={() => setRaiseAmount(prompt.minimumBet)}
+              className="transition-colors duration-150"
+              style={{
+                fontSize: 'var(--chip-btn-font-size)',
+                color: 'var(--text-muted)',
+                padding: '0 6px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              ↩ Clear
+            </button>
+          </div>
+
+          {/* Preset row */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            {presets.map(({ label, value }) => {
+              const isActive = raiseAmount === value
+              return (
+                <button
+                  key={label}
+                  onClick={() => setRaiseAmount(value)}
+                  className="rounded-full transition-all duration-150 font-semibold"
+                  style={{
+                    padding: 'var(--preset-padding)',
+                    fontSize: 'var(--preset-font-size)',
+                    background: isActive ? 'rgba(212,168,67,0.12)' : 'rgba(255,255,255,0.05)',
+                    border: isActive ? '1px solid rgba(212,168,67,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                    color: isActive ? 'var(--gold-bright)' : 'var(--text-dim)',
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Running total + Raise confirm */}
+          <div className="flex items-center justify-center gap-3">
+            <span style={{ fontSize: 'var(--preset-font-size)', color: 'var(--text-muted)' }}>
+              Raise to:{' '}
+              <span
+                className="font-outfit font-black"
+                style={{
+                  fontSize: 'var(--btn-font-size)',
+                  color: raiseDisabled ? 'var(--red)' : 'var(--gold-bright)',
+                }}
+              >
+                {raiseIsAllIn ? 'All In' : raiseAmount}
+              </span>
+            </span>
+            <button
+              onClick={() => onAction('RAISE', raiseAmount)}
+              disabled={raiseDisabled}
+              className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-2px] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              style={{
+                padding: 'var(--btn-padding)',
+                fontSize: 'var(--btn-font-size)',
+                background: raiseDisabled ? 'rgba(212,168,67,0.04)' : 'rgba(212,168,67,0.1)',
+                color: 'var(--gold)',
+                border: `1px solid ${raiseDisabled ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.35)'}`,
+              }}
+            >
+              {raiseIsAllIn ? 'Raise (All In)' : `Raise ${raiseAmount}`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -142,7 +142,10 @@ export function GameTable() {
           )}
           {currentRound && (
             <span style={{ color: 'var(--text-dim)' }}>
-              Round <span className="font-bold text-white">{currentRound.roundNumber}</span>
+              Round{' '}
+              <span data-testid="round-counter" className="font-bold text-white">
+                {currentRound.roundNumber}
+              </span>
             </span>
           )}
           {myPlayer && (

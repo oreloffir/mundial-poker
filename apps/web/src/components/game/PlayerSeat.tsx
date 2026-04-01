@@ -304,6 +304,7 @@ export function PlayerSeat({
         </span>
         <div
           key={player.chips}
+          data-testid={`seat-balance-${player.seatIndex}`}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
           style={{
             background: 'rgba(5,10,24,0.85)',

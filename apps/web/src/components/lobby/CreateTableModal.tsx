@@ -17,23 +17,25 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
 
   const handleSmallBlindChange = (value: string) => {
     setSmallBlind(value)
-    setBlindError(null)
     const sb = parseInt(value, 10)
-    if (!isNaN(sb) && sb >= 1) {
+    if (isNaN(sb) || sb < 1) {
+      setBlindError('Small blind must be at least 1')
+    } else {
+      setBlindError(null)
       setBigBlind(String(sb * 2))
     }
   }
 
   const handleBigBlindChange = (value: string) => {
     setBigBlind(value)
-    setBlindError(null)
     const bb = parseInt(value, 10)
-    if (!isNaN(bb) && bb >= 2) {
-      if (bb % 2 === 0) {
-        setSmallBlind(String(bb / 2))
-      } else {
-        setBlindError('Big blind must be exactly 2× small blind')
-      }
+    if (isNaN(bb) || bb < 2) {
+      setBlindError('Big blind must be at least 2')
+    } else if (bb % 2 !== 0) {
+      setBlindError('Big blind must be exactly 2× small blind')
+    } else {
+      setBlindError(null)
+      setSmallBlind(String(bb / 2))
     }
   }
 
