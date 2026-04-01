@@ -506,14 +506,166 @@ The game view is desktop-only. All dimensions are hardcoded pixels with zero med
 
 ---
 
+## J9 — Redesign Betting Controls (Chip Stack + Presets)
+
+**Priority:** High (gameplay feel)
+**Branch:** `feat/betting-controls-redesign`
+**Deadline:** April 3
+
+### Context
+
+The current raise UI is a slider + button. It works but feels flat — no casino vibe, no satisfaction in building a bet. We're replacing it with a hybrid chip-stacking + preset system. The action buttons (Fold, Check, Call) stay as-is. Only the RAISE flow changes.
+
+### Current behavior
+
+When RAISE is allowed, the player sees a range slider (`min = currentBet + 1`, `max = chips`) and a "Raise {amount}" button. The slider is hard to use precisely, especially on mobile (J8 already shrunk it to 72px). No visual feedback of "how much am I betting."
+
+### Expected behavior
+
+When RAISE is allowed, the player sees two rows replacing the slider:
+
+**Row 1 — Chip denominations:** Circular chip icons that the player taps to build a raise amount. Each tap adds that denomination to a running total.
+
+```
+[ 5 ] [ 10 ] [ 25 ] [ 50 ] [ 100 ] [ 200 ]
+```
+
+- Each chip is a circular button (~36px on desktop, scale down via CSS vars on mobile) styled like a poker chip — dark background, gold border, denomination text in center
+- Tapping a chip adds its value to the running raise total
+- Running total shown between the rows: "Raise to: **150**" in gold text
+- A small "Clear" link/button resets the total back to the minimum raise
+- If the running total exceeds the player's chip stack, cap at chip stack (effectively all-in)
+- If the running total is below minimum raise, the Raise button is disabled
+- Grey out / disable chip denominations that would push the total above the player's stack
+
+**Row 2 — Smart presets:** One-tap shortcuts for common bet sizes.
+
+```
+[ Min ] [ ½ Pot ] [ Pot ] [ All In ]
+```
+
+- **Min:** Sets raise to `minimumBet` (currentBet + BB or minimum raise increment)
+- **½ Pot:** Sets raise to `Math.floor(pot / 2)` (or minimum raise if half pot is below it)
+- **Pot:** Sets raise to `pot` (or all chips if pot exceeds stack)
+- **All In:** Sets raise to player's entire chip stack
+- These are styled as pill buttons (not chips) — `bg-white/5 border border-white/10 text-xs` — subtler than the chip row
+- Tapping a preset **replaces** the running total (doesn't add to it)
+
+**Confirm button:** The existing "Raise {amount}" button stays below, now showing the built-up total. Gold styling, same as current.
+
+### Full layout when it's your turn and RAISE is allowed
+
+```
+┌─────────────────────────────────────────────────────┐
+│  [timer bar ████████████░░░░░░░░░░░░░░░░░░░]  12s  │
+│                                                     │
+│  [ Fold ]   [ Check/Call ]              [ All In ]  │
+│                                                     │
+│  ⑤  ⑩  ㉕  ㊿  ⓵⓪⓪  ⓶⓪⓪     ↩ Clear │
+│                                                     │
+│  [ Min ] [ ½ Pot ] [ Pot ]                          │
+│                                                     │
+│        ▶ Raise to: 150  [ RAISE ]                   │
+└─────────────────────────────────────────────────────┘
+```
+
+When RAISE is **not** allowed (e.g., only CHECK/FOLD/CALL), the chip row and preset row are hidden — just the action buttons show like today.
+
+### Requirements
+
+1. **Replace the slider** — Remove the `<input type="range">` entirely. Replace with chip denomination row + preset row + running total display.
+
+2. **Chip denomination row:**
+   - Denominations: `[5, 10, 25, 50, 100, 200]`
+   - Style each as a circular button: `w-9 h-9` (36px), `rounded-full`, dark bg (`rgba(5,10,24,0.85)`), gold border (`border border-yellow-700/40`), gold text center, `text-xs font-bold`
+   - On hover: slight scale up (`scale-110`) and brighter border
+   - On tap: brief press animation (`scale-95` for 100ms), add denomination to `raiseAmount` state
+   - Disabled state: `opacity-30 pointer-events-none` when chip would exceed player's stack
+   - Use CSS vars for sizing so mobile responsive (J8) scales them down
+
+3. **Running total display:**
+   - Show between chip row and confirm button: `"Raise to: {amount}"` in gold
+   - "Clear" link next to chip row — resets to `minimumBet`
+   - If total < minimumBet: show warning text, disable Raise button
+   - If total >= chips: show "All In" instead of amount
+
+4. **Preset row:**
+   - Buttons: `Min`, `½ Pot`, `Pot`, `All In`
+   - Each sets `raiseAmount` directly (replaces, doesn't add)
+   - Pill style: `rounded-full px-3 py-1 text-[10px] bg-white/5 border border-white/10`
+   - Active/selected state: gold border when the current total matches that preset
+   - Calculate: Min = `minimumBet`, Half Pot = `max(minimumBet, floor(pot / 2))`, Pot = `min(pot, chips)`, All In = `chips`
+
+5. **Keep existing action buttons** — Fold, Check, Call stay exactly as they are. They are NOT part of this redesign.
+
+6. **Keep the timer bar** — No changes to the timer. It stays at the top of the controls.
+
+7. **Mobile responsive** — Use CSS vars from J8. Chips scale to `w-7 h-7` (28px) on mobile landscape. Preset pills scale font down. The layout should wrap gracefully on narrow screens.
+
+8. **State management** — All state stays local to `BettingControls.tsx` (the `raiseAmount` useState is already there). No gameStore changes needed.
+
+9. **Fix Mark's QA bugs while you're here:**
+   - **J6-BUG-01:** Add validation that BB must equal 2x SB in CreateTableModal — reject mismatch on submit
+   - **J6-BUG-02:** Add validation that SB must be >= 1 (not 0) in CreateTableModal
+   - **J2-TESTID:** Add `data-testid="round-counter"` to the round number element in GameTable.tsx
+   - **J3-TESTID:** Add `data-testid="seat-balance-{seatIndex}"` to the chip balance element in PlayerSeat.tsx
+
+### Files to modify
+
+- `apps/web/src/components/game/BettingControls.tsx` — full redesign of RAISE section
+- `apps/web/src/index.css` — CSS vars for chip sizing on mobile (e.g., `--chip-btn-size`)
+- `apps/web/src/components/lobby/CreateTableModal.tsx` — fix J6-BUG-01 and J6-BUG-02
+- `apps/web/src/pages/GameTable.tsx` — add `data-testid="round-counter"`
+- `apps/web/src/components/game/PlayerSeat.tsx` — add `data-testid="seat-balance-{n}"`
+
+### Deliverables
+
+- [ ] Slider removed, chip denomination buttons render correctly
+- [ ] Tapping chips builds raise total, Clear resets it
+- [ ] Disabled chips when would exceed stack
+- [ ] Preset buttons (Min, ½ Pot, Pot, All In) set raise total on tap
+- [ ] Running total display with gold text
+- [ ] Raise button disabled when total < minimum
+- [ ] Mobile responsive (chips and presets scale down on landscape phones)
+- [ ] Fold / Check / Call / All In buttons unchanged
+- [ ] Timer bar unchanged
+- [ ] J6-BUG-01 and J6-BUG-02 fixed
+- [ ] J2-TESTID and J3-TESTID added
+
+### Out of scope
+
+- Custom chip artwork (use CSS-styled circles for now — Doni will design chip assets later)
+- Drag-and-drop chip stacking animation
+- Sound effects on chip tap
+- Changing the backend bet validation (server doesn't care how the amount was built)
+- Haptic feedback on mobile
+
+**Estimated effort:** 1 day
+
+---
+
 ## Sprint Progress — Joni's Delivery Log
 
 **Last updated:** April 1, 2026
-**Status:** Sprint complete — J1–J8 delivered, J4 partial (blocked on Soni S1)
+**Status:** Sprint complete — J1–J9 delivered
 
 ---
 
 ### Completed
+
+#### J9 — Redesign Betting Controls (Chip Stack + Presets) ✅
+- Removed slider from RAISE section entirely
+- Chip denomination row: `[5, 10, 25, 50, 100, 200]` circular buttons (`var(--chip-btn-size)` = 36px desktop / 28px mobile); each tap adds to running total; chips that would exceed stack are `opacity-25 cursor-not-allowed`; 100ms `scale(0.88)` press animation via `pressedChip` state
+- Preset row: Min / ½ Pot / Pot / All In pill buttons — tap to replace (not add) running total; active state (gold border + gold text) when `raiseAmount === preset.value`; preset calculations: `Min = minimumBet`, `½ Pot = max(minimumBet, floor(pot/2))`, `Pot = min(pot, chips)`, `All In = chips`
+- Running total: `"Raise to: {amount}"` with gold `font-outfit font-black` amount; shows "All In" text when `raiseAmount >= chips`; Clear link resets to `minimumBet`
+- Raise button disabled (`opacity-30`) when `raiseAmount < minimumBet`; shows "Raise (All In)" when at chip cap
+- Fold / Check / Call / All In action buttons and timer bar completely unchanged
+- CSS vars added: `--chip-btn-size`, `--chip-btn-font-size`, `--preset-padding`, `--preset-font-size` — all override in `@media (max-height: 500px) and (orientation: landscape)`
+- **J6-BUG-01 fixed:** `handleBigBlindChange` now immediately shows "Big blind must be at least 2" when `bb < 2` (previously cleared the error silently)
+- **J6-BUG-02 fixed:** `handleSmallBlindChange` now immediately shows "Small blind must be at least 1" when `sb < 1` (previously cleared the error without setting a new one)
+- **J2-TESTID:** `data-testid="round-counter"` added to round number `<span>` in `GameTable.tsx`
+- **J3-TESTID:** `data-testid="seat-balance-{player.seatIndex}"` added to chip badge div in `PlayerSeat.tsx`
+- Commit: `feat: redesign betting controls with chip stack and presets`
 
 #### J8 — Mobile Responsive Game View (Landscape) ✅
 - Approach: CSS custom property overrides inside `@media (max-height: 500px) and (orientation: landscape)` — no JS resize logic, zero impact on desktop
