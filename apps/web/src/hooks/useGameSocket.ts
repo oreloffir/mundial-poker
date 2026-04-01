@@ -213,12 +213,14 @@ export function useGameSocket(tableId: string) {
 
     socket.on('round:pause', () => {
       store.getState().setActiveTurn(null)
-      store.getState().setMyTurn(false)
-      store.getState().setBetPrompt(null)
       store.getState().setWaitingForResults(true)
     })
 
     socket.on('round:results', (payload) => {
+      // Definitively end the betting phase — by the time results arrive,
+      // all bets are settled and no new bet:prompt can be in flight
+      store.getState().setMyTurn(false)
+      store.getState().setBetPrompt(null)
       store.getState().setWaitingForResults(false)
       const resultsPayload = payload as { fixtures?: unknown[] }
       if (resultsPayload.fixtures) {
