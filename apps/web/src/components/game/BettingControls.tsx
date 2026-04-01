@@ -73,8 +73,10 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
         {isAllowed('FOLD') && (
           <button
             onClick={() => onAction('FOLD', 0)}
-            className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 hover:translate-y-[-2px]"
+            className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-2px]"
             style={{
+              padding: 'var(--btn-padding)',
+              fontSize: 'var(--btn-font-size)',
               background: 'rgba(231,76,60,0.1)',
               color: 'var(--red)',
               border: '1px solid rgba(231,76,60,0.3)',
@@ -87,8 +89,10 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
         {isAllowed('CHECK') && (
           <button
             onClick={() => onAction('CHECK', 0)}
-            className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 hover:translate-y-[-2px]"
+            className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-2px]"
             style={{
+              padding: 'var(--btn-padding)',
+              fontSize: 'var(--btn-font-size)',
               background: 'rgba(255,255,255,0.04)',
               color: 'var(--text)',
               border: '1px solid rgba(255,255,255,0.1)',
@@ -101,8 +105,10 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
         {isAllowed('CALL') && (
           <button
             onClick={() => onAction('CALL', prompt.currentBet)}
-            className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 hover:translate-y-[-2px]"
+            className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-2px]"
             style={{
+              padding: 'var(--btn-padding)',
+              fontSize: 'var(--btn-font-size)',
               background: 'rgba(52,152,219,0.1)',
               color: 'var(--blue)',
               border: '1px solid rgba(52,152,219,0.3)',
@@ -121,13 +127,14 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
               step={Math.max(1, Math.floor(prompt.minimumBet / 2))}
               value={raiseAmount}
               onChange={(e) => setRaiseAmount(parseInt(e.target.value, 10))}
-              className="w-24"
-              style={{ accentColor: 'var(--gold)' }}
+              style={{ width: 'var(--slider-w)', accentColor: 'var(--gold)' }}
             />
             <button
               onClick={() => onAction('RAISE', raiseAmount)}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 hover:translate-y-[-2px]"
+              className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-2px]"
               style={{
+                padding: 'var(--btn-padding)',
+                fontSize: 'var(--btn-font-size)',
                 background: 'rgba(212,168,67,0.1)',
                 color: 'var(--gold)',
                 border: '1px solid rgba(212,168,67,0.3)',
@@ -141,7 +148,8 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
         {isAllowed('ALL_IN') && (
           <button
             onClick={() => onAction('ALL_IN', prompt.chips)}
-            className="wpc-btn-primary text-sm py-2.5 px-5"
+            className="wpc-btn-primary"
+            style={{ padding: 'var(--btn-padding)', fontSize: 'var(--btn-font-size)' }}
           >
             All In ({prompt.chips})
           </button>

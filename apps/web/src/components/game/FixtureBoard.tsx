@@ -56,7 +56,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
               border: finished
                 ? '1px solid rgba(212, 168, 67, 0.45)'
                 : '1px solid rgba(255, 255, 255, 0.07)',
-              width: '72px',
+              width: 'var(--fixture-tile-w)',
               boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
               animation: !showAll ? 'tile-reveal 0.3s ease-out both' : undefined,
             }}
@@ -130,7 +130,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
 
             {/* Event icons */}
             {events.length > 0 && (
-              <div className="flex gap-0.5 pb-1.5">
+              <div className="mobile-landscape-hide flex gap-0.5 pb-1.5">
                 {events.map((e, i) => (
                   <span key={i} className="text-[9px]">
                     {e}

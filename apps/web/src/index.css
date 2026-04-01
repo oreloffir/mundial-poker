@@ -363,3 +363,57 @@ input {
     opacity: 0.3;
   }
 }
+
+/* ============ MOBILE LANDSCAPE RESPONSIVE ============ */
+
+:root {
+  --avatar-size: 56px;
+  --card-w: 60px;
+  --card-h: 84px;
+  --card-flag-size: 1.5rem;
+  --card-code-size: 9px;
+  --ring-scale: 1;
+  --fixture-tile-w: 72px;
+  --top-bar-h: 48px;
+  --top-bar-px: 20px;
+  --btn-padding: 10px 20px;
+  --btn-font-size: 0.875rem;
+  --slider-w: 96px;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --avatar-size: 40px;
+    --card-w: 44px;
+    --card-h: 62px;
+    --card-flag-size: 1rem;
+    --card-code-size: 7px;
+    --ring-scale: 0.765;
+    --fixture-tile-w: 56px;
+    --top-bar-h: 36px;
+    --top-bar-px: 8px;
+    --btn-padding: 6px 12px;
+    --btn-font-size: 0.75rem;
+    --slider-w: 72px;
+  }
+
+  .mobile-landscape-hide {
+    display: none !important;
+  }
+
+  .poker-table-pitch {
+    width: min(85vw, calc((100vh - 36px) * 1.6)) !important;
+    max-height: calc(100vh - 36px) !important;
+  }
+}
+
+/* Portrait orientation hint — hidden by default, shown on portrait mobile */
+.portrait-hint {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .portrait-hint {
+    display: flex;
+  }
+}

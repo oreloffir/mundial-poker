@@ -8,6 +8,11 @@ import { GameOverOverlay } from '@/components/game/GameOverOverlay'
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 
+function formatChips(chips: number): string {
+  if (chips >= 1000) return `${(chips / 1000).toFixed(chips % 1000 === 0 ? 0 : 1)}K`
+  return String(chips)
+}
+
 export function GameTable() {
   const { id: tableId } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -33,6 +38,7 @@ export function GameTable() {
   }, [reset])
 
   const [botLoading, setBotLoading] = useState(false)
+  const [portraitHintDismissed, setPortraitHintDismissed] = useState(false)
 
   if (!tableId) {
     navigate('/lobby')
@@ -73,10 +79,31 @@ export function GameTable() {
       className="h-screen w-screen overflow-hidden relative"
       style={{ background: 'var(--bg-deep)' }}
     >
+      {/* Portrait rotation hint — CSS-controlled, JS-dismissible */}
+      {!portraitHintDismissed && (
+        <div
+          className="portrait-hint fixed inset-0 z-50 items-center justify-center flex-col gap-4"
+          style={{ background: 'rgba(5,10,24,0.92)', backdropFilter: 'blur(8px)' }}
+        >
+          <span style={{ fontSize: '3rem' }}>&#8635;</span>
+          <p className="font-outfit font-bold text-base" style={{ color: 'var(--gold)' }}>
+            Rotate your device to landscape
+          </p>
+          <button
+            onClick={() => setPortraitHintDismissed(true)}
+            className="wpc-btn-ghost text-xs py-1 px-4 mt-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Top bar - floating over table */}
       <div
-        className="absolute top-0 left-0 right-0 z-30 px-5 h-12 flex items-center justify-between"
+        className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between"
         style={{
+          height: 'var(--top-bar-h)',
+          padding: '0 var(--top-bar-px)',
           background: 'rgba(5,10,24,0.5)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid var(--border)',
@@ -122,7 +149,7 @@ export function GameTable() {
             <span style={{ color: 'var(--text-dim)' }}>
               Chips{' '}
               <span className="font-bold" style={{ color: 'var(--green-glow)' }}>
-                {myPlayer.chips}
+                {formatChips(myPlayer.chips)}
               </span>
             </span>
           )}
@@ -131,8 +158,9 @@ export function GameTable() {
 
       {error && (
         <div
-          className="absolute top-14 left-5 right-5 z-30 p-3 rounded-lg text-sm flex items-center justify-between"
+          className="absolute left-5 right-5 z-30 p-3 rounded-lg text-sm flex items-center justify-between"
           style={{
+            top: 'calc(var(--top-bar-h) + 4px)',
             background: 'rgba(231,76,60,0.15)',
             border: '1px solid rgba(231,76,60,0.3)',
             color: 'var(--red)',

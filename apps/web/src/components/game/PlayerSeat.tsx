@@ -54,8 +54,8 @@ function FaceDownCard() {
     <div
       className="rounded-[10px] overflow-hidden"
       style={{
-        width: '60px',
-        height: '84px',
+        width: 'var(--card-w)',
+        height: 'var(--card-h)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,67,0.2)',
         flexShrink: 0,
       }}
@@ -75,16 +75,16 @@ function FaceUpMiniCard({ card }: { readonly card: TeamCard }) {
     <div
       className="rounded-[10px] flex flex-col items-center justify-center gap-1 overflow-hidden"
       style={{
-        width: '60px',
-        height: '84px',
+        width: 'var(--card-w)',
+        height: 'var(--card-h)',
         background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
         border: '1.5px solid var(--border)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
         flexShrink: 0,
       }}
     >
-      <span className="text-2xl leading-none">{card.team.flagUrl}</span>
-      <span className="text-[9px] font-bold text-white leading-none tracking-wide">{card.team.code}</span>
+      <span style={{ fontSize: 'var(--card-flag-size)', lineHeight: 1 }}>{card.team.flagUrl}</span>
+      <span style={{ fontSize: 'var(--card-code-size)', fontWeight: 'bold', color: 'white', lineHeight: 1, letterSpacing: '0.05em' }}>{card.team.code}</span>
     </div>
   )
 }
@@ -133,8 +133,8 @@ export function PlayerSeat({
   if (!player) {
     return (
       <div
-        className="w-14 h-14 rounded-full flex items-center justify-center"
-        style={{ border: '2px dashed rgba(212,168,67,0.12)' }}
+        className="rounded-full flex items-center justify-center"
+        style={{ width: 'var(--avatar-size)', height: 'var(--avatar-size)', border: '2px dashed rgba(212,168,67,0.12)' }}
       >
         <span className="text-[10px]" style={{ color: 'var(--text-muted)', opacity: 0.4 }}>
           Empty
@@ -225,8 +225,13 @@ export function PlayerSeat({
             <svg
               width={RING_SIZE}
               height={RING_SIZE}
-              className="absolute -inset-1"
-              style={{ transform: 'rotate(-90deg)' }}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%) scale(var(--ring-scale)) rotate(-90deg)',
+                transformOrigin: '50% 50%',
+              }}
             >
               <circle
                 cx={RING_SIZE / 2}
@@ -251,8 +256,10 @@ export function PlayerSeat({
             </svg>
           )}
           <div
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-sm font-black font-outfit transition-all duration-300 ${dimmed ? 'opacity-25 grayscale' : ''}`}
+            className={`rounded-full flex items-center justify-center text-sm font-black font-outfit transition-all duration-300 ${dimmed ? 'opacity-25 grayscale' : ''}`}
             style={{
+              width: 'var(--avatar-size)',
+              height: 'var(--avatar-size)',
               background: `linear-gradient(145deg, ${avatarColor}33, ${avatarColor}11)`,
               border: isWinner
                 ? '2.5px solid var(--gold)'

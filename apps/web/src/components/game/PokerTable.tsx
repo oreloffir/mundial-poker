@@ -249,7 +249,7 @@ export function PokerTable({
       {/* Table image */}
       <div className="relative w-full h-full flex items-center justify-center">
         <div
-          className="relative"
+          className="relative poker-table-pitch"
           style={{ width: '85vw', maxWidth: '1100px', aspectRatio: '16 / 10' }}
         >
           <img
