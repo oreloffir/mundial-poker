@@ -213,6 +213,8 @@ export function useGameSocket(tableId: string) {
 
     socket.on('round:pause', () => {
       store.getState().setActiveTurn(null)
+      store.getState().setMyTurn(false)
+      store.getState().setBetPrompt(null)
       store.getState().setWaitingForResults(true)
     })
 
