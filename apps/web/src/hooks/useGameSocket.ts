@@ -115,6 +115,9 @@ export function useGameSocket(tableId: string) {
         myTurn: false,
         potFlashKey: 0,
         waitingForResults: false,
+        // J4: wire real blind seat indices from Soni's S1 payload
+        sbSeatIndex: payload.sbSeatIndex ?? null,
+        bbSeatIndex: payload.bbSeatIndex ?? null,
         // New round state set atomically with the reset (J2 — roundNumber updates first)
         currentRound: {
           id: payload.roundId,
@@ -128,6 +131,14 @@ export function useGameSocket(tableId: string) {
           dealerSeatIndex: payload.dealerSeatIndex,
           fixtures: [],
         },
+      })
+    })
+
+    socket.on('blinds:posted', (payload) => {
+      store.getState().setPlayerAction(payload.userId, {
+        action: 'CALL',
+        amount: payload.amount,
+        timestamp: Date.now(),
       })
     })
 
@@ -264,6 +275,7 @@ export function useGameSocket(tableId: string) {
       socket.emit('table:leave', { tableId })
       socket.off('table:state')
       socket.off('round:start')
+      socket.off('blinds:posted')
       socket.off('board:reveal')
       socket.off('bet:prompt')
       socket.off('bet:update')

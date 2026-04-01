@@ -81,6 +81,11 @@ export interface ServerToClientEvents {
     readonly winnerId: string
     readonly finalStandings: readonly TablePlayer[]
   }) => void
+  'blinds:posted': (payload: {
+    readonly userId: string
+    readonly amount: number
+    readonly type: 'SB' | 'BB'
+  }) => void
   error: (payload: { readonly code: string; readonly message: string }) => void
 }
 

@@ -39,7 +39,6 @@ interface GameState {
   readonly revealedFixtureCount: number
   readonly potFlashKey: number
   readonly error: string | null
-  // J4: blind position seat indices (null until round:start provides them)
   readonly sbSeatIndex: number | null
   readonly bbSeatIndex: number | null
   readonly setTable: (table: Table) => void
@@ -80,9 +79,8 @@ const initialState = {
   revealedFixtureCount: -1,
   potFlashKey: 0,
   error: null,
-  // J4: stub with hardcoded values — swap to real socket data once Soni's S1 merges
-  sbSeatIndex: 1 as number | null,
-  bbSeatIndex: 2 as number | null,
+  sbSeatIndex: null as number | null,
+  bbSeatIndex: null as number | null,
 }
 
 export const useGameStore = create<GameState>((set) => ({
