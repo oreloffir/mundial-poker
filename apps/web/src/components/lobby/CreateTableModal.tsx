@@ -9,11 +9,52 @@ interface CreateTableModalProps {
 export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) {
   const [name, setName] = useState('')
   const [startingChips, setStartingChips] = useState('500')
+  const [smallBlind, setSmallBlind] = useState('5')
+  const [bigBlind, setBigBlind] = useState('10')
+  const [blindError, setBlindError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const handleSmallBlindChange = (value: string) => {
+    setSmallBlind(value)
+    setBlindError(null)
+    const sb = parseInt(value, 10)
+    if (!isNaN(sb) && sb >= 1) {
+      setBigBlind(String(sb * 2))
+    }
+  }
+
+  const handleBigBlindChange = (value: string) => {
+    setBigBlind(value)
+    setBlindError(null)
+    const bb = parseInt(value, 10)
+    if (!isNaN(bb) && bb >= 2) {
+      if (bb % 2 === 0) {
+        setSmallBlind(String(bb / 2))
+      } else {
+        setBlindError('Big blind must be exactly 2× small blind')
+      }
+    }
+  }
+
+  const validateBlinds = (): string | null => {
+    const sb = parseInt(smallBlind, 10)
+    const bb = parseInt(bigBlind, 10)
+    const chips = parseInt(startingChips, 10)
+    if (!Number.isInteger(sb) || sb < 1) return 'Small blind must be a positive integer'
+    if (!Number.isInteger(bb) || bb < 2) return 'Big blind must be at least 2'
+    if (bb !== sb * 2) return 'Big blind must be exactly 2× small blind'
+    if (bb >= chips) return 'Big blind must be less than starting chips'
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const validationError = validateBlinds()
+    if (validationError) {
+      setBlindError(validationError)
+      return
+    }
     setIsSubmitting(true)
     setError(null)
 
@@ -21,6 +62,8 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
       const response = await api.post('/tables', {
         name: name.trim(),
         startingChips: parseInt(startingChips, 10),
+        smallBlind: parseInt(smallBlind, 10),
+        bigBlind: parseInt(bigBlind, 10),
       })
       const table = response.data?.data?.table
       if (!table?.id) {
@@ -106,6 +149,55 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
               className="w-full px-4 py-3 rounded-xl text-sm"
             />
           </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label
+                htmlFor="smallBlind"
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--text-dim)' }}
+              >
+                Small Blind
+              </label>
+              <input
+                id="smallBlind"
+                type="number"
+                value={smallBlind}
+                onChange={(e) => handleSmallBlindChange(e.target.value)}
+                required
+                min={1}
+                className="w-full px-4 py-3 rounded-xl text-sm"
+              />
+            </div>
+            <div className="flex-1">
+              <label
+                htmlFor="bigBlind"
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--text-dim)' }}
+              >
+                Big Blind
+              </label>
+              <input
+                id="bigBlind"
+                type="number"
+                value={bigBlind}
+                onChange={(e) => handleBigBlindChange(e.target.value)}
+                required
+                min={2}
+                className="w-full px-4 py-3 rounded-xl text-sm"
+              />
+            </div>
+          </div>
+
+          {blindError && (
+            <p className="text-xs" style={{ color: 'var(--red)', marginTop: '-8px' }}>
+              {blindError}
+            </p>
+          )}
+
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Big blind is automatically set to 2× small blind.
+          </p>
 
           <div className="flex gap-3 pt-2">
             <button

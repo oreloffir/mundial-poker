@@ -25,7 +25,7 @@ export type MatchStage =
 
 export type FixtureStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'DEMO'
 
-export type BetAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'ALL_IN'
+export type BetAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'ALL_IN' | 'SMALL_BLIND' | 'BIG_BLIND'
 
 export interface User {
   readonly id: string

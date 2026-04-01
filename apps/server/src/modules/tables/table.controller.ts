@@ -18,9 +18,10 @@ export function createTableRouter(io: Server): Router {
     bigBlind: z.number().int().min(2).max(2000).optional(),
   })
 
-  router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+  router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tables = await tableService.listTables()
+      const includeCompleted = req.query.all === 'true'
+      const tables = await tableService.listTables(includeCompleted)
       res.json({ success: true, data: { tables } })
     } catch (error) {
       next(error)

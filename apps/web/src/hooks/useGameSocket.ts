@@ -100,22 +100,35 @@ export function useGameSocket(tableId: string) {
     })
 
     socket.on('round:start', (payload) => {
-      store.getState().setRound({
-        id: payload.roundId,
-        tableId: tableId,
-        roundNumber: payload.roundNumber,
-        status: 'BOARD_REVEALED',
-        board: [],
-        hands: [],
-        bettingRounds: [],
-        pot: 0,
-        dealerSeatIndex: payload.dealerSeatIndex,
+      // J1 + J2 + J5: single atomic update — clears all stale state and sets new round
+      // in one render tick, preventing intermediate renders with stale data
+      store.setState({
+        // Clear all card/showdown/betting state (J5)
         fixtures: [],
+        revealedFixtureCount: 0,
+        myHand: payload.cards.map(toTeamCard),
+        showdownResults: null,
+        playerActions: {},
+        foldedPlayerIds: [],
+        activeTurn: null,
+        betPrompt: null,
+        myTurn: false,
+        potFlashKey: 0,
+        waitingForResults: false,
+        // New round state set atomically with the reset (J2 — roundNumber updates first)
+        currentRound: {
+          id: payload.roundId,
+          tableId,
+          roundNumber: payload.roundNumber,
+          status: 'BOARD_REVEALED' as never,
+          board: [],
+          hands: [],
+          bettingRounds: [],
+          pot: 0,
+          dealerSeatIndex: payload.dealerSeatIndex,
+          fixtures: [],
+        },
       })
-      store.getState().setMyHand(payload.cards.map(toTeamCard))
-      store.getState().setShowdownResults(null)
-      store.getState().setWaitingForResults(false)
-      store.getState().setRevealedFixtureCount(0)
     })
 
     socket.on('board:reveal', (fixtureData) => {
@@ -201,6 +214,21 @@ export function useGameSocket(tableId: string) {
       store.getState().setShowdownResults(results)
     })
 
+    socket.on('players:update', (playerChips) => {
+      const table = store.getState().table
+      if (table) {
+        const updates = playerChips as { userId: string; chips: number }[]
+        const chipMap = new Map(updates.map((u) => [u.userId, u.chips]))
+        store.getState().setTable({
+          ...table,
+          players: table.players.map((p) => {
+            const newChips = chipMap.get(p.userId)
+            return newChips !== undefined ? { ...p, chips: newChips } : p
+          }),
+        })
+      }
+    })
+
     socket.on('player:joined', (player) => {
       const table = store.getState().table
       if (table) {
@@ -242,6 +270,7 @@ export function useGameSocket(tableId: string) {
       socket.off('round:pause')
       socket.off('round:results')
       socket.off('round:showdown')
+      socket.off('players:update')
       socket.off('player:joined')
       socket.off('player:left')
       socket.off('game:over')

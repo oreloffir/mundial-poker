@@ -31,6 +31,16 @@ export function clearBettingState(roundId: string): void {
   activeBettingStates.delete(roundId)
 }
 
+interface BlindSeedInfo {
+  readonly sbSeatIndex: number
+  readonly bbSeatIndex: number
+  readonly sbAmount: number
+  readonly bbAmount: number
+  readonly dealerSeatIndex: number
+  readonly smallBlind: number
+  readonly bigBlind: number
+}
+
 export function initBettingRound(
   roundId: string,
   players: readonly {
@@ -40,8 +50,9 @@ export function initBettingRound(
     readonly hasFolded: boolean
   }[],
   bettingRoundNumber: number,
+  blindInfo?: BlindSeedInfo,
 ): BettingState {
-  const playerStates: readonly PlayerState[] = players.map((p) => ({
+  let playerStates: PlayerState[] = players.map((p) => ({
     userId: p.userId,
     seatIndex: p.seatIndex,
     hasFolded: p.hasFolded,
@@ -50,15 +61,32 @@ export function initBettingRound(
     hasActed: p.hasFolded,
   }))
 
+  let currentBet = 0
+  let pot = 0
+
+  if (bettingRoundNumber === 1 && blindInfo) {
+    playerStates = playerStates.map((p) => {
+      if (p.seatIndex === blindInfo.sbSeatIndex) {
+        return { ...p, totalBet: blindInfo.sbAmount, hasActed: false }
+      }
+      if (p.seatIndex === blindInfo.bbSeatIndex) {
+        return { ...p, totalBet: blindInfo.bbAmount, hasActed: false }
+      }
+      return p
+    })
+    currentBet = blindInfo.bbAmount
+    pot = blindInfo.sbAmount + blindInfo.bbAmount
+  }
+
   const firstActiveIndex = playerStates.findIndex((p) => !p.hasFolded && p.chipStack > 0)
 
   const state: BettingState = {
     roundId,
     bettingRound: bettingRoundNumber,
-    currentBet: 0,
+    currentBet,
     currentPlayerIndex: firstActiveIndex >= 0 ? firstActiveIndex : 0,
     playerStates,
-    pot: 0,
+    pot,
   }
 
   activeBettingStates.set(roundId, state)

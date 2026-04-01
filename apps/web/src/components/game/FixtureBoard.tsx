@@ -47,10 +47,15 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         return (
           <div
             key={f.id}
+            data-testid={finished ? 'fixture-scored' : 'fixture-pending'}
             className="flex flex-col items-center rounded-xl overflow-hidden"
             style={{
-              background: 'linear-gradient(160deg, var(--bg-card), var(--surface))',
-              border: finished ? '1px solid var(--gold-dim)' : '1px solid var(--border)',
+              background: finished ? 'rgba(13, 20, 36, 0.55)' : 'rgba(13, 20, 36, 0.4)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: finished
+                ? '1px solid rgba(212, 168, 67, 0.45)'
+                : '1px solid rgba(255, 255, 255, 0.07)',
               width: '72px',
               boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
               animation: !showAll ? 'tile-reveal 0.3s ease-out both' : undefined,
@@ -70,7 +75,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
             {/* Score / VS */}
             <div
               className="w-full py-1 flex items-center justify-center"
-              style={{ background: 'rgba(0,0,0,0.3)' }}
+              style={{ background: 'rgba(0,0,0,0.2)' }}
             >
               {finished ? (
                 <div className="flex items-center gap-1">

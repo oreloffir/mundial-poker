@@ -30,6 +30,15 @@ const seatStyles: readonly React.CSSProperties[] = [
   { top: '38%', right: '5%', transform: 'translate(50%, -50%)' },
 ]
 
+// Direction the rail glow should radiate from (toward the table center)
+const seatGlowOrigin: readonly string[] = [
+  'top',          // seat 0: bottom-center — glow from top (table side)
+  'right',        // seat 1: left side — glow from right
+  'bottom right', // seat 2: top-left — glow from bottom-right
+  'bottom left',  // seat 3: top-right — glow from bottom-left
+  'left',         // seat 4: right side — glow from left
+]
+
 function PotDisplay({
   pot,
   isAnimatingOut,
@@ -77,6 +86,7 @@ function PotDisplay({
 function WinnerBanner({ name, pot }: { readonly name: string; readonly pot: number }) {
   return (
     <div
+      data-testid="winner-banner"
       className="flex flex-col items-center gap-1 px-6 py-3 rounded-xl"
       style={{
         background: 'rgba(5,10,24,0.85)',
@@ -99,6 +109,7 @@ function WinnerBanner({ name, pot }: { readonly name: string; readonly pot: numb
 function WaitingBadge() {
   return (
     <div
+      data-testid="waiting-badge"
       className="flex items-center gap-2 px-4 py-2 rounded-full"
       style={{ background: 'rgba(5,10,24,0.8)', border: '1px solid var(--border)' }}
     >
@@ -127,6 +138,17 @@ export function PokerTable({
   const playerActions = useGameStore((s) => s.playerActions)
   const foldedPlayerIds = useGameStore((s) => s.foldedPlayerIds)
   const revealedFixtureCount = useGameStore((s) => s.revealedFixtureCount)
+  const sbSeatIndex = useGameStore((s) => s.sbSeatIndex)
+  const bbSeatIndex = useGameStore((s) => s.bbSeatIndex)
+
+  // Preload card back images to prevent flash on first render
+  useEffect(() => {
+    const srcs = ['/images/card-back-sm.png', '/images/card-back-md.png']
+    srcs.forEach((src) => {
+      const img = new Image()
+      img.src = src
+    })
+  }, [])
 
   const [revealedUserIds, setRevealedUserIds] = useState<readonly string[]>([])
   const [winnerId, setWinnerId] = useState<string | null>(null)
@@ -190,6 +212,20 @@ export function PokerTable({
     return () => timers.forEach(clearTimeout)
   }, [showdownResults, players])
 
+  // J1: auto-dismiss safety — banner clears itself after max display time
+  // so it can never bleed into the next round if round:start resets are slow
+  useEffect(() => {
+    if (!showWinnerBanner) return
+    const maxDisplayMs = 5000 + players.length * 1500
+    const timer = setTimeout(() => {
+      if (!mountedRef.current) return
+      setShowWinnerBanner(false)
+      setWinnerId(null)
+      setWinnerName(null)
+    }, maxDisplayMs)
+    return () => clearTimeout(timer)
+  }, [showWinnerBanner, players.length])
+
   const revealedResultMap = new Map<string, ShowdownResult>()
   if (showdownResults) {
     for (const r of showdownResults) {
@@ -223,17 +259,40 @@ export function PokerTable({
             draggable={false}
           />
 
-          {/* Center content: pot + fixtures + winner banner */}
+          {/* Pot — lives on the center circle */}
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-            style={{ padding: '18% 22%' }}
+            className="absolute pointer-events-none"
+            style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           >
-            <div className="pointer-events-auto flex flex-col items-center gap-2">
+            {/* Subtle green glow echoing the center circle */}
+            <div
+              className="absolute"
+              style={{
+                width: 130,
+                height: 130,
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(26,110,58,0.2) 0%, transparent 70%)',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+              }}
+            />
+            <div className="pointer-events-auto relative flex flex-col items-center">
               {showWinnerBanner && winnerName ? (
                 <WinnerBanner name={winnerName} pot={pot} />
               ) : (
                 <PotDisplay pot={pot} isAnimatingOut={potAnimatingOut} />
               )}
+            </div>
+          </div>
+
+          {/* Fixtures — upper half of pitch, above center circle */}
+          <div
+            className="absolute pointer-events-none flex flex-col items-center gap-2"
+            style={{ top: '22%', left: '50%', transform: 'translateX(-50%)' }}
+          >
+            <div className="pointer-events-auto">
               <FixtureBoard fixtures={fixtures as never} revealedCount={revealedFixtureCount} />
               {waitingForResults && <WaitingBadge />}
             </div>
@@ -250,9 +309,31 @@ export function PokerTable({
             const isMe = player?.userId === currentUserId
             const playerCards = isMe ? myHand : null
             const hasCards = isInRound && !!player && !player.isEliminated
+            const blindPosition =
+              index === sbSeatIndex ? 'SB' : index === bbSeatIndex ? 'BB' : null
 
             return (
-              <div key={index} className="absolute z-10" style={style}>
+              <div
+                key={index}
+                className="absolute z-10"
+                style={{
+                  ...style,
+                  ...(player
+                    ? { filter: 'drop-shadow(0 0 14px rgba(212,168,67,0.2))' }
+                    : {}),
+                }}
+              >
+                {/* Rail glow connector — directional ambient halo for occupied seats */}
+                {player && (
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(ellipse at ${seatGlowOrigin[index]}, rgba(212,168,67,0.12) 0%, transparent 70%)`,
+                      borderRadius: '50%',
+                      transform: 'scale(1.6)',
+                    }}
+                  />
+                )}
                 <PlayerSeat
                   player={player ?? null}
                   isCurrentUser={isMe}
@@ -265,6 +346,7 @@ export function PokerTable({
                   isWinner={isWinner}
                   cards={playerCards}
                   hasCards={hasCards}
+                  blindPosition={blindPosition}
                 />
               </div>
             )

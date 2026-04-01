@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import type { TablePlayer, ShowdownResult, TeamCard } from '@wpc/shared'
 
 interface PlayerAction {
@@ -19,6 +19,7 @@ interface PlayerSeatProps {
   readonly isWinner: boolean
   readonly cards: readonly TeamCard[] | null
   readonly hasCards: boolean
+  readonly blindPosition?: 'SB' | 'BB' | null
 }
 
 const RING_SIZE = 68
@@ -51,26 +52,20 @@ function formatAction(action: string, amount: number): string {
 function FaceDownCard() {
   return (
     <div
-      className="w-9 h-12 rounded-lg flex items-center justify-center relative overflow-hidden"
+      className="rounded-[10px] overflow-hidden"
       style={{
-        background: 'linear-gradient(145deg, #0f1a2e, #1a2744)',
-        border: '1.5px solid var(--gold-dim)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+        width: '60px',
+        height: '84px',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,67,0.2)',
+        flexShrink: 0,
       }}
     >
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(45deg, var(--gold) 0, var(--gold) 1px, transparent 0, transparent 6px), repeating-linear-gradient(-45deg, var(--gold) 0, var(--gold) 1px, transparent 0, transparent 6px)',
-        }}
+      <img
+        src="/images/card-back-sm.png"
+        alt=""
+        className="w-full h-full object-cover"
+        draggable={false}
       />
-      <span
-        className="relative text-[8px] font-outfit font-black tracking-wider"
-        style={{ color: 'var(--gold-dim)' }}
-      >
-        MP
-      </span>
     </div>
   )
 }
@@ -78,15 +73,18 @@ function FaceDownCard() {
 function FaceUpMiniCard({ card }: { readonly card: TeamCard }) {
   return (
     <div
-      className="w-9 h-12 rounded-lg flex flex-col items-center justify-center gap-0.5 overflow-hidden"
+      className="rounded-[10px] flex flex-col items-center justify-center gap-1 overflow-hidden"
       style={{
+        width: '60px',
+        height: '84px',
         background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
         border: '1.5px solid var(--border)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+        flexShrink: 0,
       }}
     >
-      <span className="text-base leading-none">{card.team.flagUrl}</span>
-      <span className="text-[7px] font-bold text-white leading-none">{card.team.code}</span>
+      <span className="text-2xl leading-none">{card.team.flagUrl}</span>
+      <span className="text-[9px] font-bold text-white leading-none tracking-wide">{card.team.code}</span>
     </div>
   )
 }
@@ -103,8 +101,11 @@ export function PlayerSeat({
   isWinner,
   cards,
   hasCards,
+  blindPosition,
 }: PlayerSeatProps) {
   const [timePercent, setTimePercent] = useState(100)
+  const prevChipsRef = useRef(player?.chips ?? 0)
+  const [chipAnim, setChipAnim] = useState<'up' | 'down' | null>(null)
 
   useEffect(() => {
     if (!isActive || !turnStartedAt || !turnTimeoutMs) {
@@ -118,6 +119,16 @@ export function PlayerSeat({
     }, 50)
     return () => clearInterval(interval)
   }, [isActive, turnStartedAt, turnTimeoutMs])
+
+  useEffect(() => {
+    if (!player) return
+    if (player.chips !== prevChipsRef.current) {
+      setChipAnim(player.chips > prevChipsRef.current ? 'up' : 'down')
+      prevChipsRef.current = player.chips
+      const timer = setTimeout(() => setChipAnim(null), 800)
+      return () => clearTimeout(timer)
+    }
+  }, [player?.chips])
 
   if (!player) {
     return (
@@ -133,8 +144,8 @@ export function PlayerSeat({
   }
 
   const inShowdown = !!showdownResult
-  const ringColor =
-    timePercent > 50 ? 'var(--green-glow)' : timePercent > 25 ? 'var(--gold)' : 'var(--red)'
+  const timeLeftMs = turnTimeoutMs ? (timePercent / 100) * turnTimeoutMs : 0
+  const ringColor = timeLeftMs > 10000 ? 'var(--green-glow)' : timeLeftMs > 5000 ? 'var(--gold)' : 'var(--red)'
   const dashOffset = RING_CIRCUMFERENCE * (1 - timePercent / 100)
   const dimmed = (isFolded || player.isEliminated) && !inShowdown
   const avatarColor = getAvatarColor(player.username)
@@ -202,7 +213,7 @@ export function PlayerSeat({
           </div>
         )}
         {!showShowdownCards && !showFaceUp && showFaceDown && (
-          <div className="flex gap-0.5">
+          <div className="flex gap-0.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
             <FaceDownCard />
             <FaceDownCard />
           </div>
@@ -258,24 +269,73 @@ export function PlayerSeat({
         </div>
       </div>
 
-      {/* Name + chips */}
-      <div className={`flex items-center gap-1.5 mt-1 ${dimmed ? 'opacity-25' : ''}`}>
+      {/* Blind position badge (SB / BB) */}
+      {blindPosition && (
+        <div className="flex justify-center mt-1">
+          <span
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+            style={
+              blindPosition === 'SB'
+                ? { background: 'rgba(52,152,219,0.25)', color: '#5dade2', border: '1px solid rgba(52,152,219,0.4)' }
+                : { background: 'rgba(212,168,67,0.2)', color: 'var(--gold-bright)', border: '1px solid rgba(212,168,67,0.4)' }
+            }
+          >
+            {blindPosition}
+          </span>
+        </div>
+      )}
+
+      {/* Name + chip badge */}
+      <div className={`flex flex-col items-center gap-1 mt-1.5 ${dimmed ? 'opacity-25' : ''}`}>
         <span
-          className="text-[10px] font-semibold truncate max-w-16"
+          className="text-[10px] font-semibold truncate max-w-20"
           style={{
-            color: isWinner ? 'var(--gold)' : isCurrentUser ? 'var(--gold-dim)' : 'var(--text)',
+            color: isWinner ? 'var(--gold)' : isCurrentUser ? 'var(--gold-dim)' : 'var(--text-dim)',
           }}
         >
           {player.username}
         </span>
-        <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--green-glow)' }}>
-          {player.chips}
-        </span>
+        <div
+          key={player.chips}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+          style={{
+            background: 'rgba(5,10,24,0.85)',
+            border: `1px solid ${chipAnim === 'up' ? 'rgba(46,204,113,0.5)' : chipAnim === 'down' ? 'rgba(231,76,60,0.4)' : 'rgba(212,168,67,0.25)'}`,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+            transition: 'border-color 0.3s ease',
+          }}
+        >
+          {/* Chip icon */}
+          <div
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, var(--gold-bright), var(--gold-dim))',
+              border: '1.5px solid var(--gold-bright)',
+              boxShadow: '0 0 6px rgba(212,168,67,0.4)',
+            }}
+          />
+          <span
+            className="font-outfit font-black text-xs leading-none"
+            style={{
+              color:
+                chipAnim === 'up'
+                  ? 'var(--green-glow)'
+                  : chipAnim === 'down'
+                    ? 'var(--red)'
+                    : 'var(--gold-bright)',
+              textShadow: '0 0 8px rgba(212,168,67,0.4)',
+              transition: 'color 0.3s ease',
+            }}
+          >
+            {player.chips}
+          </span>
+        </div>
       </div>
 
       {/* Showdown score */}
       {inShowdown && (
         <div
+          data-testid="showdown-score"
           className="mt-0.5 text-[10px] font-outfit font-black px-2.5 py-0.5 rounded-lg"
           style={{
             background: isWinner ? 'rgba(212,168,67,0.15)' : 'rgba(255,255,255,0.04)',

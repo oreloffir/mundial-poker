@@ -28,6 +28,8 @@ import {
 import { scoreRound } from './scoring.service.js'
 import { createDemoFixtures, resolveDemoFixtures } from './demo.service.js'
 import { isBotUser, scheduleBotAction } from './bot.service.js'
+import { calculateBlindPositions, calculateNextActiveSeat } from './blinds.service.js'
+import { bets } from '../../db/schema.js'
 import type { BetAction, BetPromptPayload } from '@wpc/shared'
 
 const DEMO_REVEAL_DELAY_MS = 30_000
@@ -35,6 +37,18 @@ const NEXT_ROUND_DELAY_MS = 14_000
 const DEMO_FIXTURE_COUNT = 5
 
 const activeTimers = new Map<string, { readonly cancel: () => void }>()
+
+interface RoundBlindInfo {
+  readonly dealerSeatIndex: number
+  readonly sbSeatIndex: number
+  readonly bbSeatIndex: number
+  readonly smallBlind: number
+  readonly bigBlind: number
+  readonly sbAmount: number
+  readonly bbAmount: number
+}
+
+const roundBlindCache = new Map<string, RoundBlindInfo>()
 
 function emitToRoom(io: Server, tableId: string, event: string, data: unknown): void {
   io.to(`table:${tableId}`).emit(event, data)
@@ -117,7 +131,8 @@ async function startBettingRound(
     .set({ status: statusMap[bettingRoundNumber] ?? 'BETTING_ROUND_1' })
     .where(eq(rounds.id, roundId))
 
-  const state = initBettingRound(roundId, playerData, bettingRoundNumber)
+  const blindInfo = roundBlindCache.get(roundId)
+  const state = initBettingRound(roundId, playerData, bettingRoundNumber, blindInfo ?? undefined)
 
   if (getActivePlayers(state).length <= 1) {
     await resolveRound(roundId, io)
@@ -169,11 +184,45 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
 
   await db.update(rounds).set({ status: 'BOARD_REVEALED' }).where(eq(rounds.id, dealResult.roundId))
 
+  const blindPositions = calculateBlindPositions(
+    dealResult.dealerSeatIndex,
+    activePlayers.map((p) => ({ seatIndex: p.seatIndex, chipStack: p.chipStack, userId: p.userId })),
+  )
+  const sbPlayer = activePlayers.find((p) => p.seatIndex === blindPositions.sbSeatIndex)!
+  const bbPlayer = activePlayers.find((p) => p.seatIndex === blindPositions.bbSeatIndex)!
+  const sbAmount = Math.min(table.smallBlind ?? 5, sbPlayer.chipStack)
+  const bbAmount = Math.min(table.bigBlind ?? 10, bbPlayer.chipStack)
+
+  await db.update(tablePlayers).set({ chipStack: sbPlayer.chipStack - sbAmount }).where(and(eq(tablePlayers.tableId, tableId), eq(tablePlayers.userId, sbPlayer.userId)))
+  await db.update(tablePlayers).set({ chipStack: bbPlayer.chipStack - bbAmount }).where(and(eq(tablePlayers.tableId, tableId), eq(tablePlayers.userId, bbPlayer.userId)))
+  await db.insert(bets).values([
+    { roundId: dealResult.roundId, userId: sbPlayer.userId, bettingRound: 0, action: 'SMALL_BLIND', amount: sbAmount },
+    { roundId: dealResult.roundId, userId: bbPlayer.userId, bettingRound: 0, action: 'BIG_BLIND', amount: bbAmount },
+  ])
+  await db.update(rounds).set({ pot: sbAmount + bbAmount }).where(eq(rounds.id, dealResult.roundId))
+
+  const blindInfo: RoundBlindInfo = {
+    dealerSeatIndex: dealResult.dealerSeatIndex,
+    sbSeatIndex: blindPositions.sbSeatIndex,
+    bbSeatIndex: blindPositions.bbSeatIndex,
+    smallBlind: table.smallBlind ?? 5,
+    bigBlind: table.bigBlind ?? 10,
+    sbAmount,
+    bbAmount,
+  }
+  roundBlindCache.set(dealResult.roundId, blindInfo)
+
+  console.log('GameService - blindsPosted', { roundId: dealResult.roundId, sbSeat: blindPositions.sbSeatIndex, bbSeat: blindPositions.bbSeatIndex, sbAmount, bbAmount })
+
   for (const playerDeal of dealResult.playerDeals) {
     emitToPlayer(io, playerDeal.userId, 'round:start', {
       roundId: dealResult.roundId,
       roundNumber: dealResult.roundNumber,
       dealerSeatIndex: dealResult.dealerSeatIndex,
+      sbSeatIndex: blindPositions.sbSeatIndex,
+      bbSeatIndex: blindPositions.bbSeatIndex,
+      smallBlind: table.smallBlind ?? 5,
+      bigBlind: table.bigBlind ?? 10,
       cards: playerDeal.cards.map((c) => ({
         teamId: c.teamId,
         teamName: c.teamName,
@@ -185,6 +234,14 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
       })),
     })
   }
+
+  emitToRoom(io, tableId, 'blinds:posted', {
+    sbUserId: sbPlayer.userId,
+    sbAmount,
+    bbUserId: bbPlayer.userId,
+    bbAmount,
+    pot: sbAmount + bbAmount,
+  })
 
   const fixtureTeamIds = [
     ...new Set(dealResult.fixtureRows.flatMap((f) => [f.homeTeamId, f.awayTeamId])),
@@ -283,11 +340,17 @@ export async function handleBetAction(
         .set({ winnerId: winner.userId, status: 'COMPLETE', resolvedAt: new Date() })
         .where(eq(rounds.id, roundId))
       clearBettingState(roundId)
+    roundBlindCache.delete(roundId)
       activeTimers.get(roundId)?.cancel()
       activeTimers.delete(roundId)
       emitToRoom(io, tableId, 'round:showdown', [
         { userId: winner.userId, totalScore: 0, cardScores: [], hand: [] },
       ])
+      const foldWinPlayers = await getPlayersWithUsernames(tableId)
+      emitToRoom(io, tableId, 'players:update', foldWinPlayers.map((p) => ({
+        userId: p.userId,
+        chips: p.chipStack,
+      })))
       await scheduleNextRound(tableId, io)
       console.log('GameService - handleBetAction - lastPlayerStanding', {
         roundId,
@@ -299,6 +362,7 @@ export async function handleBetAction(
 
   if (isBettingRoundComplete(newState)) {
     clearBettingState(roundId)
+    roundBlindCache.delete(roundId)
 
     if (newState.bettingRound < 3) {
       await startBettingRound(roundId, tableId, newState.bettingRound + 1, io)
@@ -373,6 +437,7 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
     const scoringResult = await scoreRound(roundId)
 
     clearBettingState(roundId)
+    roundBlindCache.delete(roundId)
     activeTimers.get(roundId)?.cancel()
     activeTimers.delete(roundId)
 
@@ -461,7 +526,14 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
       }
     })
 
+    await new Promise((resolve) => setTimeout(resolve, 2000))
     emitToRoom(io, tableId, 'round:showdown', showdownResults)
+
+    const updatedPlayers = await getPlayersWithUsernames(tableId)
+    emitToRoom(io, tableId, 'players:update', updatedPlayers.map((p) => ({
+      userId: p.userId,
+      chips: p.chipStack,
+    })))
 
     await scheduleNextRound(tableId, io)
     console.log('GameService - resolveRound', {

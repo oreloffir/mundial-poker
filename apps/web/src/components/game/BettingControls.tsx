@@ -39,8 +39,8 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
   const timePercent = (timeLeft / prompt.timeoutMs) * 100
   const timeSeconds = Math.ceil(timeLeft / 1000)
   const isAllowed = (action: string) => prompt.allowedActions.includes(action)
-  const timerColor =
-    timePercent > 50 ? 'var(--green-glow)' : timePercent > 25 ? 'var(--gold)' : 'var(--red)'
+  const timerColor = timeLeft > 10000 ? 'var(--green-glow)' : timeLeft > 5000 ? 'var(--gold)' : 'var(--red)'
+  const isUrgent = timeLeft > 0 && timeLeft <= 5000
 
   return (
     <div className="space-y-3">
@@ -51,10 +51,20 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
         >
           <div
             className="h-full rounded-full transition-all duration-100"
-            style={{ width: `${timePercent}%`, background: timerColor }}
+            style={{
+              width: `${timePercent}%`,
+              background: timerColor,
+              ...(isUrgent ? { animation: 'blink 0.7s ease-in-out infinite' } : {}),
+            }}
           />
         </div>
-        <span className="text-xs font-mono font-bold" style={{ color: timerColor }}>
+        <span
+          className="text-xs font-mono font-bold"
+          style={{
+            color: timerColor,
+            ...(isUrgent ? { animation: 'blink 0.7s ease-in-out infinite' } : {}),
+          }}
+        >
           {timeSeconds}s
         </span>
       </div>

@@ -39,6 +39,9 @@ interface GameState {
   readonly revealedFixtureCount: number
   readonly potFlashKey: number
   readonly error: string | null
+  // J4: blind position seat indices (null until round:start provides them)
+  readonly sbSeatIndex: number | null
+  readonly bbSeatIndex: number | null
   readonly setTable: (table: Table) => void
   readonly setRound: (round: Round) => void
   readonly setMyHand: (hand: readonly TeamCard[]) => void
@@ -54,6 +57,8 @@ interface GameState {
   readonly addFoldedPlayer: (userId: string) => void
   readonly setRevealedFixtureCount: (count: number) => void
   readonly triggerPotFlash: () => void
+  readonly resetRoundState: () => void
+  readonly setBlindPositions: (sb: number | null, bb: number | null) => void
   readonly setError: (error: string | null) => void
   readonly reset: () => void
 }
@@ -75,6 +80,9 @@ const initialState = {
   revealedFixtureCount: -1,
   potFlashKey: 0,
   error: null,
+  // J4: stub with hardcoded values — swap to real socket data once Soni's S1 merges
+  sbSeatIndex: 1 as number | null,
+  bbSeatIndex: 2 as number | null,
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -95,6 +103,8 @@ export const useGameStore = create<GameState>((set) => ({
   addFoldedPlayer: (userId) => set((s) => ({ foldedPlayerIds: [...s.foldedPlayerIds, userId] })),
   setRevealedFixtureCount: (count) => set({ revealedFixtureCount: count }),
   triggerPotFlash: () => set((s) => ({ potFlashKey: s.potFlashKey + 1 })),
+  resetRoundState: () => set({ playerActions: {}, foldedPlayerIds: [], activeTurn: null, betPrompt: null, myTurn: false, potFlashKey: 0, sbSeatIndex: null, bbSeatIndex: null }),
+  setBlindPositions: (sb, bb) => set({ sbSeatIndex: sb, bbSeatIndex: bb }),
   setError: (error) => set({ error }),
   reset: () => set(initialState),
 }))

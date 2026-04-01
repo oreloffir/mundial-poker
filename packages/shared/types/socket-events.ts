@@ -58,6 +58,10 @@ export interface RoundStartPayload {
   readonly roundNumber: number
   readonly dealerSeatIndex: number
   readonly cards: readonly RoundCardPayload[]
+  readonly sbSeatIndex: number
+  readonly bbSeatIndex: number
+  readonly smallBlind: number
+  readonly bigBlind: number
 }
 
 export interface ServerToClientEvents {
