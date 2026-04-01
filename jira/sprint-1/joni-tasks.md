@@ -509,11 +509,26 @@ The game view is desktop-only. All dimensions are hardcoded pixels with zero med
 ## Sprint Progress — Joni's Delivery Log
 
 **Last updated:** April 1, 2026
-**Status:** Sprint in progress — all tasks for Week 1 complete
+**Status:** Sprint complete — J1–J8 delivered, J4 partial (blocked on Soni S1)
 
 ---
 
 ### Completed
+
+#### J8 — Mobile Responsive Game View (Landscape) ✅
+- Approach: CSS custom property overrides inside `@media (max-height: 500px) and (orientation: landscape)` — no JS resize logic, zero impact on desktop
+- `index.css`: Added `--avatar-size`, `--card-w/h`, `--card-flag-size`, `--ring-scale`, `--fixture-tile-w`, `--top-bar-h/px`, `--btn-padding`, `--btn-font-size`, `--slider-w` vars; `.mobile-landscape-hide` utility; `.poker-table-pitch` max-height constraint; `.portrait-hint` CSS for portrait overlay
+- `PlayerSeat.tsx`: avatar `56→40px` via `var(--avatar-size)`; cards `60×84→44×62px` via `var(--card-w/h)`; ring SVG repositioned to `top: 50%, left: 50%, translate(-50%,-50%)` for correct centering at any avatar size, then `scale(var(--ring-scale))` for visual size `68→52px`
+- `FixtureBoard.tsx`: tile width `72→56px` via `var(--fixture-tile-w)`; event icon row gets `mobile-landscape-hide` class
+- `BettingControls.tsx`: all button `px-5 py-2.5` converted to inline `padding: var(--btn-padding)` and `font-size: var(--btn-font-size)`; slider `w-24` → `width: var(--slider-w)` (`96→72px`)
+- `GameTable.tsx`: top bar height/padding use CSS vars; error toast `top` tracks top bar height; chips abbreviate to `1.2K` format; portrait rotation overlay (CSS-shown on portrait mobile, JS-dismissible)
+- Commit: `feat: mobile responsive game view (landscape)`
+
+#### J7 — Fix React Hooks Crash on Bot Add ✅
+- Root cause confirmed: `prevChipsRef` (useRef) and `chipAnim` (useState) were declared after the `if (!player)` early return — React threw `Rendered more hooks than during the previous render` when a seat transitioned between empty and occupied
+- Fix: moved all hooks (2× useState, 1× useRef, 2× useEffect) to lines 106–123, before the early return at line 133 — hooks now execute unconditionally on every render, and the early-return null-check path is purely a render bail-out with no hook involvement
+- Both useEffect bodies already have internal `if (!player) return` guards so the logic is safe when `player` is null
+- Commit: `fix: resolve React hooks crash in PlayerSeat on bot add`
 
 #### J1 — Fix Winner Banner Timing ✅
 - Rewrote the `round:start` handler in `useGameSocket.ts` as a single atomic `store.setState()` call — `showdownResults` is now cleared in the same render tick as the new round data, so the winner banner is guaranteed gone before anything new renders
