@@ -183,8 +183,6 @@ export function PokerTable({
   const winnerData = useGameStore((s) => s.winnerData)
   const playerScoreReveals = useGameStore((s) => s.playerScoreReveals)
   const currentRevealIndex = useGameStore((s) => s.currentRevealIndex)
-  const currentRound = useGameStore((s) => s.currentRound)
-
   // Preload card back images to prevent flash on first render
   useEffect(() => {
     const srcs = ['/images/card-back-sm.png', '/images/card-back-md.png']

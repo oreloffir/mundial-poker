@@ -13,6 +13,8 @@ export default tseslint.config(
       'scripts/**',
       '**/vite.config.ts',
       '**/vitest.config.ts',
+      '**/e2e/**',
+      '**/playwright.config.ts',
     ],
   },
 

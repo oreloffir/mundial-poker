@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import { getSocket, disconnectSocket } from '@/lib/socket'
 import { useGameStore } from '@/stores/gameStore'
 import { useAuthStore } from '@/stores/authStore'
-import type { BetAction, TeamCard, TeamTier, Confederation } from '@wpc/shared'
+import type { BetAction, TeamCard, TeamTier, Confederation, Fixture } from '@wpc/shared'
 import type { RoundCardPayload, FixtureResultPayload, PlayerScoredPayload } from '@wpc/shared'
 
 // C1 fix: use confederation from payload; falls back to 'UEFA' until Soni adds the field (TODO S4)
@@ -207,7 +207,7 @@ export function useGameSocket(tableId: string) {
     // TeamCard[] (stale) and setFixtures expects Fixture[] (shared type). Both mismatches are
     // Soni's debt (S-debt-01). Cast through unknown rather than `never[]` to document intent.
     socket.on('board:reveal', (fixtureData) => {
-      const fixtureArray = fixtureData as unknown as readonly import('@wpc/shared').Fixture[]
+      const fixtureArray = fixtureData as unknown as readonly Fixture[]
       store.getState().setFixtures(fixtureArray)
       store.getState().setRevealedFixtureCount(0)
       fixtureArray.forEach((_, i) => {
