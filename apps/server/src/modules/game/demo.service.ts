@@ -129,6 +129,55 @@ export async function createDemoFixtures(count: number): Promise<readonly string
   return fixtureIds
 }
 
+export function resolveDemoFixturesProgressive(
+  fixtureIds: readonly string[],
+  intervalMs: number,
+  onEachResolved: (fixtureId: string, result: MatchResult) => void,
+  onAllResolved: () => void,
+): { readonly cancel: () => void } {
+  const timers: NodeJS.Timeout[] = []
+
+  fixtureIds.forEach((fixtureId, i) => {
+    const timer = setTimeout(
+      async () => {
+        try {
+          const result = generateDemoResult()
+          await db
+            .update(fixtures)
+            .set({
+              homeGoals: result.homeScore,
+              awayGoals: result.awayScore,
+              homePenaltiesScored: result.homePenalties ?? 0,
+              homePenaltiesMissed: result.homePenalties === 0 ? 1 : 0,
+              awayPenaltiesScored: result.awayPenalties ?? 0,
+              awayPenaltiesMissed: result.awayPenalties === 0 ? 1 : 0,
+              status: 'FINISHED',
+              updatedAt: new Date(),
+            })
+            .where(eq(fixtures.id, fixtureId))
+
+          onEachResolved(fixtureId, result)
+          console.log('DemoService - fixtureResolved', {
+            fixtureId,
+            index: i,
+            result: `${result.homeScore}-${result.awayScore}`,
+          })
+
+          if (i === fixtureIds.length - 1) {
+            onAllResolved()
+          }
+        } catch (error) {
+          console.error('DemoService - resolveDemoFixture - error', { fixtureId, error })
+        }
+      },
+      (i + 1) * intervalMs,
+    )
+    timers.push(timer)
+  })
+
+  return { cancel: () => timers.forEach(clearTimeout) }
+}
+
 export function resolveDemoFixtures(
   fixtureIds: readonly string[],
   delayMs: number,
@@ -138,7 +187,6 @@ export function resolveDemoFixtures(
     try {
       for (const fixtureId of fixtureIds) {
         const result = generateDemoResult()
-
         await db
           .update(fixtures)
           .set({
@@ -153,7 +201,6 @@ export function resolveDemoFixtures(
           })
           .where(eq(fixtures.id, fixtureId))
       }
-
       console.log('DemoService - resolveDemoFixtures', { resolvedCount: fixtureIds.length })
       onResolved?.()
     } catch (error) {

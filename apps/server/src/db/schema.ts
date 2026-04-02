@@ -206,7 +206,7 @@ export const bets = pgTable(
       .references(() => users.id)
       .notNull(),
     bettingRound: smallint('betting_round').notNull(),
-    action: varchar('action', { length: 10 }).notNull(),
+    action: varchar('action', { length: 20 }).notNull(),
     amount: integer('amount').default(0).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },

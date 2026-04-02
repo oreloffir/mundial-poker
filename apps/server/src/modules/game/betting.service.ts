@@ -19,9 +19,65 @@ export interface BettingState {
   readonly currentPlayerIndex: number
   readonly playerStates: readonly PlayerState[]
   readonly pot: number
+  readonly bbPlayerIndex: number | null
+  readonly bigBlindAmount: number | null
 }
 
 const activeBettingStates = new Map<string, BettingState>()
+const betTimers = new Map<string, NodeJS.Timeout>()
+
+const BET_TIMEOUT_MS = 30_000
+
+export function startBetTimer(
+  roundId: string,
+  userId: string,
+  allowedActions: readonly BetAction[],
+  handleAction: (
+    roundId: string,
+    userId: string,
+    action: BetAction,
+    amount: number,
+    autoAction: boolean,
+  ) => Promise<void>,
+): void {
+  const key = `${roundId}:${userId}`
+  cancelBetTimer(roundId, userId)
+
+  const timer = setTimeout(async () => {
+    betTimers.delete(key)
+    const state = getBettingState(roundId)
+    if (!state) return
+    const player = state.playerStates[state.currentPlayerIndex]
+    if (!player || player.userId !== userId) return
+
+    const action: BetAction = allowedActions.includes('CHECK') ? 'CHECK' : 'FOLD'
+    try {
+      await handleAction(roundId, userId, action, 0, true)
+    } catch (err) {
+      console.error('BettingService - betTimeout - failed', { roundId, userId, error: err })
+    }
+  }, BET_TIMEOUT_MS)
+
+  betTimers.set(key, timer)
+}
+
+export function cancelBetTimer(roundId: string, userId: string): void {
+  const key = `${roundId}:${userId}`
+  const timer = betTimers.get(key)
+  if (timer) {
+    clearTimeout(timer)
+    betTimers.delete(key)
+  }
+}
+
+export function cleanupBetTimers(roundId: string): void {
+  for (const [key, timer] of betTimers) {
+    if (key.startsWith(`${roundId}:`)) {
+      clearTimeout(timer)
+      betTimers.delete(key)
+    }
+  }
+}
 
 export function getBettingState(roundId: string): BettingState | undefined {
   return activeBettingStates.get(roundId)
@@ -29,6 +85,17 @@ export function getBettingState(roundId: string): BettingState | undefined {
 
 export function clearBettingState(roundId: string): void {
   activeBettingStates.delete(roundId)
+  cleanupBetTimers(roundId)
+}
+
+interface BlindSeedInfo {
+  readonly sbSeatIndex: number
+  readonly bbSeatIndex: number
+  readonly sbAmount: number
+  readonly bbAmount: number
+  readonly dealerSeatIndex: number
+  readonly smallBlind: number
+  readonly bigBlind: number
 }
 
 export function initBettingRound(
@@ -40,8 +107,10 @@ export function initBettingRound(
     readonly hasFolded: boolean
   }[],
   bettingRoundNumber: number,
+  blindInfo?: BlindSeedInfo,
+  startingSeatIndex?: number,
 ): BettingState {
-  const playerStates: readonly PlayerState[] = players.map((p) => ({
+  let playerStates: PlayerState[] = players.map((p) => ({
     userId: p.userId,
     seatIndex: p.seatIndex,
     hasFolded: p.hasFolded,
@@ -50,15 +119,53 @@ export function initBettingRound(
     hasActed: p.hasFolded,
   }))
 
-  const firstActiveIndex = playerStates.findIndex((p) => !p.hasFolded && p.chipStack > 0)
+  let currentBet = 0
+  let pot = 0
+  let bbPlayerIndex: number | null = null
+  let bigBlindAmount: number | null = null
+
+  if (bettingRoundNumber === 1 && blindInfo) {
+    playerStates = playerStates.map((p) => {
+      if (p.seatIndex === blindInfo.sbSeatIndex) {
+        return { ...p, totalBet: blindInfo.sbAmount, hasActed: false }
+      }
+      if (p.seatIndex === blindInfo.bbSeatIndex) {
+        return { ...p, totalBet: blindInfo.bbAmount, hasActed: false }
+      }
+      return p
+    })
+    currentBet = blindInfo.bbAmount
+    pot = blindInfo.sbAmount + blindInfo.bbAmount
+    bbPlayerIndex = playerStates.findIndex((p) => p.seatIndex === blindInfo.bbSeatIndex)
+    bigBlindAmount = blindInfo.bbAmount
+  }
+
+  let startIndex: number
+  if (startingSeatIndex !== undefined) {
+    startIndex = playerStates.findIndex(
+      (p) => p.seatIndex === startingSeatIndex && !p.hasFolded && p.chipStack > 0,
+    )
+    if (startIndex === -1) {
+      const sorted = [...playerStates]
+        .map((p, i) => ({ ...p, origIndex: i }))
+        .filter((p) => !p.hasFolded && p.chipStack > 0)
+      const after = sorted.find((p) => p.seatIndex > startingSeatIndex)
+      startIndex = after ? after.origIndex : (sorted[0]?.origIndex ?? 0)
+    }
+  } else {
+    startIndex = playerStates.findIndex((p) => !p.hasFolded && p.chipStack > 0)
+    if (startIndex === -1) startIndex = 0
+  }
 
   const state: BettingState = {
     roundId,
     bettingRound: bettingRoundNumber,
-    currentBet: 0,
-    currentPlayerIndex: firstActiveIndex >= 0 ? firstActiveIndex : 0,
+    currentBet,
+    currentPlayerIndex: startIndex,
     playerStates,
-    pot: 0,
+    pot,
+    bbPlayerIndex,
+    bigBlindAmount,
   }
 
   activeBettingStates.set(roundId, state)
@@ -101,6 +208,24 @@ export function isBettingRoundComplete(state: BettingState): boolean {
 
 function getAllowedActions(state: BettingState, player: PlayerState): readonly BetAction[] {
   const actions: BetAction[] = ['FOLD']
+
+  const playerIndex = state.playerStates.indexOf(player)
+  const isBB = state.bbPlayerIndex !== null && playerIndex === state.bbPlayerIndex
+  const isBBOption =
+    isBB &&
+    state.bettingRound === 1 &&
+    state.bigBlindAmount !== null &&
+    state.currentBet === state.bigBlindAmount &&
+    player.totalBet === state.bigBlindAmount
+
+  if (isBBOption) {
+    actions.push('CHECK')
+    if (player.chipStack > 0) {
+      actions.push('RAISE')
+      actions.push('ALL_IN')
+    }
+    return actions
+  }
 
   if (state.currentBet === player.totalBet) {
     actions.push('CHECK')

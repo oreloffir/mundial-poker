@@ -25,7 +25,7 @@ export type MatchStage =
 
 export type FixtureStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'DEMO'
 
-export type BetAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'ALL_IN'
+export type BetAction = 'CHECK' | 'CALL' | 'RAISE' | 'FOLD' | 'ALL_IN' | 'SMALL_BLIND' | 'BIG_BLIND'
 
 export interface User {
   readonly id: string
@@ -57,6 +57,7 @@ export interface TablePlayer {
   readonly seatIndex: number
   readonly isConnected: boolean
   readonly isEliminated: boolean
+  readonly isBot?: boolean
 }
 
 export interface Table {
@@ -105,6 +106,28 @@ export interface Fixture {
 export interface CardScore {
   readonly teamId: string
   readonly fixtureId: string
+  readonly baseScore: number
+  readonly goalBonus: number
+  readonly cleanSheetBonus: number
+  readonly penaltyModifier: number
+  readonly totalScore: number
+}
+
+/** Rich card score — includes team and fixture detail as sent in player:scored events */
+export interface CardScoreData {
+  readonly teamId: string
+  readonly team: { readonly name: string; readonly code: string; readonly flagUrl: string }
+  readonly fixtureId: string
+  readonly fixture: {
+    readonly homeGoals: number
+    readonly awayGoals: number
+    readonly side: 'home' | 'away'
+    readonly opponentTeam?: {
+      readonly name: string
+      readonly code: string
+      readonly flagUrl: string
+    } | null
+  }
   readonly baseScore: number
   readonly goalBonus: number
   readonly cleanSheetBonus: number

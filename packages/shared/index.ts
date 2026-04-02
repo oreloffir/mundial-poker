@@ -4,6 +4,7 @@ export type {
   BettingRound,
   Blinds,
   CardScore,
+  CardScoreData,
   Confederation,
   Fixture,
   FixtureStatus,
@@ -27,11 +28,15 @@ export type {
   BetPromptPayload,
   BetUpdatePayload,
   ClientToServerEvents,
+  FixtureResultPayload,
+  LobbyTableItem,
   PlayerActionPayload,
+  PlayerScoredPayload,
   RoundCardPayload,
   RoundPausePayload,
   RoundResultsPayload,
   RoundStartPayload,
+  RoundWinnerPayload,
   ServerToClientEvents,
 } from './types/socket-events.js'
 

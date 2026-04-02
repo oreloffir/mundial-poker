@@ -9,11 +9,38 @@ interface CreateTableModalProps {
 export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) {
   const [name, setName] = useState('')
   const [startingChips, setStartingChips] = useState('500')
+  const [smallBlind, setSmallBlind] = useState('5')
+  const [bigBlind, setBigBlind] = useState('10')
+  const [blindError, setBlindError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const handleSmallBlindChange = (value: string) => {
+    setSmallBlind(value)
+    const sb = parseInt(value, 10)
+    if (isNaN(sb) || sb < 1) {
+      setBlindError('Small blind must be at least 1')
+    } else {
+      setBlindError(null)
+      setBigBlind(String(sb * 2))
+    }
+  }
+
+  const validateBlinds = (): string | null => {
+    const sb = parseInt(smallBlind, 10)
+    const chips = parseInt(startingChips, 10)
+    if (!Number.isInteger(sb) || sb < 1) return 'Small blind must be a positive integer'
+    if (sb * 2 >= chips) return 'Big blind must be less than starting chips'
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const validationError = validateBlinds()
+    if (validationError) {
+      setBlindError(validationError)
+      return
+    }
     setIsSubmitting(true)
     setError(null)
 
@@ -21,6 +48,8 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
       const response = await api.post('/tables', {
         name: name.trim(),
         startingChips: parseInt(startingChips, 10),
+        smallBlind: parseInt(smallBlind, 10),
+        bigBlind: parseInt(bigBlind, 10),
       })
       const table = response.data?.data?.table
       if (!table?.id) {
@@ -34,6 +63,9 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
             'Failed to create table')
           : 'Failed to create table'
       setError(message)
+    } finally {
+      // Always reset — if navigation works the component unmounts anyway;
+      // if it fails (e.g., route guard redirect), the button must be clickable again
       setIsSubmitting(false)
     }
   }
@@ -46,8 +78,13 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
         onClick={onClose}
       />
       <div
-        className="relative w-full max-w-md shadow-2xl rounded-2xl p-7"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        className="relative w-full max-w-md shadow-2xl rounded-2xl p-7 create-table-modal-content"
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          maxHeight: 'calc(100dvh - 2rem)',
+          overflowY: 'auto',
+        }}
       >
         <div className="wpc-label mb-2">New Table</div>
         <h2 className="font-outfit text-2xl font-bold text-white mb-6">Create Table</h2>
@@ -106,6 +143,60 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
               className="w-full px-4 py-3 rounded-xl text-sm"
             />
           </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label
+                htmlFor="smallBlind"
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--text-dim)' }}
+              >
+                Small Blind
+              </label>
+              <input
+                id="smallBlind"
+                type="number"
+                value={smallBlind}
+                onChange={(e) => handleSmallBlindChange(e.target.value)}
+                required
+                min={1}
+                className="w-full px-4 py-3 rounded-xl text-sm"
+              />
+            </div>
+            <div className="flex-1">
+              <label
+                htmlFor="bigBlind"
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--text-dim)' }}
+              >
+                Big Blind
+              </label>
+              <input
+                id="bigBlind"
+                data-testid="big-blind-input"
+                type="number"
+                value={bigBlind}
+                readOnly
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  color: 'var(--text-dim)',
+                  cursor: 'default',
+                }}
+              />
+            </div>
+          </div>
+
+          {blindError && (
+            <p className="text-xs" style={{ color: 'var(--red)', marginTop: '-8px' }}>
+              {blindError}
+            </p>
+          )}
+
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Always 2× the small blind
+          </p>
 
           <div className="flex gap-3 pt-2">
             <button

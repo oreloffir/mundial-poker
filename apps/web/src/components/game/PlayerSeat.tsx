@@ -1,5 +1,9 @@
-import { useEffect, useState } from 'react'
-import type { TablePlayer, ShowdownResult, TeamCard } from '@wpc/shared'
+import { useEffect, useState, useRef } from 'react'
+import type { TablePlayer, TeamCard } from '@wpc/shared'
+import { PokerChip } from '@/components/shared/PokerChip'
+import { getAvatarColor } from '@/utils/avatarColor'
+import type { PlayerScoredData } from '@/stores/gameStore'
+import { SeatScorePopup } from './SeatScorePopup'
 
 interface PlayerAction {
   readonly action: string
@@ -15,10 +19,12 @@ interface PlayerSeatProps {
   readonly turnTimeoutMs: number | null
   readonly lastAction: PlayerAction | null
   readonly isFolded: boolean
-  readonly showdownResult: ShowdownResult | null
+  readonly scoreResult: PlayerScoredData | null
+  readonly isCurrent: boolean
   readonly isWinner: boolean
   readonly cards: readonly TeamCard[] | null
   readonly hasCards: boolean
+  readonly blindPosition?: 'SB' | 'BB' | null
 }
 
 const RING_SIZE = 68
@@ -31,14 +37,9 @@ const BADGE_STYLES: Record<string, { bg: string; text: string; border: string }>
   RAISE: { bg: 'rgba(212,168,67,0.15)', text: 'var(--gold)', border: 'rgba(212,168,67,0.3)' },
   FOLD: { bg: 'rgba(231,76,60,0.15)', text: 'var(--red)', border: 'rgba(231,76,60,0.3)' },
   ALL_IN: { bg: 'rgba(212,168,67,0.2)', text: 'var(--gold-bright)', border: 'var(--gold-dim)' },
-}
-
-const AVATAR_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12']
-
-function getAvatarColor(name: string): string {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]!
+  // C6: blind posts use payload.type ('SB'|'BB') as the action key
+  SB: { bg: 'rgba(52,152,219,0.15)', text: '#5dade2', border: 'rgba(52,152,219,0.3)' },
+  BB: { bg: 'rgba(212,168,67,0.15)', text: 'var(--gold-bright)', border: 'rgba(212,168,67,0.4)' },
 }
 
 function formatAction(action: string, amount: number): string {
@@ -48,45 +49,77 @@ function formatAction(action: string, amount: number): string {
   return action.charAt(0) + action.slice(1).toLowerCase()
 }
 
-function FaceDownCard() {
+// C9: extracted from inline IIFE in render to a named component
+function ActionBadge({ action, amount, timestamp }: PlayerAction) {
+  const badge = BADGE_STYLES[action]
+  if (!badge) return null
   return (
     <div
-      className="w-9 h-12 rounded-lg flex items-center justify-center relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(145deg, #0f1a2e, #1a2744)',
-        border: '1.5px solid var(--gold-dim)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-      }}
+      key={timestamp}
+      className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+      style={{ animation: 'badge-pop 2s ease-out forwards' }}
     >
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(45deg, var(--gold) 0, var(--gold) 1px, transparent 0, transparent 6px), repeating-linear-gradient(-45deg, var(--gold) 0, var(--gold) 1px, transparent 0, transparent 6px)',
-        }}
-      />
       <span
-        className="relative text-[8px] font-outfit font-black tracking-wider"
-        style={{ color: 'var(--gold-dim)' }}
+        className="text-[9px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap"
+        style={{
+          background: badge.bg,
+          color: badge.text,
+          border: `1px solid ${badge.border}`,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+        }}
       >
-        MP
+        {formatAction(action, amount)}
       </span>
     </div>
   )
 }
 
-function FaceUpMiniCard({ card }: { readonly card: TeamCard }) {
+function FaceDownCard() {
   return (
     <div
-      className="w-9 h-12 rounded-lg flex flex-col items-center justify-center gap-0.5 overflow-hidden"
+      className="rounded-[10px] overflow-hidden"
       style={{
-        background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
-        border: '1.5px solid var(--border)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+        width: 'var(--card-w)',
+        height: 'var(--card-h)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,67,0.2)',
+        flexShrink: 0,
       }}
     >
-      <span className="text-base leading-none">{card.team.flagUrl}</span>
-      <span className="text-[7px] font-bold text-white leading-none">{card.team.code}</span>
+      <img
+        src="/images/card-back-sm.png"
+        alt=""
+        className="w-full h-full object-cover"
+        draggable={false}
+      />
+    </div>
+  )
+}
+
+function FaceUpMiniCard({ card }: { readonly card: { team: { flagUrl: string; code: string } } }) {
+  return (
+    <div
+      className="rounded-[10px] flex flex-col items-center justify-center gap-1 overflow-hidden"
+      style={{
+        width: 'var(--card-w)',
+        height: 'var(--card-h)',
+        background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
+        border: '1.5px solid var(--border)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ fontSize: 'var(--card-flag-size)', lineHeight: 1 }}>{card.team.flagUrl}</span>
+      <span
+        style={{
+          fontSize: 'var(--card-code-size)',
+          fontWeight: 'bold',
+          color: 'white',
+          lineHeight: 1,
+          letterSpacing: '0.05em',
+        }}
+      >
+        {card.team.code}
+      </span>
     </div>
   )
 }
@@ -99,12 +132,16 @@ export function PlayerSeat({
   turnTimeoutMs,
   lastAction,
   isFolded,
-  showdownResult,
+  scoreResult,
+  isCurrent,
   isWinner,
   cards,
   hasCards,
+  blindPosition,
 }: PlayerSeatProps) {
   const [timePercent, setTimePercent] = useState(100)
+  const prevChipsRef = useRef(player?.chips ?? 0)
+  const [chipAnim, setChipAnim] = useState<'up' | 'down' | null>(null)
 
   useEffect(() => {
     if (!isActive || !turnStartedAt || !turnTimeoutMs) {
@@ -119,11 +156,25 @@ export function PlayerSeat({
     return () => clearInterval(interval)
   }, [isActive, turnStartedAt, turnTimeoutMs])
 
+  useEffect(() => {
+    if (!player) return
+    if (player.chips !== prevChipsRef.current) {
+      setChipAnim(player.chips > prevChipsRef.current ? 'up' : 'down')
+      prevChipsRef.current = player.chips
+      const timer = setTimeout(() => setChipAnim(null), 800)
+      return () => clearTimeout(timer)
+    }
+  }, [player?.chips])
+
   if (!player) {
     return (
       <div
-        className="w-14 h-14 rounded-full flex items-center justify-center"
-        style={{ border: '2px dashed rgba(212,168,67,0.12)' }}
+        className="rounded-full flex items-center justify-center"
+        style={{
+          width: 'var(--avatar-size)',
+          height: 'var(--avatar-size)',
+          border: '2px dashed rgba(212,168,67,0.12)',
+        }}
       >
         <span className="text-[10px]" style={{ color: 'var(--text-muted)', opacity: 0.4 }}>
           Empty
@@ -132,16 +183,18 @@ export function PlayerSeat({
     )
   }
 
-  const inShowdown = !!showdownResult
+  const inShowdown = !!scoreResult
+  const timeLeftMs = turnTimeoutMs ? (timePercent / 100) * turnTimeoutMs : 0
   const ringColor =
-    timePercent > 50 ? 'var(--green-glow)' : timePercent > 25 ? 'var(--gold)' : 'var(--red)'
+    timeLeftMs > 10000 ? 'var(--green-glow)' : timeLeftMs > 5000 ? 'var(--gold)' : 'var(--red)'
   const dashOffset = RING_CIRCUMFERENCE * (1 - timePercent / 100)
   const dimmed = (isFolded || player.isEliminated) && !inShowdown
   const avatarColor = getAvatarColor(player.username)
 
   const showFaceUp = isCurrentUser && cards && cards.length > 0
+  // When scored, show opponent cards face-up (flip) — otherwise face-down while in round
+  const showScoredCards = !isCurrentUser && inShowdown && scoreResult.hand.length > 0
   const showFaceDown = !isCurrentUser && hasCards && !inShowdown && !isFolded
-  const showShowdownCards = inShowdown && showdownResult.hand.length > 0
 
   return (
     <div
@@ -158,51 +211,31 @@ export function PlayerSeat({
         transition: 'all 0.4s ease',
       }}
     >
+      {/* Inline score popup — shown above seat when this player has been scored */}
+      {inShowdown && <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />}
+
       {/* Action badge */}
-      {lastAction &&
-        !inShowdown &&
-        (() => {
-          const badge = BADGE_STYLES[lastAction.action]
-          return badge ? (
-            <div
-              key={lastAction.timestamp}
-              className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-              style={{ animation: 'badge-pop 2s ease-out forwards' }}
-            >
-              <span
-                className="text-[9px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap"
-                style={{
-                  background: badge.bg,
-                  color: badge.text,
-                  border: `1px solid ${badge.border}`,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-                }}
-              >
-                {formatAction(lastAction.action, lastAction.amount)}
-              </span>
-            </div>
-          ) : null
-        })()}
+      {lastAction && !inShowdown && <ActionBadge {...lastAction} />}
 
       {/* Avatar + cards row */}
       <div className="flex items-center gap-1.5">
-        {/* Cards on the left for seats 1,2 (left side) or showdown cards */}
-        {showShowdownCards && (
+        {/* Opponent scored cards flip face-up */}
+        {showScoredCards && (
           <div className="flex gap-0.5" style={{ animation: 'card-flip 0.4s ease-out both' }}>
-            {showdownResult.hand.map((card) => (
+            {scoreResult.hand.map((card) => (
               <FaceUpMiniCard key={card.teamId} card={card} />
             ))}
           </div>
         )}
-        {!showShowdownCards && showFaceUp && (
+        {!showScoredCards && showFaceUp && (
           <div className="flex gap-0.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
             {cards!.map((card) => (
               <FaceUpMiniCard key={card.teamId} card={card} />
             ))}
           </div>
         )}
-        {!showShowdownCards && !showFaceUp && showFaceDown && (
-          <div className="flex gap-0.5">
+        {!showScoredCards && !showFaceUp && showFaceDown && (
+          <div className="flex gap-0.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
             <FaceDownCard />
             <FaceDownCard />
           </div>
@@ -214,8 +247,13 @@ export function PlayerSeat({
             <svg
               width={RING_SIZE}
               height={RING_SIZE}
-              className="absolute -inset-1"
-              style={{ transform: 'rotate(-90deg)' }}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%) scale(var(--ring-scale)) rotate(-90deg)',
+                transformOrigin: '50% 50%',
+              }}
             >
               <circle
                 cx={RING_SIZE / 2}
@@ -240,8 +278,10 @@ export function PlayerSeat({
             </svg>
           )}
           <div
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-sm font-black font-outfit transition-all duration-300 ${dimmed ? 'opacity-25 grayscale' : ''}`}
+            className={`rounded-full flex items-center justify-center text-sm font-black font-outfit transition-all duration-300 ${dimmed ? 'opacity-25 grayscale' : ''}`}
             style={{
+              width: 'var(--avatar-size)',
+              height: 'var(--avatar-size)',
               background: `linear-gradient(145deg, ${avatarColor}33, ${avatarColor}11)`,
               border: isWinner
                 ? '2.5px solid var(--gold)'
@@ -258,24 +298,77 @@ export function PlayerSeat({
         </div>
       </div>
 
-      {/* Name + chips */}
-      <div className={`flex items-center gap-1.5 mt-1 ${dimmed ? 'opacity-25' : ''}`}>
+      {/* Blind position badge (SB / BB) */}
+      {blindPosition && (
+        <div className="flex justify-center mt-1">
+          <span
+            data-testid={blindPosition === 'SB' ? 'sb-badge' : 'bb-badge'}
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+            style={
+              blindPosition === 'SB'
+                ? {
+                    background: 'rgba(52,152,219,0.25)',
+                    color: '#5dade2',
+                    border: '1px solid rgba(52,152,219,0.4)',
+                  }
+                : {
+                    background: 'rgba(212,168,67,0.2)',
+                    color: 'var(--gold-bright)',
+                    border: '1px solid rgba(212,168,67,0.4)',
+                  }
+            }
+          >
+            {blindPosition}
+          </span>
+        </div>
+      )}
+
+      {/* Name + chip badge */}
+      <div className={`flex flex-col items-center gap-1 mt-1.5 ${dimmed ? 'opacity-25' : ''}`}>
         <span
-          className="text-[10px] font-semibold truncate max-w-16"
+          className="text-[10px] font-semibold truncate max-w-20"
           style={{
-            color: isWinner ? 'var(--gold)' : isCurrentUser ? 'var(--gold-dim)' : 'var(--text)',
+            color: isWinner ? 'var(--gold)' : isCurrentUser ? 'var(--gold-dim)' : 'var(--text-dim)',
           }}
         >
           {player.username}
         </span>
-        <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--green-glow)' }}>
-          {player.chips}
-        </span>
+        <div
+          data-testid={`seat-balance-${player.seatIndex}`}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+          style={{
+            background: 'rgba(5,10,24,0.85)',
+            border: `1px solid ${chipAnim === 'up' ? 'rgba(46,204,113,0.5)' : chipAnim === 'down' ? 'rgba(231,76,60,0.4)' : 'rgba(212,168,67,0.25)'}`,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+            transition: 'border-color 0.3s ease',
+          }}
+        >
+          <PokerChip
+            size={14}
+            style={{ flexShrink: 0, filter: 'drop-shadow(0 0 4px rgba(212,168,67,0.4))' }}
+          />
+          <span
+            className="font-outfit font-black text-xs leading-none"
+            style={{
+              color:
+                chipAnim === 'up'
+                  ? 'var(--green-glow)'
+                  : chipAnim === 'down'
+                    ? 'var(--red)'
+                    : 'var(--gold-bright)',
+              textShadow: '0 0 8px rgba(212,168,67,0.4)',
+              transition: 'color 0.3s ease',
+            }}
+          >
+            {player.chips}
+          </span>
+        </div>
       </div>
 
-      {/* Showdown score */}
+      {/* Score total — shown below chips once scored */}
       {inShowdown && (
         <div
+          data-testid="showdown-score"
           className="mt-0.5 text-[10px] font-outfit font-black px-2.5 py-0.5 rounded-lg"
           style={{
             background: isWinner ? 'rgba(212,168,67,0.15)' : 'rgba(255,255,255,0.04)',
@@ -284,12 +377,13 @@ export function PlayerSeat({
             animation: 'score-pop 0.4s ease-out 0.2s both',
           }}
         >
-          {showdownResult.totalScore} PTS
+          {scoreResult.totalScore} PTS
         </div>
       )}
 
       {isFolded && !player.isEliminated && !inShowdown && (
         <span
+          data-testid="folded-indicator"
           className="text-[8px] font-bold uppercase tracking-wider"
           style={{ color: 'var(--red)', opacity: 0.6 }}
         >

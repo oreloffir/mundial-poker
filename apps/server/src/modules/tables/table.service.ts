@@ -1,3 +1,6 @@
+import { ne } from 'drizzle-orm'
+import { db } from '../../db/index.js'
+import { tables } from '../../db/schema.js'
 import * as tableRepo from './table.repository.js'
 import { NotFoundError, GameError, ForbiddenError } from '../../shared/errors.js'
 import { BOT_IDS, isBotUser, createSingleBot } from '../game/bot.service.js'
@@ -13,8 +16,8 @@ interface CreateTableOptions {
   readonly bigBlind?: number
 }
 
-export async function listTables() {
-  const tables = await tableRepo.findAll()
+export async function listTables(includeCompleted = false) {
+  const tables = await tableRepo.findAll(includeCompleted)
   return tables
 }
 
@@ -168,4 +171,19 @@ export async function startGame(tableId: string, userId: string) {
 
   await tableRepo.updateStatus(tableId, 'IN_PROGRESS')
   return tableRepo.findById(tableId)
+}
+
+export async function cleanupStaleTables(): Promise<void> {
+  const result = await db
+    .update(tables)
+    .set({ status: 'COMPLETED', updatedAt: new Date() })
+    .where(ne(tables.status, 'COMPLETED'))
+    .returning({ id: tables.id })
+
+  if (result.length > 0) {
+    console.log('TableService - cleanupStaleTables', {
+      cleaned: result.length,
+      ids: result.map((r) => r.id),
+    })
+  }
 }

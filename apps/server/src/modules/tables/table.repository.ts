@@ -1,9 +1,16 @@
-import { eq, sql, and } from 'drizzle-orm'
+import { eq, sql, and, ne, desc } from 'drizzle-orm'
 import { db } from '../../db/index.js'
 import { tables, tablePlayers, users } from '../../db/schema.js'
 
-export async function findAll() {
-  const result = await db
+const STATUS_SORT_ORDER: Record<string, number> = {
+  WAITING: 0,
+  IN_PROGRESS: 1,
+  PAUSED_FOR_MATCHES: 2,
+  COMPLETED: 3,
+}
+
+export async function findAll(includeCompleted = false) {
+  let query = db
     .select({
       id: tables.id,
       name: tables.name,
@@ -19,8 +26,16 @@ export async function findAll() {
     .from(tables)
     .leftJoin(tablePlayers, eq(tables.id, tablePlayers.tableId))
     .groupBy(tables.id)
+    .orderBy(desc(tables.createdAt))
 
-  return result
+  if (!includeCompleted) {
+    query = query.where(ne(tables.status, 'COMPLETED')) as typeof query
+  }
+
+  const result = await query
+  return result.sort(
+    (a, b) => (STATUS_SORT_ORDER[a.status] ?? 9) - (STATUS_SORT_ORDER[b.status] ?? 9),
+  )
 }
 
 export async function findById(id: string) {
