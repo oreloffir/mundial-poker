@@ -38,11 +38,6 @@ vi.mock('../../db/index.js', () => ({ db: mockDb }))
 
 // ─── Mock emits ─────────────────────────────────────────────────────────────
 const emittedEvents: { event: string; data: unknown }[] = []
-const _mockIo = {
-  to: () => ({
-    emit: (event: string, data: unknown) => { emittedEvents.push({ event, data }) },
-  }),
-}
 
 // ─── Import real betting service (pure logic, no DB for init/getAllowedActions) ──
 import { initBettingRound, clearBettingState, getAllowedActions, isBettingRoundComplete } from '../modules/game/betting.service.js'
