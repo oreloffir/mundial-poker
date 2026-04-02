@@ -176,18 +176,22 @@ Once Soni's S1 delivers `sbSeatIndex` and `bbSeatIndex` in the `round:start` soc
 ### Requirements
 
 1. In `gameStore.ts`, add new state fields:
+
    ```typescript
    sbSeatIndex: number | null
    bbSeatIndex: number | null
    ```
+
    Include setters and clear them to `null` in `resetRoundState()` and `reset()`.
 
 2. In `useGameSocket.ts`, in the `round:start` event handler, extract `sbSeatIndex` and `bbSeatIndex` from the payload and store them in gameStore.
 
 3. In `PlayerSeat.tsx`, accept a new prop:
+
    ```typescript
    blindPosition?: 'SB' | 'BB' | null
    ```
+
    Render a small badge when this prop is set:
    - **"SB" badge:** `bg-blue-600 text-white text-[10px] font-bold rounded px-1`
    - **"BB" badge:** `bg-yellow-600 text-white text-[10px] font-bold rounded px-1`
@@ -255,7 +259,7 @@ All visual card state is atomically cleared before any new round rendering begin
    - `betPrompt` → `null`
    - `myTurn` → `false`
    - `activeTurn` → `null`
-   Then in the same or immediately following `set()`, apply the new round's initial state.
+     Then in the same or immediately following `set()`, apply the new round's initial state.
 
 2. In `FixtureBoard.tsx`, add a guard: if `fixtures` array is empty or `revealedFixtureCount <= 0`, render nothing (return `null`) — not even placeholder slots that might cause a brief flash.
 
@@ -322,8 +326,8 @@ All visual card state is atomically cleared before any new round rendering begin
 ### Deliverables
 
 - [ ] Small Blind and Big Blind number inputs in modal
-- [ ] Auto-sync logic (SB * 2 = BB)
-- [ ] Validation: positive integers, BB = 2 * SB, less than starting chips
+- [ ] Auto-sync logic (SB \* 2 = BB)
+- [ ] Validation: positive integers, BB = 2 \* SB, less than starting chips
 - [ ] Values included in table creation API call
 - [ ] Help text below inputs
 - [ ] Styling matches existing form fields
@@ -407,13 +411,13 @@ The game view is desktop-only. All dimensions are hardcoded pixels with zero med
 
 ### Target screens
 
-| Device | Landscape Resolution | Priority |
-|--------|---------------------|----------|
-| iPhone SE | 667 x 375 | Must work |
-| iPhone 12/13/14 | 844 x 390 | Must work |
-| iPhone 14 Pro Max | 932 x 430 | Must work |
-| Android mid-range | ~800 x 360 | Should work |
-| iPad landscape | 1024 x 768 | Should work (already close) |
+| Device            | Landscape Resolution | Priority                    |
+| ----------------- | -------------------- | --------------------------- |
+| iPhone SE         | 667 x 375            | Must work                   |
+| iPhone 12/13/14   | 844 x 390            | Must work                   |
+| iPhone 14 Pro Max | 932 x 430            | Must work                   |
+| Android mid-range | ~800 x 360           | Should work                 |
+| iPad landscape    | 1024 x 768           | Should work (already close) |
 
 ### Current issues (by component)
 
@@ -741,24 +745,30 @@ Player can't see their hand, chip count, or blind badge while betting.
    - Submitting the raise also collapses the drawer
 
 4. **New props on BettingControls** (mobile drawer needs them):
+
    ```typescript
    interface BettingControlsProps {
      readonly prompt: BetPrompt
      readonly onAction: (action: BetAction, amount: number) => void
-     readonly myHand?: readonly TeamCard[] | null    // NEW — for hand preview in drawer
-     readonly myChips?: number                        // NEW — for chip display in drawer
+     readonly myHand?: readonly TeamCard[] | null // NEW — for hand preview in drawer
+     readonly myChips?: number // NEW — for chip display in drawer
    }
    ```
+
    Pass these from `GameTable.tsx` where `myHand` and `myPlayer.chips` are already available.
 
 5. **Drawer background:** Same glassmorphism as current — `rgba(5,10,24,0.85)` with `backdrop-filter: blur(16px)`. Slightly more opaque than current (0.85 vs 0.7) since the drawer is taller and needs to be readable.
 
 6. **Smooth transition:** The expand/collapse should animate. Use:
+
    ```css
    .betting-drawer {
-     transition: max-height 200ms ease-out, opacity 150ms ease-out;
+     transition:
+       max-height 200ms ease-out,
+       opacity 150ms ease-out;
    }
    ```
+
    Or `transform: translateY(100%)` → `translateY(0)` for GPU-accelerated animation.
 
 7. **Z-index:** The drawer must stay above the table but below any overlays (game over, portrait hint). Current `z-30` is fine.
@@ -805,6 +815,7 @@ Player can't see their hand, chip count, or blind badge while betting.
 ### Completed
 
 #### J10 — Mobile Betting Controls: Collapsible Drawer ✅
+
 - **Strategy (updated by Doni):** Replaced dual-layout (`.betting-desktop-only` / `.betting-mobile-only`) with a single unified layout that works at all viewport sizes. Dead CSS classes removed from `index.css`.
 - **Unified layout — 3 layers:**
   - **Info row:** player's mini hand cards (28×38px, inline) + chip count pill + vertical divider + timer bar. Always visible.
@@ -821,6 +832,7 @@ Player can't see their hand, chip count, or blind badge while betting.
 - Commit: `feat: unified betting controls with collapsible raise drawer and PokerChip component`
 
 #### J9 — Redesign Betting Controls (Chip Stack + Presets) ✅
+
 - Removed slider from RAISE section entirely
 - Chip denomination row: `[5, 10, 25, 50, 100, 200]` circular buttons (`var(--chip-btn-size)` = 36px desktop / 28px mobile); each tap adds to running total; chips that would exceed stack are `opacity-25 cursor-not-allowed`; 100ms `scale(0.88)` press animation via `pressedChip` state
 - Preset row: Min / ½ Pot / Pot / All In pill buttons — tap to replace (not add) running total; active state (gold border + gold text) when `raiseAmount === preset.value`; preset calculations: `Min = minimumBet`, `½ Pot = max(minimumBet, floor(pot/2))`, `Pot = min(pot, chips)`, `All In = chips`
@@ -835,6 +847,7 @@ Player can't see their hand, chip count, or blind badge while betting.
 - Commit: `feat: redesign betting controls with chip stack and presets`
 
 #### J8 — Mobile Responsive Game View (Landscape) ✅
+
 - Approach: CSS custom property overrides inside `@media (max-height: 500px) and (orientation: landscape)` — no JS resize logic, zero impact on desktop
 - `index.css`: Added `--avatar-size`, `--card-w/h`, `--card-flag-size`, `--ring-scale`, `--fixture-tile-w`, `--top-bar-h/px`, `--btn-padding`, `--btn-font-size`, `--slider-w` vars; `.mobile-landscape-hide` utility; `.poker-table-pitch` max-height constraint; `.portrait-hint` CSS for portrait overlay
 - `PlayerSeat.tsx`: avatar `56→40px` via `var(--avatar-size)`; cards `60×84→44×62px` via `var(--card-w/h)`; ring SVG repositioned to `top: 50%, left: 50%, translate(-50%,-50%)` for correct centering at any avatar size, then `scale(var(--ring-scale))` for visual size `68→52px`
@@ -844,27 +857,32 @@ Player can't see their hand, chip count, or blind badge while betting.
 - Commit: `feat: mobile responsive game view (landscape)`
 
 #### J7 — Fix React Hooks Crash on Bot Add ✅
+
 - Root cause confirmed: `prevChipsRef` (useRef) and `chipAnim` (useState) were declared after the `if (!player)` early return — React threw `Rendered more hooks than during the previous render` when a seat transitioned between empty and occupied
 - Fix: moved all hooks (2× useState, 1× useRef, 2× useEffect) to lines 106–123, before the early return at line 133 — hooks now execute unconditionally on every render, and the early-return null-check path is purely a render bail-out with no hook involvement
 - Both useEffect bodies already have internal `if (!player) return` guards so the logic is safe when `player` is null
 - Commit: `fix: resolve React hooks crash in PlayerSeat on bot add`
 
 #### J1 — Fix Winner Banner Timing ✅
+
 - Rewrote the `round:start` handler in `useGameSocket.ts` as a single atomic `store.setState()` call — `showdownResults` is now cleared in the same render tick as the new round data, so the winner banner is guaranteed gone before anything new renders
 - Added an auto-dismiss safety `useEffect` in `PokerTable.tsx`: if the banner is still visible after `5000 + (players.length × 1500)` ms it clears itself — guards against edge cases where the socket event is slow
 - Old fixture cards are wiped atomically as part of the same reset (see J5)
 
 #### J2 — Fix Round Counter Sync ✅
+
 - Root cause was 6 separate `store.getState().setX()` calls in `round:start` firing 6 intermediate renders — the top bar would briefly show a stale `roundNumber` during one of those frames
 - Fixed by consolidating into a single `store.setState({...})` call that sets `currentRound` (with the new `roundNumber`) and all resets together — the round counter now updates atomically with no flicker
 
 #### J3 — Improve Balance Readability ✅
+
 - Completed prior to sprint start during a design polish pass
 - Replaced the small green chip number with a dark pill badge: `rgba(5,10,24,0.85)` background, gold `var(--gold-bright)` text, `font-outfit font-black text-xs`, small circular chip icon alongside the amount
 - Badge border flashes green on chip increase, red on chip decrease — existing animation behavior preserved
 - Changes in: `apps/web/src/components/game/PlayerSeat.tsx`
 
 #### J4 — Display Blind Position Badges ✅ (fully wired — Soni S1 merged)
+
 - `gameStore.ts`: `sbSeatIndex`/`bbSeatIndex` in state; `setBlindPositions(sb, bb)` setter; both cleared in `resetRoundState()` and `reset()`; removed hardcoded stub values
 - `PlayerSeat.tsx`: `blindPosition?: 'SB' | 'BB' | null` prop renders blue pill (SB) or gold pill (BB) below the avatar
 - `PokerTable.tsx`: derives `blindPosition` per seat from store indices, passes prop to `PlayerSeat`
@@ -873,11 +891,13 @@ Player can't see their hand, chip count, or blind badge while betting.
 - `socket-events.ts`: added `blinds:posted` event type to `ServerToClientEvents`
 
 #### J5 — Stale Cards Cleanup Between Rounds ✅
+
 - Root cause: `resetRoundState()` only cleared betting state — `fixtures`, `myHand`, `showdownResults`, `foldedPlayerIds`, `playerActions` were never wiped on `round:start`, causing stale data to linger for one or more render frames
 - Fixed by the same atomic `store.setState()` rewrite in J1/J2 — the single call resets `fixtures: []`, `myHand`, `showdownResults`, `playerActions: {}`, `foldedPlayerIds: []`, `betPrompt: null`, `activeTurn: null`, `myTurn: false`, `revealedFixtureCount: 0`, `waitingForResults: false` all at once
 - `FixtureBoard.tsx` already had an `if (fixtures.length === 0) return null` guard — confirmed still in place
 
 #### J6 — Add Blind Configuration to CreateTableModal ✅
+
 - Added Small Blind (default 5, min 1) and Big Blind (default 10, min 2) inputs to `CreateTableModal.tsx`, displayed side-by-side below Starting Chips
 - Auto-sync: changing SB updates BB to `SB × 2`; changing BB updates SB to `BB ÷ 2` (shows inline error if not cleanly divisible)
 - Validation on submit: positive integers, `BB === SB × 2`, `BB < startingChips` — blocks form submission with a clear error message

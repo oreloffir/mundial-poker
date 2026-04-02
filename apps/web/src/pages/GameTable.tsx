@@ -33,7 +33,9 @@ export function GameTable() {
 
   useEffect(() => {
     resetShowdownPhase()
-    return () => { reset() }
+    return () => {
+      reset()
+    }
   }, [reset, resetShowdownPhase])
 
   const [botLoading, setBotLoading] = useState(false)

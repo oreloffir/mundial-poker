@@ -35,6 +35,7 @@ The DB schema already has `smallBlind`/`bigBlind` on the `tables` table (default
 3. **Persist blind bets** — Record in `bets` table with `bettingRound: 0` and action `SMALL_BLIND` / `BIG_BLIND`. You may need to extend the `BetAction` type in `@wpc/shared` to include these values.
 
 4. **Socket event update** — Add to `round:start` (or `board:reveal`) payload:
+
    ```typescript
    {
      ...existingPayload,
@@ -44,6 +45,7 @@ The DB schema already has `smallBlind`/`bigBlind` on the `tables` table (default
      bigBlind: number,
    }
    ```
+
    Joni needs these fields to render SB/BB badges on the frontend.
 
 5. **Unit tests** — Cover:
@@ -246,8 +248,10 @@ With blinds introduced, bots in SB/BB positions need their blinds auto-posted by
 ## Delivery Log
 
 ### S1 — Blind Position Assignment & Collection
+
 **Status:** ✅ Done (April 1)
 **Files changed:**
+
 - `packages/shared/types/game.types.ts` — Added `SMALL_BLIND`, `BIG_BLIND` to BetAction type
 - `packages/shared/types/socket-events.ts` — Added `sbSeatIndex`, `bbSeatIndex`, `smallBlind`, `bigBlind` to RoundStartPayload
 - `apps/server/src/modules/game/blinds.service.ts` — NEW: `calculateBlindPositions()`, `calculateNextActiveSeat()`
@@ -258,20 +262,25 @@ With blinds introduced, bots in SB/BB positions need their blinds auto-posted by
 **Verified:** SB/BB positions correct (incl. heads-up), chips deducted, pot seeded at 15 (5+10), bets persisted with bettingRound:0, socket payload includes blind data
 
 ### S4 — Blind-Aware Bot Logic
+
 **Status:** ✅ Done (April 1, alongside S1)
 **Files changed:** None — existing bot logic (`currentBet - totalBet`) correctly accounts for blind contributions. Verified bot SB calls only 5 (not 10) and bot BB gets CHECK option.
 
 ### S2 — Betting Order Fix
+
 **Status:** ✅ Done (April 1)
 **Files changed:**
+
 - `apps/server/src/modules/game/betting.service.ts` — Added `startingSeatIndex` param to `initBettingRound()`, BB option logic in `getAllowedActions()`, added `bbPlayerIndex`/`bigBlindAmount` to BettingState
 - `apps/server/src/modules/game/game.service.ts` — Computes UTG (pre-flop) and SB-first (post-flop) starting positions
 
 **Verified:** Pre-flop starts at UTG (after BB), BB gets CHECK+RAISE option when nobody raised, post-flop starts at first active after dealer
 
 ### S3 — Server-Side Bet Timeout Enforcement
+
 **Status:** ✅ Done (April 1)
 **Files changed:**
+
 - `apps/server/src/modules/game/betting.service.ts` — Timer Map, `startBetTimer()`, `cancelBetTimer()`, `cleanupBetTimers()`, auto-cleanup in `clearBettingState()`
 - `apps/server/src/modules/game/game.service.ts` — Timer started after each `bet:prompt` (excluding bots), cancelled on player action
 
@@ -280,11 +289,13 @@ With blinds introduced, bots in SB/BB positions need their blinds auto-posted by
 ### Post-Sprint Fixes (Clodi request, April 1)
 
 **autoAction flag:** ✅ Done
+
 - `handleBetAction()` now accepts `autoAction` param, included in `bet:update` emit
 - `BetUpdatePayload` has `autoAction?: boolean`
 - Timeout handler passes `autoAction: true` through the chain
 
 **Unit Tests:** ✅ Done — 26 tests passing
+
 - `blinds.service.test.ts` (13 tests): position calculation for 3/4/5 players, heads-up, wrap-around, skip eliminated, error cases
 - `betting.service.test.ts` (13 tests): blind seeding, BB option, UTG start, post-flop order, no-blind fallback
 - Coverage: blinds.service 89% lines / 87% branches, betting.service 35% lines / 92% branches

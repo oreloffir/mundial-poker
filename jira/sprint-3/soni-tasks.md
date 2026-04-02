@@ -36,6 +36,7 @@ Currently `demo.service.ts` generates random fixtures with hardcoded teams and s
    - World Cup 2026 specifically (not just leagues)
 
 3. **Build a prototype service** — Create `apps/server/src/modules/match-data/live-match.service.ts`:
+
    ```typescript
    interface LiveMatchService {
      // Fetch today's World Cup fixtures
@@ -55,6 +56,7 @@ Currently `demo.service.ts` generates random fixtures with hardcoded teams and s
    - External goals/penalties → our `homeGoals`, `awayGoals`, penalty fields
 
 5. **Environment config** — API key in `.env`, not hardcoded:
+
    ```
    MATCH_API_PROVIDER=football-data  # or api-football
    MATCH_API_KEY=your-key-here
@@ -109,6 +111,7 @@ Mark's E2E tests spend 15-20s per test on setup: create table → add 4 bots →
 ### Requirements
 
 1. **Create endpoint** — `POST /api/test/seed-game` (only available in development/test env):
+
    ```typescript
    // Request
    {
@@ -257,25 +260,30 @@ When Joni opens her next PR (likely J13 — the overlay polish, or J14 — the t
 _Update after completing each task._
 
 ### S8 — Live Match API Research
+
 **Status:** Not started
 
 ### S9 — Test Seed Endpoint
+
 **Status:** ✅ Done
-**Design:** `POST /api/test/seed-game` creates a guest user, a `__test_<ts>` table, adds BOT_IDS bots, starts the game, and drives it to the requested phase. `DELETE /api/test/cleanup` deletes all `__test_*` tables (cascade removes players). Both routes return 404 in production (`NODE_ENV !== 'production'` guard in `app.ts`).
+**Design:** `POST /api/test/seed-game` creates a guest user, a `__test_<ts>` table, adds BOT*IDS bots, starts the game, and drives it to the requested phase. `DELETE /api/test/cleanup` deletes all `\_\_test*\*` tables (cascade removes players). Both routes return 404 in production (`NODE_ENV !== 'production'`guard in`app.ts`).
 **Phase logic:**
+
 - `betting` — `startRound()` returns; first bet:prompt is live
 - `waiting` — drives all 3 betting rounds via `driveAllBetting()` loop; returns with fixture timers running
 - `showdown` — same as waiting, then cancels fixture timers, resolves all fixtures immediately via `resolveFixturesImmediately()`, fires `resolveRound()` async, returns after 50ms (during player:scored reveals)
-**New export:** `cancelRoundTimers(roundId)` added to `game.service.ts` (needed for showdown phase).
-**42 tests green. Server typecheck clean.**
-**Files:** `apps/server/src/modules/test/test.service.ts` (NEW), `apps/server/src/modules/test/test.controller.ts` (NEW), `apps/server/src/app.ts`, `apps/server/src/modules/game/game.service.ts`
+  **New export:** `cancelRoundTimers(roundId)` added to `game.service.ts` (needed for showdown phase).
+  **42 tests green. Server typecheck clean.**
+  **Files:** `apps/server/src/modules/test/test.service.ts` (NEW), `apps/server/src/modules/test/test.controller.ts` (NEW), `apps/server/src/app.ts`, `apps/server/src/modules/game/game.service.ts`
 
 ### BUG-S3-03 / BUG-S3-04 — Fixture Results During Betting (Full Fix)
+
 **Status:** ✅ Fixed (second pass — root cause fully resolved)
 **Root cause (first pass, incomplete):** My first fix guarded `resolveRound` against being called while betting statuses were active. This prevented the showdown overlay from firing mid-betting, but `fixture:result` socket events were STILL emitting during betting because `resolveDemoFixturesProgressive` was started immediately in `startRound` (before any betting round).
 **Root cause (actual):** The demo fixture timer started on round:start, so `fixture:result` events fired at 5s/10s/15s/20s/25s during betting. The fix is not a guard — it's moving the timer start to AFTER betting completes.
 
 **Fix — complete rewrite of the timing architecture (`game.service.ts`):**
+
 1. **`roundFixtureDataCache`** (new Map) — stores `{ fixtureIds, fixtureRowMap, fixtureTeamMap }` keyed by roundId
 2. **`startDemoFixtureTimer(roundId, tableId, io)`** (new function) — retrieves cached fixture data, starts `resolveDemoFixturesProgressive`, stores result in `activeTimers`
 3. **`startRound`** — removed the direct `resolveDemoFixturesProgressive` call. Now caches fixture display data and starts betting round 1. Timer starts only later.
@@ -285,6 +293,7 @@ _Update after completing each task._
 7. **`resolveRound`** cleanup — also clears `roundFixtureDataCache`
 
 **Phase transition logs added** at every transition (per Clodi's request):
+
 ```
 PHASE: betting-round-1-started | roundId | timestamp
 PHASE: betting | bettingRound | promptedPlayer | timestamp
@@ -306,32 +315,39 @@ PHASE: winner | roundId | winnerIds | timestamp
 ### Flow Audit Follow-Ups (from Mark's sprint-3/shared/flow-audit.md)
 
 #### Item 2 — Desktop vs Mobile Create Table (BUG-S2-03)
+
 **Status:** → Joni
 **Findings:** Server response is viewport-agnostic. `POST /tables` returns `{ success: true, data: { table } }` with status 201 in both cases — no User-Agent checks, no conditional CORS headers (all CORS config is global in `app.ts`). No `table:state` or `table:join` socket event is emitted at creation — only a `lobby:tables` broadcast fires after the 201. The server is not the source of this bug. The client on desktop is not navigating to `data.table.id` after the 201 response. This is purely a frontend issue.
 
 **CONTRACT: no server changes needed.** Tagging → Joni to investigate why `router.push('/table/:id')` (or equivalent) doesn't fire on desktop viewports after receiving the 201.
 
 #### Item 3 — Server restart for Mark
+
 **Note:** Mark's process on port 5174 predates the S9 merge — the test route `/api/test/seed-game` will 404. `tsx watch` does NOT hot-reload newly registered Express routes (routes are bound at startup). Mark must: `kill` old process → `pnpm dev:server` to pick up the S9 test routes.
 
 #### Item 4 — Winner announcement timing
+
 **Status:** ✅ Fixed
 **Problem:** `round:winner` → `round:start` gap was 4s (NEXT_ROUND_DELAY_MS). Mark's audit noted the winner moment was invisible or too brief between Round 1 and Round 2.
 **Fix:** Increased timing constants in `game.service.ts`:
+
 - `WINNER_DISPLAY_DELAY_MS`: 2000 → 3000ms (more build-up before winner event fires)
 - `NEXT_ROUND_DELAY_MS`: 4000 → 7000ms (winner banner stays visible for 7s before next round:start)
-**New sequence:** last `player:scored` → 3s → `round:winner` + `players:update` → 7s → `round:start`
-**Total celebration window:** ~10s from last reveal to new round. Was ~6s.
-**43 tests green. Server typecheck clean.**
+  **New sequence:** last `player:scored` → 3s → `round:winner` + `players:update` → 7s → `round:start`
+  **Total celebration window:** ~10s from last reveal to new round. Was ~6s.
+  **43 tests green. Server typecheck clean.**
 
 ### S10 — Phase Tracker Extraction
+
 **Status:** Not started (optional)
 
 ### S11 — Code Review of Joni's MR (J13 Overlay Polish)
+
 **Status:** ✅ Done
 **Review filed:** `jira/sprint-3/shared/joni-j13-review.md`
 **Verdict:** APPROVED
 **10 substantive comments:**
+
 1. `CardScoreData` inverted dependency (store importing from component) → move to `@wpc/shared`
 2. `useCountUp` duplicated in 2 files → extract to `src/hooks/useCountUp.ts`; same for `getAvatarColor`
 3. Dead `animateRef` in `TeamScoreSubCard` — set but never read → delete
@@ -342,4 +358,4 @@ PHASE: winner | roundId | winnerIds | timestamp
 8. `rowIdx++` mutation inside render → replaced with explicit named delay constants
 9. Dead `mountedRef` in `PokerTable` — set but never read → remove until needed
 10. **CONTRACT REVIEW:** All `player:scored`, `fixture:result`, `round:winner` payloads verified ✅. Pre-existing `blinds:posted` contract mismatch flagged for separate fix (my side).
-**Shared action items:** Soni to fix `as never` casts in reconnect replay + `blinds:posted` contract mismatch.
+    **Shared action items:** Soni to fix `as never` casts in reconnect replay + `blinds:posted` contract mismatch.

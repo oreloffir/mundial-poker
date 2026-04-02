@@ -44,17 +44,30 @@ export function RoundResultsOverlay({
           }}
         >
           <span style={{ fontSize: '0.65rem', lineHeight: 1 }}>{card.team.flagUrl}</span>
-          <span style={{ fontSize: '4px', fontWeight: 800, color: 'rgba(255,255,255,0.8)', lineHeight: 1, letterSpacing: '0.02em' }}>
+          <span
+            style={{
+              fontSize: '4px',
+              fontWeight: 800,
+              color: 'rgba(255,255,255,0.8)',
+              lineHeight: 1,
+              letterSpacing: '0.02em',
+            }}
+          >
             {card.team.code}
           </span>
         </div>
       ))}
       {myChips !== undefined && (
         <>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+          <div
+            style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
+          />
           <div className="flex items-center gap-1">
             <PokerChip size={10} style={{ flexShrink: 0 }} />
-            <span className="font-outfit font-black" style={{ fontSize: 10, color: 'var(--gold-bright)' }}>
+            <span
+              className="font-outfit font-black"
+              style={{ fontSize: 10, color: 'var(--gold-bright)' }}
+            >
               {myChips}
             </span>
           </div>
@@ -100,7 +113,11 @@ export function RoundResultsOverlay({
         {handPreview}
 
         {/* Progress: "N of M" + colored dots */}
-        <div data-testid="showdown-progress" className="flex items-center flex-shrink-0" style={{ gap: 8 }}>
+        <div
+          data-testid="showdown-progress"
+          className="flex items-center flex-shrink-0"
+          style={{ gap: 8 }}
+        >
           <span
             className="font-outfit"
             style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-dim)' }}
@@ -161,11 +178,7 @@ export function RoundResultsOverlay({
         }}
       >
         {playerScoreReveals.map((r) => (
-          <RevealedPlayerMini
-            key={r.userId}
-            result={r}
-            isMe={r.userId === currentUserId}
-          />
+          <RevealedPlayerMini key={r.userId} result={r} isMe={r.userId === currentUserId} />
         ))}
       </div>
     </div>

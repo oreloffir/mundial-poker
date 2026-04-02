@@ -33,12 +33,14 @@ You shipped `lobby:tables` on the server (broadcasts full table list after creat
 ### Requirements
 
 1. In `Lobby.tsx`, remove the `setInterval` polling entirely:
+
    ```typescript
    // REMOVE this:
    const interval = setInterval(fetchTables, 5000)
    ```
 
 2. Replace with a socket listener:
+
    ```typescript
    useEffect(() => {
      // Fetch once on mount
@@ -205,17 +207,20 @@ In the showdown polish ticket (`jira/sprint-2/shared/showdown-polish.md`), Issue
 _Update this section after completing each fix. Clodi reads this file across sessions to track your progress._
 
 ### SF-01c — hasFolded Test Fix
+
 **Status:** ✅ Done
 **Fix:** Added `hasFolded: false` to `makePlayers()` in `game-engine.test.ts`. One-line change. 42 tests green, typecheck clean.
 **Files:** `apps/server/src/__tests__/game-engine.test.ts`
 
 ### SF-01a — Lobby Socket Wiring
+
 **Status:** ✅ Done
 **Root cause:** `setInterval(fetchTables, 5000)` polling forever. Server `lobby:tables` event was already emitting but never consumed on the client.
 **Fix:** Replaced polling with `socket.on('lobby:tables', ...)` listener + single initial REST fetch on mount. Updated `LobbyTableItem.status` to `TableStatus` in shared types. Exported `FixtureResultPayload`, `PlayerScoredPayload`, `RoundWinnerPayload`, `LobbyTableItem` from `@wpc/shared` index.
 **Files:** `apps/web/src/pages/Lobby.tsx`, `packages/shared/types/socket-events.ts`, `packages/shared/index.ts`
 
 ### SF-01d — Issue #9 Investigation + opponentTeam data
+
 **Status:** ✅ Done
 **Root cause (Issue #9):** Server was always correct — `userId` and `isBot` in `player:scored` were accurate. Bug was 100% frontend. Joni's fix is correct.
 **opponentTeam (Issue #5 unblocked):** `player:scored.cardScores[i].fixture` now includes `opponentTeam: { name, code, flagUrl } | null`. Team loading in `resolveRound` refactored to pull all fixture team IDs in one query.
@@ -223,6 +228,7 @@ _Update this section after completing each fix. Clodi reads this file across ses
 **Files:** `apps/server/src/modules/game/game.service.ts`, `packages/shared/types/socket-events.ts`, `packages/shared/index.ts`
 
 ### SF-01b — Reconnect State Recovery
+
 **Status:** ✅ Done
 **Design:** `roundPhaseMap: Map<tableId, RoundPhaseState>` tracks current phase + accumulated `resolvedFixtures[]` + `revealedPlayerScores[]` per table. Cleared on `clearRoundPhase(tableId)` at round start and game:over.
 **Phases tracked:** `dealing → betting → waiting → fixtures → scoring → reveals → winner`

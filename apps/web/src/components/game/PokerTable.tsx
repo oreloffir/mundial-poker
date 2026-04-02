@@ -32,7 +32,6 @@ const seatStyles: readonly React.CSSProperties[] = [
   { top: '38%', right: '5%', transform: 'translate(50%, -50%)' },
 ]
 
-
 function PotDisplay({
   pot,
   isAnimatingOut,
@@ -87,12 +86,11 @@ function WinnerBanner({
   const { winnerIds, potDistribution } = winnerData
   const isSplit = winnerIds.length > 1
 
-  const winnerNames = winnerIds
-    .map((id: string) => players.find((p) => p.userId === id)?.username ?? id)
+  const winnerNames = winnerIds.map(
+    (id: string) => players.find((p) => p.userId === id)?.username ?? id,
+  )
 
-  const shareAmount = winnerIds.length > 0
-    ? (potDistribution[winnerIds[0]!] ?? 0)
-    : 0
+  const shareAmount = winnerIds.length > 0 ? (potDistribution[winnerIds[0]!] ?? 0) : 0
 
   let subtitleText: string
   if (winnerIds.length === 2) {
@@ -138,7 +136,13 @@ function WinnerBanner({
   )
 }
 
-function WaitingBadge({ fixtureCount, resolvedCount }: { readonly fixtureCount: number; readonly resolvedCount: number }) {
+function WaitingBadge({
+  fixtureCount,
+  resolvedCount,
+}: {
+  readonly fixtureCount: number
+  readonly resolvedCount: number
+}) {
   const allResolved = resolvedCount >= fixtureCount && fixtureCount > 0
   return (
     <div
@@ -251,7 +255,10 @@ export function PokerTable({
             style={{ top: '18%', left: '50%', transform: 'translateX(-50%)' }}
           >
             <div className="pointer-events-auto">
-              <FixtureBoard fixtures={fixtures as unknown as readonly RawFixture[]} revealedCount={revealedFixtureCount} />
+              <FixtureBoard
+                fixtures={fixtures as unknown as readonly RawFixture[]}
+                revealedCount={revealedFixtureCount}
+              />
               {waitingForResults && (
                 <div className="flex justify-center mt-2">
                   <WaitingBadge
@@ -269,12 +276,12 @@ export function PokerTable({
             const isActive = !!player && !!activeTurn && activeTurn.userId === player.userId
             const lastAction = player ? (playerActions[player.userId] ?? null) : null
             const isFolded = !!player && foldedPlayerIds.includes(player.userId)
-            const isWinner = isWinnerPhase && !!player && (winnerData?.winnerIds ?? []).includes(player.userId)
+            const isWinner =
+              isWinnerPhase && !!player && (winnerData?.winnerIds ?? []).includes(player.userId)
             const isMe = player?.userId === currentUserId
             const playerCards = isMe ? myHand : null
             const hasCards = isInRound && !!player && !player.isEliminated
-            const blindPosition =
-              index === sbSeatIndex ? 'SB' : index === bbSeatIndex ? 'BB' : null
+            const blindPosition = index === sbSeatIndex ? 'SB' : index === bbSeatIndex ? 'BB' : null
 
             return (
               <div
@@ -283,9 +290,7 @@ export function PokerTable({
                 className="absolute z-10"
                 style={{
                   ...style,
-                  ...(player
-                    ? { filter: 'drop-shadow(0 0 14px rgba(212,168,67,0.2))' }
-                    : {}),
+                  ...(player ? { filter: 'drop-shadow(0 0 14px rgba(212,168,67,0.2))' } : {}),
                 }}
               >
                 <PlayerSeat
@@ -296,8 +301,14 @@ export function PokerTable({
                   turnTimeoutMs={isActive ? activeTurn!.timeoutMs : null}
                   lastAction={lastAction}
                   isFolded={isFolded}
-                  scoreResult={player ? (playerScoreReveals.find((r) => r.userId === player.userId) ?? null) : null}
-                  isCurrent={!!player && playerScoreReveals[currentRevealIndex]?.userId === player.userId}
+                  scoreResult={
+                    player
+                      ? (playerScoreReveals.find((r) => r.userId === player.userId) ?? null)
+                      : null
+                  }
+                  isCurrent={
+                    !!player && playerScoreReveals[currentRevealIndex]?.userId === player.userId
+                  }
                   isWinner={isWinner}
                   cards={playerCards}
                   hasCards={hasCards}
@@ -308,7 +319,6 @@ export function PokerTable({
           })}
         </div>
       </div>
-
     </div>
   )
 }

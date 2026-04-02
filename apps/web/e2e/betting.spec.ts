@@ -8,9 +8,7 @@ test.describe('Betting Controls', () => {
     await guestLogin(page)
   })
 
-  test('shows Fold, Check/Call, Raise, and All-In buttons during player turn', async ({
-    page,
-  }) => {
+  test('shows Fold, Check/Call, Raise, and All-In buttons during player turn', async ({ page }) => {
     await setupGame(page, { name: 'E2E Betting Controls' })
     const prompt = await waitForBetPrompt(page)
     expect(prompt).not.toBeNull()

@@ -6,7 +6,12 @@ import { createGuest } from '../auth/auth.service.js'
 import * as tableService from '../tables/table.service.js'
 import * as tableRepo from '../tables/table.repository.js'
 import { BOT_IDS, isBotUser } from '../game/bot.service.js'
-import { startRound, handleBetAction, cancelRoundTimers, resolveRound } from '../game/game.service.js'
+import {
+  startRound,
+  handleBetAction,
+  cancelRoundTimers,
+  resolveRound,
+} from '../game/game.service.js'
 import { getBettingState, cancelBetTimer, getAllowedActions } from '../game/betting.service.js'
 import { generateDemoResult } from '../game/demo.service.js'
 import type { BetAction } from '@wpc/shared'
@@ -147,7 +152,12 @@ export async function seedGame(req: SeedRequest, io: Server): Promise<SeedRespon
     .innerJoin(users, eq(tablePlayers.userId, users.id))
     .where(eq(tablePlayers.tableId, table.id))
 
-  console.log('TestService - seedGame', { tableId: table.id, phase: req.phase, playerCount: finalPlayers.length, roundId })
+  console.log('TestService - seedGame', {
+    tableId: table.id,
+    phase: req.phase,
+    playerCount: finalPlayers.length,
+    roundId,
+  })
 
   return {
     tableId: table.id,

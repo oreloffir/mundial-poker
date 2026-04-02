@@ -49,7 +49,13 @@ describe('calculateBlindPositions', () => {
   })
 
   it('skips multiple eliminated players', () => {
-    const players = [makePlayer(0), makePlayer(1, 0), makePlayer(2, 0), makePlayer(3), makePlayer(4)]
+    const players = [
+      makePlayer(0),
+      makePlayer(1, 0),
+      makePlayer(2, 0),
+      makePlayer(3),
+      makePlayer(4),
+    ]
     const result = calculateBlindPositions(0, players)
     expect(result.sbSeatIndex).toBe(3)
     expect(result.bbSeatIndex).toBe(4)

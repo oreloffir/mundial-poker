@@ -14,7 +14,10 @@ export function bettingControls(page: Page) {
     call: bar.locator('button').filter({ hasText: /Call/ }).first(),
     fold: bar.locator('button').filter({ hasText: 'Fold' }).first(),
     raise: bar.locator('button').filter({ hasText: /Raise/ }).first(),
-    allIn: bar.locator('button').filter({ hasText: /All.?In/i }).first(),
+    allIn: bar
+      .locator('button')
+      .filter({ hasText: /All.?In/i })
+      .first(),
   }
 }
 
@@ -71,7 +74,10 @@ export async function playAllBettingPhases(page: Page): Promise<void> {
  */
 export async function waitForWinnerBanner(page: Page, timeoutMs = 60000): Promise<string> {
   await page.waitForSelector('[data-testid="winner-banner"]', { timeout: timeoutMs })
-  return page.locator('[data-testid="winner-banner"]').textContent().then((t) => t ?? '')
+  return page
+    .locator('[data-testid="winner-banner"]')
+    .textContent()
+    .then((t) => t ?? '')
 }
 
 /**
@@ -100,7 +106,10 @@ export async function playFullRound(page: Page): Promise<string> {
  * Get the current round number from the data-testid.
  */
 export async function getRoundNumber(page: Page): Promise<string | null> {
-  return page.locator('[data-testid="round-counter"]').textContent().catch(() => null)
+  return page
+    .locator('[data-testid="round-counter"]')
+    .textContent()
+    .catch(() => null)
 }
 
 /**

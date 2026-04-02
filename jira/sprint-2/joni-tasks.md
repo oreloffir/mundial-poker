@@ -106,18 +106,19 @@ Your job: consume these new events and build a visual experience that tells the 
 
 ### Doni's design decisions (follow these)
 
-| Phase | Location | Why |
-|-------|----------|-----|
-| Fixture reveals | On the table (no overlay) | Players see each other's reactions. Social moment. |
-| Calculating | Lightweight overlay, 2s only | Pure transition beat. Progress bar + text. |
-| Player scores | Full-screen overlay | The breakdown story needs the full canvas. |
-| Winner | Back to table | Chip movement, seat reactions — social again. |
+| Phase           | Location                     | Why                                                |
+| --------------- | ---------------------------- | -------------------------------------------------- |
+| Fixture reveals | On the table (no overlay)    | Players see each other's reactions. Social moment. |
+| Calculating     | Lightweight overlay, 2s only | Pure transition beat. Progress bar + text.         |
+| Player scores   | Full-screen overlay          | The breakdown story needs the full canvas.         |
+| Winner          | Back to table                | Chip movement, seat reactions — social again.      |
 
 **Components from Doni's spec:** 6 new components to build, 2 to delete (`ShowdownOverlay.tsx`, `WaitingOverlay.tsx`). The biggest new pieces are `PlayerScoreCard` + `TeamScoreSubCard`. See the spec for full details.
 
 **Score breakdown card:** Two team sub-cards side by side. Each shows: match result → score component rows (only shown when non-zero) → sub-total. Grand total below in Cinzel gold. Rows stagger in at 150ms each, score counts up from 0.
 
 **Design answers from Clodi:**
+
 - **Folded players:** Show dimmed in a bottom strip with "Folded" label. Don't omit them.
 - **Bots:** Show 🤖 indicator on avatar. Players should know who's a bot.
 - **Split pot:** `"{Player1} & {Player2} split the pot — 100 chips each"`. 3+ way: `"3-way split — 67 chips each"`.
@@ -132,12 +133,14 @@ Your job: consume these new events and build a visual experience that tells the 
 **Current:** Blank "Matches in Progress" spinner. All fixture scores appear at once.
 
 **New behavior:**
+
 - When `round:pause` fires: show a "Matches in Progress" state. Fixture cards show "VS" between teams.
 - When each `fixture:result` arrives: update THAT specific fixture card with the match score. Animate the transition (flash, scale, glow — whatever Doni designs).
 - Highlight fixtures that contain YOUR teams differently (the player's own cards). If you're holding Brazil and Brazil just won 3-0, that fixture should feel personal.
 - Show a progress indicator: "2 of 5 matches complete" or a progress bar.
 
 **Store updates:**
+
 ```typescript
 // In useGameSocket.ts
 socket.on('fixture:result', (result) => {
@@ -151,6 +154,7 @@ socket.on('fixture:result', (result) => {
 **Event:** `round:scoring` fires after all fixtures resolved.
 
 **New behavior:**
+
 - Brief transition state: dim the fixture board slightly, show "Calculating scores..." text or animation
 - This is a dramatic pause — make it feel intentional, not like lag
 - Duration: ~2 seconds before player reveals start
@@ -160,6 +164,7 @@ socket.on('fixture:result', (result) => {
 **Event:** `player:scored` events arrive one at a time, lowest score first. Winner is last.
 
 **This is the most important phase.** Each `player:scored` event includes:
+
 ```typescript
 {
   userId: string
@@ -176,6 +181,7 @@ socket.on('fixture:result', (result) => {
 ```
 
 **New behavior for each player reveal:**
+
 1. Flip their cards face-up (show team flags + codes)
 2. Show the score breakdown for each card — this is the hero element:
    ```
@@ -191,12 +197,14 @@ socket.on('fixture:result', (result) => {
 5. After all cards scored: show player's total hand score prominently
 
 **Where to render this:** Evaluate these options (defer to Doni's mockup if available):
+
 - **Option A:** Expand from the player's seat position (overlay near their avatar)
 - **Option B:** Center-stage spotlight area (one large card in the middle)
 - **Option C:** Side panel that slides in
 - Needs to work on both desktop AND mobile landscape
 
 **Existing ShowdownOverlay.tsx:**
+
 - This component at `apps/web/src/components/game/ShowdownOverlay.tsx` has score count-up animations and ranked result display
 - It's currently unused — evaluate whether to resurrect and adapt it for the new `player:scored` data structure, or build fresh
 - If the component's animation approach is good, reuse the animation logic even if you rebuild the layout
@@ -206,6 +214,7 @@ socket.on('fixture:result', (result) => {
 **Event:** `round:winner` fires after all players revealed.
 
 **New behavior:**
+
 - Winner's seat gets special treatment (glow, highlight, gold border)
 - Banner shows: winner name + **correct chip share** from `potDistribution[winnerId]` (not total pot — important for split pots)
 - If multiple winners (tie): show all winners with equal share
@@ -216,6 +225,7 @@ socket.on('fixture:result', (result) => {
 #### Phase 5 — Transition to Next Round
 
 **New behavior:**
+
 - After winner display (~3-5s), clear all showdown state
 - Reset should be atomic (same pattern as your J1/J5 fix from Sprint 1)
 - Brief "Round {N}" announcement before new cards deal
@@ -225,6 +235,7 @@ socket.on('fixture:result', (result) => {
 ### Store changes needed
 
 In `gameStore.ts`, add state for the new phases:
+
 ```typescript
 // Phase tracking
 showdownPhase: 'idle' | 'matches' | 'scoring' | 'revealing' | 'winner' | null
@@ -309,6 +320,7 @@ Remove: `round:results` and `round:showdown` handlers.
 _Update this section as you complete tasks._
 
 ### J10 — BB Read-Only + QA Items ✅
+
 - **BB input:** `readOnly`, inline style `rgba(255,255,255,0.03)` bg, `rgba(255,255,255,0.06)` border, `var(--text-dim)` text, `cursor: default`. Helper text updated to "Always 2× the small blind". Added `data-testid="big-blind-input"`. Removed `disabled` attr (readOnly is sufficient; disabled blocks form submission of the value).
 - **`fixture-card-{n}`:** Replaced old `fixture-scored/fixture-pending` testids with indexed `fixture-card-0` through `fixture-card-4` on each tile in `FixtureBoard.tsx`.
 - **`sb-badge` / `bb-badge`:** Added to the blind position `<span>` in `PlayerSeat.tsx`.
@@ -319,15 +331,18 @@ _Update this section as you complete tasks._
 - Commit: `fix: BB read-only + all remaining QA testids`
 
 ### J11 — TestIDs + TypeScript Fix ✅
+
 - **`pot-total`:** Added `data-testid="pot-total"` to the pot amount `<span>` inside `PotDisplay` in `PokerTable.tsx`.
 - **`players:update` TypeScript fix:** Added `'players:update': (players: readonly { readonly userId: string; readonly chips: number }[]) => void` to `ServerToClientEvents` in `packages/shared/types/socket-events.ts`. Removed the `as unknown` cast in `useGameSocket.ts`. `pnpm typecheck` passes with 0 errors.
 - **`promptedAt` threading:** The linter had added `promptedAt` as required to `BetPromptState` in `gameStore.ts` and updated `BettingControls`. Wired `promptedAt` through the `table:state` inline betPrompt type and both `setBetPrompt` callsites.
 - Commit: bundled with J10 commit
 
 ### J12 — Showdown Frontend Experience
+
 **Status:** Fully implemented ✅
 
 #### J12 Full Implementation ✅
+
 - **Phase 1 (waiting):** `FixtureBoard` reads `fixtureResults` from store. Shows all tiles in VS state when `showdownPhase === 'waiting'`. `WaitingBadge` updated to show "N of 5 matches complete" counter.
 - **Phase 2 (fixtures):** Each `fixture:result` event → `addFixtureResult` → tile animates to score with `tile-reveal` 0.4s. Uses team data from S6 payload (`homeTeam.code`, `homeTeam.flagUrl`). Score colors follow spec (win=green, draw=gold, loss=muted). Event icons (🔥🧤🥅) from `hasPenalties`.
 - **Phase 3 (calculating):** `CalculatingOverlay` — full-screen blur `rgba(5,10,24,0.78)`, ⚽ icon, "Calculating Scores" in Cinzel gold, animated progress bar fills over 1.6s. Fires on `round:scoring`.
@@ -338,6 +353,7 @@ _Update this section as you complete tasks._
 - `pnpm typecheck` passes with 0 errors.
 
 #### J12 Prep ✅
+
 - **Read design spec:** `docs/design/end-of-round-spec.md` + `docs/STYLE-GUIDE.md` — understood 5-phase flow, component breakdown, color tokens, animation system.
 - **Deleted:** `ShowdownOverlay.tsx`, `WaitingOverlay.tsx` (replaced by new component set per Doni's spec).
 - **Scaffolded 6 new components** (props interfaces + TODO stubs, no rendering logic):

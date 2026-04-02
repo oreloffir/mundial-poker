@@ -20,15 +20,16 @@ migration cost is low; the crash recovery risk is too high to skip.
 
 **Recommendation: Fly.io**
 
-| Option | Pros | Cons |
-|--------|------|------|
-| **Fly.io** | Free tier generous, persistent volumes, global edge, WebSocket support built-in, easy rollback | Slightly more complex than Railway |
-| Railway | Simplest DX, free tier | WebSocket support less reliable at scale, limited persistent volumes |
-| Render | Solid free tier | Cold starts on free plan, WebSocket reconnects on deploy |
-| VPS/DigitalOcean | Full control, cheap | We have to manage SSL, uptime, restarts — too much ops burden for launch |
-| Kubernetes/ECS | Enterprise scaling | Overkill for June launch — weeks of setup, ongoing ops cost |
+| Option           | Pros                                                                                           | Cons                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Fly.io**       | Free tier generous, persistent volumes, global edge, WebSocket support built-in, easy rollback | Slightly more complex than Railway                                       |
+| Railway          | Simplest DX, free tier                                                                         | WebSocket support less reliable at scale, limited persistent volumes     |
+| Render           | Solid free tier                                                                                | Cold starts on free plan, WebSocket reconnects on deploy                 |
+| VPS/DigitalOcean | Full control, cheap                                                                            | We have to manage SSL, uptime, restarts — too much ops burden for launch |
+| Kubernetes/ECS   | Enterprise scaling                                                                             | Overkill for June launch — weeks of setup, ongoing ops cost              |
 
 **Fly.io** gives us:
+
 - Managed PostgreSQL (Fly Postgres) or easy external DB connection
 - Persistent volumes for Redis
 - WebSocket-native support (important for Socket.io)
@@ -36,6 +37,7 @@ migration cost is low; the crash recovery risk is too high to skip.
 - ~$20–40/month for our scale (see load estimate below)
 
 **Budget estimate for launch: $30–50/month**
+
 - 1x shared-cpu-1x (256MB) for the Node.js server: ~$5/month
 - 1x Fly Postgres (shared): ~$7/month
 - 1x Redis (Upstash free tier → $0 at our scale): ~$0
@@ -55,6 +57,7 @@ Here's why:
 - Our actual load (see section 7) peaks at ~200–500 connections — well within single-process range.
 
 **What this means for Soni:**
+
 - No Redis adapter for Socket.io needed at launch
 - Still: **migrate in-memory state to Redis** (see section 3 — this is about crash recovery, not scaling)
 - If we ever scale to multi-instance, the Redis adapter is already a dep (`@socket.io/redis-adapter`)
@@ -73,11 +76,11 @@ has the state.
 
 Three module-level Maps in the server process hold live game state:
 
-| Map | File | What it holds | Crash consequence |
-|-----|------|---------------|-------------------|
-| `activeBettingStates` | `betting.service.ts:26` | Live betting state per round | Pots evaporate mid-hand |
-| `roundBlindCache` | `game.service.ts:97` | Blind amounts per round | Bet sizing corrupted |
-| `roundPhaseMap` | `game.service.ts:63` | Phase (pre-flop, flop, etc.) per table | Round stuck, unresolvable |
+| Map                   | File                    | What it holds                          | Crash consequence         |
+| --------------------- | ----------------------- | -------------------------------------- | ------------------------- |
+| `activeBettingStates` | `betting.service.ts:26` | Live betting state per round           | Pots evaporate mid-hand   |
+| `roundBlindCache`     | `game.service.ts:97`    | Blind amounts per round                | Bet sizing corrupted      |
+| `roundPhaseMap`       | `game.service.ts:63`    | Phase (pre-flop, flop, etc.) per table | Round stuck, unresolvable |
 
 A crash mid-hand with real money at stake is unacceptable. All three Maps must be persisted.
 
@@ -107,6 +110,7 @@ over microseconds.
 ### Redis provider
 
 **Upstash** (serverless Redis):
+
 - Free tier: 10,000 commands/day, 256MB — covers launch
 - Pay-as-you-go after: ~$0.2/100K commands
 - Fly.io extension available, or standalone
@@ -119,14 +123,15 @@ Alternative: Fly.io Redis (Upstash-backed anyway).
 
 **Recommendation: Supabase (managed PostgreSQL)**
 
-| Option | Cost | Pros | Cons |
-|--------|------|------|------|
-| **Supabase** | Free → $25/mo | Generous free tier, PG 15, built-in pooler, backups | US-east only on free |
-| Neon | Free → $19/mo | Serverless scaling, branching | Cold starts on free tier |
-| Fly Postgres | ~$7/mo | Co-located with app | Self-managed backups, no built-in pooler |
-| RDS | $15+/mo | AWS-grade reliability | Overkill, expensive for our scale |
+| Option       | Cost          | Pros                                                | Cons                                     |
+| ------------ | ------------- | --------------------------------------------------- | ---------------------------------------- |
+| **Supabase** | Free → $25/mo | Generous free tier, PG 15, built-in pooler, backups | US-east only on free                     |
+| Neon         | Free → $19/mo | Serverless scaling, branching                       | Cold starts on free tier                 |
+| Fly Postgres | ~$7/mo        | Co-located with app                                 | Self-managed backups, no built-in pooler |
+| RDS          | $15+/mo       | AWS-grade reliability                               | Overkill, expensive for our scale        |
 
 **Supabase free tier covers us for launch:**
+
 - 500MB storage (our schema is tiny)
 - 2GB bandwidth
 - Daily backups
@@ -148,6 +153,7 @@ Currently using `drizzle-kit push` (schema push, no versioned migrations). **Thi
 before launch.**
 
 **Plan:**
+
 1. Switch to `drizzle-kit generate` + `drizzle-kit migrate` before Sprint 5
 2. Commit migration files to `apps/server/src/db/migrations/`
 3. Run migrations in CD pipeline before server starts
@@ -191,8 +197,8 @@ app.get('/api/health', (_req, res) => {
     data: {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      activeGames: gameService.getActiveGameCount(),  // new metric
-    }
+      activeGames: gameService.getActiveGameCount(), // new metric
+    },
   })
 })
 ```
@@ -209,6 +215,7 @@ enough. Players get a brief disconnect, reconnect, and state is restored from Re
 ### Error tracking
 
 **Sentry** — free tier covers us:
+
 - 5,000 errors/month free
 - Node.js SDK is 2 lines to install
 - Captures unhandled exceptions and `console.error` calls
@@ -221,6 +228,7 @@ pnpm add @sentry/node --filter server
 ### Infrastructure metrics (built-in via Fly.io)
 
 Fly.io dashboard gives us for free:
+
 - CPU usage, memory usage
 - HTTP request counts and latency
 - WebSocket connection count (via socket.io metrics)
@@ -240,22 +248,24 @@ Fly.io dashboard gives us for free:
 ### Log aggregation
 
 Fly.io ships logs to `fly logs` by default. For launch:
+
 - `fly logs --app wpc-server` is enough for debugging
 - If we need search/alerting: ship to **Logtail** (free tier: 1GB/month) via `fly log-shipper`
 
 ### Key metrics to watch
 
-| Metric | Source | Alert threshold |
-|--------|--------|----------------|
-| HTTP 5xx rate | Fly.io dashboard | > 1% over 5min |
-| WebSocket disconnect rate | Socket.io | > 20% in 1min |
-| Memory usage | Fly.io | > 80% |
-| Active betting states | Redis key count | Anomalous spike |
-| DB connection errors | Sentry | Any |
+| Metric                    | Source           | Alert threshold |
+| ------------------------- | ---------------- | --------------- |
+| HTTP 5xx rate             | Fly.io dashboard | > 1% over 5min  |
+| WebSocket disconnect rate | Socket.io        | > 20% in 1min   |
+| Memory usage              | Fly.io           | > 80%           |
+| Active betting states     | Redis key count  | Anomalous spike |
+| DB connection errors      | Sentry           | Any             |
 
 ### Game-specific observability (Sprint 4 scope)
 
 Soni should instrument:
+
 - Active table count
 - Active round count
 - Average hand duration
@@ -306,30 +316,30 @@ Soni should instrument:
 
 ## Recommendation Summary
 
-| Decision | Answer |
-|----------|--------|
-| Deployment target | Fly.io |
-| Scaling model | Single process (auto-restart on failure) |
-| Redis | Yes — migrate all 3 Maps, use Upstash free tier |
-| PostgreSQL | Supabase managed (free tier at launch) |
-| Graceful restart | Fly rolling deploy + SIGTERM handler (60s drain) |
-| Monitoring | Sentry (errors) + Fly.io metrics + structured logs |
-| Peak load | ~300–750 WebSocket connections, single server handles it |
+| Decision          | Answer                                                   |
+| ----------------- | -------------------------------------------------------- |
+| Deployment target | Fly.io                                                   |
+| Scaling model     | Single process (auto-restart on failure)                 |
+| Redis             | Yes — migrate all 3 Maps, use Upstash free tier          |
+| PostgreSQL        | Supabase managed (free tier at launch)                   |
+| Graceful restart  | Fly rolling deploy + SIGTERM handler (60s drain)         |
+| Monitoring        | Sentry (errors) + Fly.io metrics + structured logs       |
+| Peak load         | ~300–750 WebSocket connections, single server handles it |
 
 ---
 
 ## Timeline
 
-| Task | Owner | Sprint | Notes |
-|------|-------|--------|-------|
-| Redis state migration (3 Maps) | Soni | Sprint 4 | Unblocked by this doc |
-| SIGTERM drain handler | Soni / Devsi | Sprint 4 | 1-2 day task |
-| `fly.toml` + Fly.io setup | Devsi | Sprint 4 | 2 days |
-| Supabase prod DB setup | Devsi | Sprint 4 | 0.5 days |
-| Sentry integration | Devsi | Sprint 4 | 0.5 days |
-| Migrate to versioned DB migrations | Soni + Devsi | Sprint 4–5 | Coordinate |
-| SSL / custom domain | Devsi | Sprint 5 | Fly.io built-in |
-| Load testing | Devsi | Sprint 5 | Before launch |
+| Task                               | Owner        | Sprint     | Notes                 |
+| ---------------------------------- | ------------ | ---------- | --------------------- |
+| Redis state migration (3 Maps)     | Soni         | Sprint 4   | Unblocked by this doc |
+| SIGTERM drain handler              | Soni / Devsi | Sprint 4   | 1-2 day task          |
+| `fly.toml` + Fly.io setup          | Devsi        | Sprint 4   | 2 days                |
+| Supabase prod DB setup             | Devsi        | Sprint 4   | 0.5 days              |
+| Sentry integration                 | Devsi        | Sprint 4   | 0.5 days              |
+| Migrate to versioned DB migrations | Soni + Devsi | Sprint 4–5 | Coordinate            |
+| SSL / custom domain                | Devsi        | Sprint 5   | Fly.io built-in       |
+| Load testing                       | Devsi        | Sprint 5   | Before launch         |
 
 **Infrastructure can be production-ready by end of Sprint 4** if Soni starts Redis migration
 in parallel.

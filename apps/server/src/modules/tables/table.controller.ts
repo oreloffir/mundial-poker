@@ -66,7 +66,9 @@ export function createTableRouter(io: Server): Router {
       const table = await tableService.joinTable(req.params.id, authReq.user!.userId)
       res.json({ success: true, data: { table } })
       broadcastLobbyTables(io).catch((err) =>
-        console.error('TableController - POST /:id/join - broadcastLobbyTables failed', { error: err }),
+        console.error('TableController - POST /:id/join - broadcastLobbyTables failed', {
+          error: err,
+        }),
       )
     } catch (error) {
       next(error)
@@ -79,7 +81,9 @@ export function createTableRouter(io: Server): Router {
       const table = await tableService.leaveTable(req.params.id, authReq.user!.userId)
       res.json({ success: true, data: { table } })
       broadcastLobbyTables(io).catch((err) =>
-        console.error('TableController - POST /:id/leave - broadcastLobbyTables failed', { error: err }),
+        console.error('TableController - POST /:id/leave - broadcastLobbyTables failed', {
+          error: err,
+        }),
       )
     } catch (error) {
       next(error)
@@ -113,7 +117,9 @@ export function createTableRouter(io: Server): Router {
       const table = await tableService.startGame(tableId, authReq.user!.userId)
       res.json({ success: true, data: { table } })
       broadcastLobbyTables(io).catch((err) =>
-        console.error('TableController - POST /:id/start - broadcastLobbyTables failed', { error: err }),
+        console.error('TableController - POST /:id/start - broadcastLobbyTables failed', {
+          error: err,
+        }),
       )
       startRound(tableId, io).catch((err) =>
         console.error('TableController - startRound - failed', { tableId, error: err }),

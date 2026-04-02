@@ -89,7 +89,8 @@ export function TeamScoreSubCard({ card, staggerBase, animate }: TeamScoreSubCar
   const baseDelay = staggerBase
   const goalBonusDelay = staggerBase + 150
   const cleanSheetDelay = staggerBase + (card.goalBonus > 0 ? 300 : 150)
-  const penaltyDelay = staggerBase + (card.goalBonus > 0 ? 300 : 150) + (card.cleanSheetBonus > 0 ? 150 : 0)
+  const penaltyDelay =
+    staggerBase + (card.goalBonus > 0 ? 300 : 150) + (card.cleanSheetBonus > 0 ? 150 : 0)
 
   return (
     <div
@@ -121,17 +122,10 @@ export function TeamScoreSubCard({ card, staggerBase, animate }: TeamScoreSubCar
             vs {fixture.opponentTeam.flagUrl} {fixture.opponentTeam.name}
           </span>
         )}
-        <div
-          className="flex items-center gap-1 font-outfit font-black"
-          style={{ fontSize: 15 }}
-        >
-          <span style={{ color: scoreColor(teamGoals, teamGoals > oppGoals) }}>
-            {teamGoals}
-          </span>
+        <div className="flex items-center gap-1 font-outfit font-black" style={{ fontSize: 15 }}>
+          <span style={{ color: scoreColor(teamGoals, teamGoals > oppGoals) }}>{teamGoals}</span>
           <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>–</span>
-          <span style={{ color: scoreColor(oppGoals, oppGoals > teamGoals) }}>
-            {oppGoals}
-          </span>
+          <span style={{ color: scoreColor(oppGoals, oppGoals > teamGoals) }}>{oppGoals}</span>
         </div>
       </div>
 
@@ -166,7 +160,9 @@ export function TeamScoreSubCard({ card, staggerBase, animate }: TeamScoreSubCar
         {card.penaltyModifier !== 0 && (
           <ScoreRow
             label="Penalties"
-            value={card.penaltyModifier > 0 ? `+${card.penaltyModifier}` : String(card.penaltyModifier)}
+            value={
+              card.penaltyModifier > 0 ? `+${card.penaltyModifier}` : String(card.penaltyModifier)
+            }
             color={card.penaltyModifier > 0 ? 'var(--green-glow)' : 'var(--red)'}
             delayMs={penaltyDelay}
           />

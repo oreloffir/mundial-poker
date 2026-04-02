@@ -65,7 +65,9 @@ if (process.env.NODE_ENV !== 'production') {
 server.listen(PORT, () => {
   console.log('App - started', { port: PORT, env: process.env.NODE_ENV ?? 'development' })
   ensureBotsExist().catch((err) => console.error('App - ensureBotsExist - failed', { error: err }))
-  cleanupStaleTables().catch((err) => console.error('App - cleanupStaleTables - failed', { error: err }))
+  cleanupStaleTables().catch((err) =>
+    console.error('App - cleanupStaleTables - failed', { error: err }),
+  )
 })
 
 export { app, server, io }

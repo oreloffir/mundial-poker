@@ -122,7 +122,11 @@ export interface CardScoreData {
     readonly homeGoals: number
     readonly awayGoals: number
     readonly side: 'home' | 'away'
-    readonly opponentTeam?: { readonly name: string; readonly code: string; readonly flagUrl: string } | null
+    readonly opponentTeam?: {
+      readonly name: string
+      readonly code: string
+      readonly flagUrl: string
+    } | null
   }
   readonly baseScore: number
   readonly goalBonus: number

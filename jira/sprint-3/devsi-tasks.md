@@ -80,6 +80,7 @@ Write your answers in a doc at `docs/infrastructure-plan.md`:
 ## Delivery Log
 
 ### D1 — Infrastructure Plan
+
 **Status:** Complete — April 2, 2026
 **Deliverable:** `docs/infrastructure-plan.md`
 **Key decisions:** Fly.io deployment, single process, Redis for all 3 Maps, Supabase PostgreSQL, Sentry monitoring

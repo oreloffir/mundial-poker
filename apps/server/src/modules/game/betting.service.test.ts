@@ -151,9 +151,14 @@ describe('bet timer', () => {
     const currentUser = state.playerStates[state.currentPlayerIndex]!
     const { startBetTimer } = await import('./betting.service.js')
 
-    startBetTimer('timer-2', currentUser.userId, ['FOLD', 'CALL', 'RAISE', 'ALL_IN'], async (_rid, _uid, action) => {
-      firedAction = action
-    })
+    startBetTimer(
+      'timer-2',
+      currentUser.userId,
+      ['FOLD', 'CALL', 'RAISE', 'ALL_IN'],
+      async (_rid, _uid, action) => {
+        firedAction = action
+      },
+    )
 
     vi.advanceTimersByTime(30_000)
     await vi.runAllTimersAsync()

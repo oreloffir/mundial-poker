@@ -31,6 +31,7 @@ These are all UI bug fixes and polish. You can test them independently — no ba
 7. Repeat for 3+ consecutive rounds to confirm consistency
 
 **Pass criteria:**
+
 - [ ] Winner banner gone before next round's fixtures appear
 - [ ] No overlap of old and new round visual elements
 - [ ] Pot animation completes before banner dismisses (not cut short)
@@ -49,6 +50,7 @@ These are all UI bug fixes and polish. You can test them independently — no ba
 4. Test across at least 4-5 round transitions
 
 **Pass criteria:**
+
 - [ ] Round number updates immediately on every transition
 - [ ] No flicker of the old round number
 
@@ -67,6 +69,7 @@ These are all UI bug fixes and polish. You can test them independently — no ba
 5. Test at different browser window sizes if possible
 
 **Pass criteria:**
+
 - [ ] All 5 seats show readable chip balances
 - [ ] No overlap with other UI elements at any seat
 - [ ] Green/red flash animations still work on chip changes
@@ -87,6 +90,7 @@ These are all UI bug fixes and polish. You can test them independently — no ba
 5. Test across 4-5 round transitions minimum
 
 **Pass criteria:**
+
 - [ ] Zero flash of stale cards between rounds
 - [ ] Fixture board is clean before new reveals begin
 - [ ] No ghost showdown results from previous round
@@ -112,9 +116,10 @@ These are all UI bug fixes and polish. You can test them independently — no ba
 9. **Check:** Is there help text explaining the 2x relationship?
 
 **Pass criteria:**
+
 - [ ] SB/BB inputs visible and styled consistently with Starting Chips
 - [ ] Auto-sync works both ways (SB→BB and BB→SB)
-- [ ] Validation prevents invalid values (0, negative, BB ≠ 2*SB)
+- [ ] Validation prevents invalid values (0, negative, BB ≠ 2\*SB)
 - [ ] Table creation works with custom blind values
 - [ ] Help text present
 
@@ -134,6 +139,7 @@ These are all UI bug fixes and polish. You can test them independently — no ba
 8. If a player gets eliminated mid-game, **Check:** No crash when their seat empties?
 
 **Pass criteria:**
+
 - [ ] Adding 4 bots one-by-one — zero crashes
 - [ ] No React hooks errors in browser console
 - [ ] Game plays normally after bots are added
@@ -150,6 +156,7 @@ These are all UI bug fixes and polish. You can test them independently — no ba
 Use Chrome DevTools responsive mode (`F12` → toggle device toolbar → select device → rotate to landscape).
 
 **Test on iPhone SE landscape (667x375):**
+
 1. Open a game with bots
 2. **Check:** Does the entire game fit on screen without scrolling?
 3. **Check:** Are all 5 player seats visible with readable names and chip amounts?
@@ -159,19 +166,14 @@ Use Chrome DevTools responsive mode (`F12` → toggle device toolbar → select 
 7. **Check:** Are fixture tiles readable?
 8. **Check:** Is the pot amount visible in the center?
 
-**Test on iPhone 12 landscape (844x390):**
-9. Repeat checks 1-8 on this larger screen
+**Test on iPhone 12 landscape (844x390):** 9. Repeat checks 1-8 on this larger screen
 
-**Test portrait orientation hint:**
-10. Switch to portrait mode on a mobile viewport
-11. **Check:** Do you see a "rotate your device" hint?
-12. **Check:** Can you dismiss it?
+**Test portrait orientation hint:** 10. Switch to portrait mode on a mobile viewport 11. **Check:** Do you see a "rotate your device" hint? 12. **Check:** Can you dismiss it?
 
-**Test desktop unchanged:**
-13. Switch back to a desktop viewport (1920x1080 or similar)
-14. **Check:** Does everything look exactly the same as before? No visual changes?
+**Test desktop unchanged:** 13. Switch back to a desktop viewport (1920x1080 or similar) 14. **Check:** Does everything look exactly the same as before? No visual changes?
 
 **Pass criteria:**
+
 - [ ] iPhone SE landscape: game fully playable, no overflow, no scroll
 - [ ] iPhone 12 landscape: game fully playable
 - [ ] All 5 seats readable on both mobile sizes
@@ -203,6 +205,7 @@ These are core gameplay changes. Test them after Soni's branches are merged. You
 9. **Edge case:** Play until a player's chip stack is less than the blind amount. **Check:** Do they go all-in for what they have instead of being skipped?
 
 **Pass criteria:**
+
 - [ ] Correct blind amounts deducted at round start
 - [ ] Pot seeded with both blinds before voluntary betting
 - [ ] SB/BB positions rotate clockwise each round
@@ -231,6 +234,7 @@ These are core gameplay changes. Test them after Soni's branches are merged. You
 6. **Folded player test:** If a player folds, **Check:** Are they correctly skipped in the rotation?
 
 **Pass criteria:**
+
 - [ ] Pre-flop starts at UTG (after BB)
 - [ ] BB gets option (check/raise) when nobody raised
 - [ ] BB loses option when someone raised
@@ -255,6 +259,7 @@ These are core gameplay changes. Test them after Soni's branches are merged. You
 8. Play several rounds with normal timing — **Check:** Does the timeout never fire incorrectly during normal play?
 
 **Pass criteria:**
+
 - [ ] Auto-CHECK or auto-FOLD fires at ~30 seconds
 - [ ] Game continues normally after auto-action
 - [ ] Bots unaffected (still act at ~1.5s)
@@ -276,6 +281,7 @@ These are core gameplay changes. Test them after Soni's branches are merged. You
 5. Play 5+ rounds — **Check:** No crashes, no stuck games, no weird bot behavior
 
 **Pass criteria:**
+
 - [ ] Bot blinds posted automatically (no decision delay)
 - [ ] Bot call amounts are correct after posting blinds
 - [ ] No stuck games or crashes with bots in blind positions
@@ -290,21 +296,22 @@ Once everything is in, do one thorough end-to-end playthrough:
 2. **Add 4 bots**, start the game
 3. Play **5+ full rounds** and verify ALL of the following in a single session:
 
-| # | Check | Status |
-|---|-------|--------|
-| 1 | SB/BB badges visible and rotating correctly | |
-| 2 | Blind amounts deducted at round start, pot seeded | |
-| 3 | Betting starts at UTG pre-flop, SB post-flop | |
-| 4 | BB gets option when no raise | |
-| 5 | Winner banner dismisses cleanly before next round | |
-| 6 | No stale cards flash between rounds | |
-| 7 | Round counter updates immediately | |
-| 8 | Chip balances readable (gold on dark pill) | |
-| 9 | Bots post blinds and call correct amounts | |
-| 10 | Timeout auto-folds after 30s of inaction | |
-| 11 | Game plays to completion (one player wins all chips) without crashes | |
+| #   | Check                                                                | Status |
+| --- | -------------------------------------------------------------------- | ------ |
+| 1   | SB/BB badges visible and rotating correctly                          |        |
+| 2   | Blind amounts deducted at round start, pot seeded                    |        |
+| 3   | Betting starts at UTG pre-flop, SB post-flop                         |        |
+| 4   | BB gets option when no raise                                         |        |
+| 5   | Winner banner dismisses cleanly before next round                    |        |
+| 6   | No stale cards flash between rounds                                  |        |
+| 7   | Round counter updates immediately                                    |        |
+| 8   | Chip balances readable (gold on dark pill)                           |        |
+| 9   | Bots post blinds and call correct amounts                            |        |
+| 10  | Timeout auto-folds after 30s of inaction                             |        |
+| 11  | Game plays to completion (one player wins all chips) without crashes |        |
 
 **File any bugs as GitHub issues with:**
+
 - Screenshot or screen recording
 - Steps to reproduce
 - Expected vs actual behavior
@@ -330,13 +337,13 @@ Before the sprint kicked off, I ran a full automated Playwright test suite (8 fl
 
 **Bugs found and verified fixed:**
 
-| ID | Severity | Description | Status |
-|----|----------|-------------|--------|
-| BUG-01 | MEDIUM | Showdown card-flip reveal not captured — timing too brief | ✅ Fixed by Soni, verified |
-| BUG-02 | MEDIUM | Winner banner ("X wins!" + trophy) not appearing | ✅ Fixed by Soni, verified |
-| BUG-03 | LOW | Folded player avatar not clearing fold state on new round | ✅ Fixed by Soni, verified |
-| BUG-04 | LOW | 29 stale "In Progress" tables polluting lobby after test sessions | ✅ Fixed by Soni, verified |
-| BUG-05 | HIGH | React hooks crash in `PlayerSeat` on every bot add — UI goes blank | ✅ Fixed by Joni (J7), verified |
+| ID     | Severity | Description                                                        | Status                          |
+| ------ | -------- | ------------------------------------------------------------------ | ------------------------------- |
+| BUG-01 | MEDIUM   | Showdown card-flip reveal not captured — timing too brief          | ✅ Fixed by Soni, verified      |
+| BUG-02 | MEDIUM   | Winner banner ("X wins!" + trophy) not appearing                   | ✅ Fixed by Soni, verified      |
+| BUG-03 | LOW      | Folded player avatar not clearing fold state on new round          | ✅ Fixed by Soni, verified      |
+| BUG-04 | LOW      | 29 stale "In Progress" tables polluting lobby after test sessions  | ✅ Fixed by Soni, verified      |
+| BUG-05 | HIGH     | React hooks crash in `PlayerSeat` on every bot add — UI goes blank | ✅ Fixed by Joni (J7), verified |
 
 **Note on testids:** `data-testid="winner-banner"` works. Showdown phase uses `data-testid="showdown-score"` (not `"showdown"`).
 
@@ -346,24 +353,24 @@ Before the sprint kicked off, I ran a full automated Playwright test suite (8 fl
 
 All 7 of Joni's tasks tested. 4 new bugs found and filed for Joni.
 
-| Task | Result | Notes |
-|------|--------|-------|
-| J7 — Hooks crash fix (BUG-05) | ✅ PASS | 0 hook errors across all 4 bot additions + full game round |
-| J1 — Winner banner timing | ✅ PASS | Banner fully dismissed before new fixtures in all 3 observed transitions |
-| J5 — Stale cards cleanup | ✅ PASS | Board clean at every transition — no ghost cards or scores |
-| J2 — Round counter sync | ⚠️ BLOCKED | Counter visually updates correctly but `data-testid="round-counter"` missing from DOM — can't automate assertions |
-| J3 — Balance readability | ⚠️ BLOCKED | Gold chip pills visually correct on all 5 seats and update on pot change — but no `data-testid` on balance elements, can't automate |
-| J6 — Blind config modal | 🐛 BUGS FOUND | SB/BB fields present, auto-sync works both ways, help text present, table creation works — but 2 validation bugs (see below) |
-| J8 — Mobile responsive | ✅ PASS | No overflow on iPhone SE (667×375) or iPhone 12 (844×390), portrait hint visible, desktop unchanged. Button tappability confirmed at layout level — needs active-turn re-run to close fully |
+| Task                          | Result        | Notes                                                                                                                                                                                       |
+| ----------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| J7 — Hooks crash fix (BUG-05) | ✅ PASS       | 0 hook errors across all 4 bot additions + full game round                                                                                                                                  |
+| J1 — Winner banner timing     | ✅ PASS       | Banner fully dismissed before new fixtures in all 3 observed transitions                                                                                                                    |
+| J5 — Stale cards cleanup      | ✅ PASS       | Board clean at every transition — no ghost cards or scores                                                                                                                                  |
+| J2 — Round counter sync       | ⚠️ BLOCKED    | Counter visually updates correctly but `data-testid="round-counter"` missing from DOM — can't automate assertions                                                                           |
+| J3 — Balance readability      | ⚠️ BLOCKED    | Gold chip pills visually correct on all 5 seats and update on pot change — but no `data-testid` on balance elements, can't automate                                                         |
+| J6 — Blind config modal       | 🐛 BUGS FOUND | SB/BB fields present, auto-sync works both ways, help text present, table creation works — but 2 validation bugs (see below)                                                                |
+| J8 — Mobile responsive        | ✅ PASS       | No overflow on iPhone SE (667×375) or iPhone 12 (844×390), portrait hint visible, desktop unchanged. Button tappability confirmed at layout level — needs active-turn re-run to close fully |
 
 **New bugs filed for Joni:**
 
-| ID | Severity | Task | Description |
-|----|----------|------|-------------|
-| J6-BUG-01 | MEDIUM | J6 | No validation error when BB is manually set to a value ≠ 2×SB. Form accepts mismatch silently. |
-| J6-BUG-02 | MEDIUM | J6 | No validation error or Create button block when SB=0. Zero blind is an invalid config. |
-| J2-TESTID | LOW | J2 | `data-testid="round-counter"` missing from the round display element — required for test automation. |
-| J3-TESTID | LOW | J3 | No `data-testid` on seat chip balance elements — `chip`/`balance`/`stack` class patterns match 0 nodes. Suggest `data-testid="seat-balance-{n}"`. |
+| ID        | Severity | Task | Description                                                                                                                                       |
+| --------- | -------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| J6-BUG-01 | MEDIUM   | J6   | No validation error when BB is manually set to a value ≠ 2×SB. Form accepts mismatch silently.                                                    |
+| J6-BUG-02 | MEDIUM   | J6   | No validation error or Create button block when SB=0. Zero blind is an invalid config.                                                            |
+| J2-TESTID | LOW      | J2   | `data-testid="round-counter"` missing from the round display element — required for test automation.                                              |
+| J3-TESTID | LOW      | J3   | No `data-testid` on seat chip balance elements — `chip`/`balance`/`stack` class patterns match 0 nodes. Suggest `data-testid="seat-balance-{n}"`. |
 
 ---
 
@@ -371,18 +378,18 @@ All 7 of Joni's tasks tested. 4 new bugs found and filed for Joni.
 
 All 4 of Soni's backend tasks tested. 1 new bug found (S3 timeout drift). 1 check inconclusive (S2 BB option after raise — test script limitation with range input; game not broken, needs manual follow-up).
 
-| Task | Result | Notes |
-|------|--------|-------|
-| S1 — Blind position assignment | ✅ PASS | SB/BB badges confirmed, Call 50 = correct BB, pot grows correctly, rotation tracked across 5 rounds |
-| S2 — Betting order | ✅ PASS (partial) | Pre-flop Call/Check correct, post-flop Check correct. BB option after raise inconclusive — raise was rejected by validation in test (script input issue, not product bug) |
-| S3 — Server-side bet timeout | 🐛 BUG FOUND | Auto-action fires but at ~40–45s, not 30s. Timer UI counts down correctly. Configuration value likely wrong on server. |
-| S4 — Bot blind awareness | ✅ PASS | Bots post blinds in < 25ms, call amounts correct, no stuck games across 5 rounds |
+| Task                           | Result            | Notes                                                                                                                                                                     |
+| ------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1 — Blind position assignment | ✅ PASS           | SB/BB badges confirmed, Call 50 = correct BB, pot grows correctly, rotation tracked across 5 rounds                                                                       |
+| S2 — Betting order             | ✅ PASS (partial) | Pre-flop Call/Check correct, post-flop Check correct. BB option after raise inconclusive — raise was rejected by validation in test (script input issue, not product bug) |
+| S3 — Server-side bet timeout   | 🐛 BUG FOUND      | Auto-action fires but at ~40–45s, not 30s. Timer UI counts down correctly. Configuration value likely wrong on server.                                                    |
+| S4 — Bot blind awareness       | ✅ PASS           | Bots post blinds in < 25ms, call amounts correct, no stuck games across 5 rounds                                                                                          |
 
 **New bug filed for Soni:**
 
-| ID | Severity | Task | Description |
-|----|----------|------|-------------|
-| S3-BUG-01 | MEDIUM | S3 | Auto-timeout fires at ~40–45s instead of 30s. Timer UI visible and counts down, but server threshold is misconfigured. |
+| ID        | Severity | Task | Description                                                                                                            |
+| --------- | -------- | ---- | ---------------------------------------------------------------------------------------------------------------------- |
+| S3-BUG-01 | MEDIUM   | S3   | Auto-timeout fires at ~40–45s instead of 30s. Timer UI visible and counts down, but server threshold is misconfigured. |
 
 ---
 
@@ -390,13 +397,13 @@ All 4 of Soni's backend tasks tested. 1 new bug found (S3 timeout drift). 1 chec
 
 All 4 filed issues re-verified. New betting controls redesign tested.
 
-| Item | Result | Notes |
-|------|--------|-------|
-| J6-BUG-02 — SB=0 validation | ✅ PASS | "Small blind must be at least 1" error shown, Create disabled |
+| Item                           | Result     | Notes                                                                                                                      |
+| ------------------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------- |
+| J6-BUG-02 — SB=0 validation    | ✅ PASS    | "Small blind must be at least 1" error shown, Create disabled                                                              |
 | J6-BUG-01 — BB≠2×SB validation | ⚠️ PARTIAL | Create button disabled (blocking works) but no inline error message shown — silent block. Needs UX clarification from Joni |
-| J2-TESTID — round-counter | ✅ PASS | `data-testid="round-counter"` resolves with live value |
-| J3-TESTID — seat-balance-{n} | ✅ PASS | All 5 testids found with correct values (e.g. 450, 450 after blinds posted) |
-| New betting controls | ✅ PASS | Range slider gone. Chip denominations (5/10/25/50/100/200), presets (Min/½Pot/Pot/All In), Raise builder all present |
+| J2-TESTID — round-counter      | ✅ PASS    | `data-testid="round-counter"` resolves with live value                                                                     |
+| J3-TESTID — seat-balance-{n}   | ✅ PASS    | All 5 testids found with correct values (e.g. 450, 450 after blinds posted)                                                |
+| New betting controls           | ✅ PASS    | Range slider gone. Chip denominations (5/10/25/50/100/200), presets (Min/½Pot/Pot/All In), Raise builder all present       |
 
 **One follow-up item for Joni:** J6-BUG-01 — should the BB field be auto-locked (read-only, always 2×SB) or show an explicit "BB must equal 2×SB" error? Either closes the partial pass. Please clarify intent.
 
@@ -406,20 +413,20 @@ All 4 filed issues re-verified. New betting controls redesign tested.
 
 Full 11-point run: SB=25, BB=50, Starting Chips=500, 4 bots, 5 rounds.
 
-| # | Check | Result |
-|---|-------|--------|
-| 1 | SB/BB badges visible and rotating | ✅ PASS |
-| 2 | Blind deductions + pot seeded | ✅ PASS |
-| 3a | Betting starts at UTG pre-flop | ✅ PASS |
-| 3b | Betting starts at SB post-flop | ❌ FAIL — hands resolved pre-flop, human never reached post-flop across 5 rounds |
-| 4 | Action buttons functional (new chip UI) | ✅ PASS |
-| 5 | Winner banner dismisses before next round | ✅ PASS |
-| 6 | No stale cards between rounds | ✅ PASS |
-| 7 | Round counter renders and updates | ✅ PASS |
-| 8 | Chip balances readable on all 5 seats | ✅ PASS |
-| 9 | Bots post blinds correctly | ✅ PASS |
-| 10 | Timeout auto-folds at 30s | ⚠️ CARRY-OVER — fires at ~40–45s (S3-BUG-01) |
-| 11 | Game plays 5 rounds without crash | ✅ PASS |
+| #   | Check                                     | Result                                                                           |
+| --- | ----------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | SB/BB badges visible and rotating         | ✅ PASS                                                                          |
+| 2   | Blind deductions + pot seeded             | ✅ PASS                                                                          |
+| 3a  | Betting starts at UTG pre-flop            | ✅ PASS                                                                          |
+| 3b  | Betting starts at SB post-flop            | ❌ FAIL — hands resolved pre-flop, human never reached post-flop across 5 rounds |
+| 4   | Action buttons functional (new chip UI)   | ✅ PASS                                                                          |
+| 5   | Winner banner dismisses before next round | ✅ PASS                                                                          |
+| 6   | No stale cards between rounds             | ✅ PASS                                                                          |
+| 7   | Round counter renders and updates         | ✅ PASS                                                                          |
+| 8   | Chip balances readable on all 5 seats     | ✅ PASS                                                                          |
+| 9   | Bots post blinds correctly                | ✅ PASS                                                                          |
+| 10  | Timeout auto-folds at 30s                 | ⚠️ CARRY-OVER — fires at ~40–45s (S3-BUG-01)                                     |
+| 11  | Game plays 5 rounds without crash         | ✅ PASS                                                                          |
 
 **10/11 PASS. Sprint 1: CONDITIONAL PASS pending S3-BUG-01 fix and Check 3b post-flop investigation.**
 
@@ -431,27 +438,28 @@ Full 11-point run: SB=25, BB=50, Starting Chips=500, 4 bots, 5 rounds.
 
 ### Sprint 1 Task Status — FINAL
 
-| Task | Description | Status |
-|------|-------------|--------|
-| J1 | Winner banner timing | ✅ PASS |
-| J2 | Round counter sync | ✅ PASS (testid added in J9) |
-| J3 | Balance readability | ✅ PASS (testid added in J9) |
-| J5 | Stale cards cleanup | ✅ PASS |
-| J6 | Blind config modal | ✅ PASS (validation fixed in J9, 1 UX question pending) |
-| J7 | Hooks crash fix | ✅ PASS |
-| J8 | Mobile responsive | ✅ PASS |
-| J9 | Validation + testids + betting controls | ✅ PASS |
-| S1 | Blind position assignment | ✅ PASS |
-| S2 | Betting order | ✅ PASS (BB option after raise: manual follow-up recommended) |
-| S3 | Server-side 30s timeout | 🐛 S3-BUG-01 filed — fires at ~40–45s |
-| S4 | Bot blind awareness | ✅ PASS |
-| Integration | Full 11-check end-to-end | ⚠️ CONDITIONAL PASS — 10/11, Check 3b + S3 outstanding |
+| Task        | Description                             | Status                                                        |
+| ----------- | --------------------------------------- | ------------------------------------------------------------- |
+| J1          | Winner banner timing                    | ✅ PASS                                                       |
+| J2          | Round counter sync                      | ✅ PASS (testid added in J9)                                  |
+| J3          | Balance readability                     | ✅ PASS (testid added in J9)                                  |
+| J5          | Stale cards cleanup                     | ✅ PASS                                                       |
+| J6          | Blind config modal                      | ✅ PASS (validation fixed in J9, 1 UX question pending)       |
+| J7          | Hooks crash fix                         | ✅ PASS                                                       |
+| J8          | Mobile responsive                       | ✅ PASS                                                       |
+| J9          | Validation + testids + betting controls | ✅ PASS                                                       |
+| S1          | Blind position assignment               | ✅ PASS                                                       |
+| S2          | Betting order                           | ✅ PASS (BB option after raise: manual follow-up recommended) |
+| S3          | Server-side 30s timeout                 | 🐛 S3-BUG-01 filed — fires at ~40–45s                         |
+| S4          | Bot blind awareness                     | ✅ PASS                                                       |
+| Integration | Full 11-check end-to-end                | ⚠️ CONDITIONAL PASS — 10/11, Check 3b + S3 outstanding        |
 
 ---
 
 ### How I Test
 
 All automated tests run via Playwright (headless Chromium) from:
+
 ```
 cd /Users/oreloffir/Desktop/Projects/Unipaas/Services/_scripts
 node -e "const { chromium } = require('./node_modules/playwright'); ..."
@@ -460,8 +468,9 @@ node -e "const { chromium } = require('./node_modules/playwright'); ..."
 Screenshots saved to `/tmp/` and visually inspected. Every test uses `waitUntil: 'domcontentloaded'` + 5s render wait. For game-phase timing I use `waitForSelector` on testids rather than fixed sleeps where available.
 
 For betting controls, always scope to the footer bar:
+
 ```js
-const bottom = page.locator('div[class*="absolute bottom"]');
+const bottom = page.locator('div[class*="absolute bottom"]')
 ```
 
 **Checklist applied to every screenshot:** MUNDIAL POKER branding, stadium table, colored avatars, gold "MP" card backs, 5 fixture cards with flags, gold pot display, turn timer, action badges, fold state, showdown reveal, winner banner, betting controls bar.

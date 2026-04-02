@@ -31,6 +31,7 @@ import type { CardScoreData } from '@/components/game/TeamScoreSubCard'
 This is an **inverted dependency**. The store is a low-level module (no React, no UI). A component is a high-level module. When the store imports from a component, you've created a dependency cycle risk: the component will eventually need to import something from the store (it already does via `useGameStore`), and now the store imports back from the component.
 
 The correct mental model is a one-way dependency graph:
+
 ```
 packages/shared  →  stores  →  hooks  →  components
 ```
@@ -53,15 +54,20 @@ Two slightly different versions of the same hook. The `TeamScoreSubCard` version
 export function useCountUp(target: number, duration: number, enabled = true): number {
   const [count, setCount] = useState(0)
   useEffect(() => {
-    if (!enabled || target === 0) { setCount(target); return }
+    if (!enabled || target === 0) {
+      setCount(target)
+      return
+    }
     setCount(0)
     const steps = Math.min(target, 30)
     const stepMs = duration / steps
     let step = 0
     const id = setInterval(() => {
       step++
-      if (step >= steps) { setCount(target); clearInterval(id) }
-      else setCount(Math.round((target / steps) * step))
+      if (step >= steps) {
+        setCount(target)
+        clearInterval(id)
+      } else setCount(Math.round((target / steps) * step))
     }, stepMs)
     return () => clearInterval(id)
   }, [target, duration, enabled])
@@ -85,7 +91,7 @@ animateRef.current = animate
 
 The `useEffect` below reads `animate` directly from its dependency array closure — which is correct. The `animateRef` was likely added during a refactor where you considered using the ref inside the effect to avoid stale closure issues, but then didn't. It's dead code now.
 
-**When to use `useRef` for a value:** When you need to read the *latest* value of a prop inside an effect or callback without that prop being in the dep array. Example: you have an `onComplete` callback prop and you want the effect to call `onComplete` without restarting the interval every time `onComplete` changes. In this component, `animate` IS in the dep array, so the ref is unnecessary.
+**When to use `useRef` for a value:** When you need to read the _latest_ value of a prop inside an effect or callback without that prop being in the dep array. Example: you have an `onComplete` callback prop and you want the effect to call `onComplete` without restarting the interval every time `onComplete` changes. In this component, `animate` IS in the dep array, so the ref is unnecessary.
 
 Delete lines 34–35.
 
@@ -142,7 +148,7 @@ Every structural style in this component is an inline style object:
 }}>
 ```
 
-**Rule for inline styles vs CSS:** Inline styles are for *dynamic* values — things that change based on props or state. Static layout (position, display, flex direction, z-index) belongs in CSS classes.
+**Rule for inline styles vs CSS:** Inline styles are for _dynamic_ values — things that change based on props or state. Static layout (position, display, flex direction, z-index) belongs in CSS classes.
 
 The `background` and `backdropFilter` are static here — they don't change. Move them to a class in `index.css`:
 
@@ -172,16 +178,22 @@ Note: `height: '100%'` on a `position: fixed; inset: 0` element is redundant. `i
 
 ```css
 @keyframes card-flip {
-  0% { transform: perspective(600px) rotateY(90deg); opacity: 0; }
-  100% { transform: perspective(600px) rotateY(0deg); opacity: 1; }
+  0% {
+    transform: perspective(600px) rotateY(90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(600px) rotateY(0deg);
+    opacity: 1;
+  }
 }
 /* Applied as: animation: 'card-flip 0.5s ease-out both' */
 ```
 
 Good choice using `ease-out` here. Here's why it matters:
 
-- **`ease-in`:** Starts slow, ends fast. Good for things *leaving* the screen (they accelerate away).
-- **`ease-out`:** Starts fast, ends slow. Good for things *arriving* — they decelerate into their resting position. Feels natural, like catching a ball.
+- **`ease-in`:** Starts slow, ends fast. Good for things _leaving_ the screen (they accelerate away).
+- **`ease-out`:** Starts fast, ends slow. Good for things _arriving_ — they decelerate into their resting position. Feels natural, like catching a ball.
 - **`ease-in-out`:** Symmetric S-curve. Good for looping animations or things moving across the screen with equal entry and exit weight.
 - **`linear`:** Robotic, only use for spinners or progress bars.
 
@@ -197,8 +209,14 @@ One note: `perspective()` inside a `transform` keyframe applies the perspective 
 
 ```css
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 ```
 
@@ -210,8 +228,14 @@ Since `fade-in-up` is a shared keyframe (likely used in other places too), consi
 
 ```css
 @keyframes fade-in-up-sm {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 ```
 
@@ -254,7 +278,9 @@ const mountedRef = useRef(true)
 
 useEffect(() => {
   mountedRef.current = true
-  return () => { mountedRef.current = false }
+  return () => {
+    mountedRef.current = false
+  }
 }, [])
 ```
 
@@ -270,15 +296,15 @@ If this was scaffolding for an async operation you were planning, great — but 
 
 Doing the contract check per our process:
 
-| Server payload | Client type | Match? |
-|---|---|---|
-| `PlayerScoredPayload.userId` | `PlayerScoredData.userId` | ✅ |
-| `PlayerScoredPayload.isBot` | `PlayerScoredData.isBot` | ✅ |
-| `PlayerScoredPayload.rank` | `PlayerScoredData.rank` | ✅ |
-| `PlayerScoredPayload.isWinner` | `PlayerScoredData.isWinner` | ✅ |
-| `PlayerScoredPayload.cardScores[i].fixture.opponentTeam` | `CardScoreData.fixture.opponentTeam` | ✅ |
-| `FixtureResultPayload` | `FixtureResultEvent` | ✅ |
-| `RoundWinnerPayload` | `RoundWinnerData` | ✅ |
+| Server payload                                           | Client type                          | Match? |
+| -------------------------------------------------------- | ------------------------------------ | ------ |
+| `PlayerScoredPayload.userId`                             | `PlayerScoredData.userId`            | ✅     |
+| `PlayerScoredPayload.isBot`                              | `PlayerScoredData.isBot`             | ✅     |
+| `PlayerScoredPayload.rank`                               | `PlayerScoredData.rank`              | ✅     |
+| `PlayerScoredPayload.isWinner`                           | `PlayerScoredData.isWinner`          | ✅     |
+| `PlayerScoredPayload.cardScores[i].fixture.opponentTeam` | `CardScoreData.fixture.opponentTeam` | ✅     |
+| `FixtureResultPayload`                                   | `FixtureResultEvent`                 | ✅     |
+| `RoundWinnerPayload`                                     | `RoundWinnerData`                    | ✅     |
 
 **CONTRACT: `player:scored` payload — APPROVED.** No changes needed. The `opponentTeam` field (from my SF-01d work) is correctly typed as optional in both `PlayerScoredPayload` and `CardScoreData`.
 
@@ -291,6 +317,7 @@ Doing the contract check per our process:
 **Ship it.** The overlay is solid, the architecture is clean enough to merge, and the animation work shows you're developing real CSS muscle.
 
 Action items (none are blockers):
+
 1. **[Joni + Soni]** Move `CardScoreData` to `packages/shared` — I'll add it there, you update the import.
 2. **[Joni]** Extract `useCountUp` and `getAvatarColor` to shared files.
 3. **[Joni]** Delete dead `animateRef` (3 lines).

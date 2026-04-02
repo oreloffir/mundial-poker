@@ -32,7 +32,13 @@ export function startBetTimer(
   roundId: string,
   userId: string,
   allowedActions: readonly BetAction[],
-  handleAction: (roundId: string, userId: string, action: BetAction, amount: number, autoAction: boolean) => Promise<void>,
+  handleAction: (
+    roundId: string,
+    userId: string,
+    action: BetAction,
+    amount: number,
+    autoAction: boolean,
+  ) => Promise<void>,
 ): void {
   const key = `${roundId}:${userId}`
   cancelBetTimer(roundId, userId)
@@ -136,9 +142,13 @@ export function initBettingRound(
 
   let startIndex: number
   if (startingSeatIndex !== undefined) {
-    startIndex = playerStates.findIndex((p) => p.seatIndex === startingSeatIndex && !p.hasFolded && p.chipStack > 0)
+    startIndex = playerStates.findIndex(
+      (p) => p.seatIndex === startingSeatIndex && !p.hasFolded && p.chipStack > 0,
+    )
     if (startIndex === -1) {
-      const sorted = [...playerStates].map((p, i) => ({ ...p, origIndex: i })).filter((p) => !p.hasFolded && p.chipStack > 0)
+      const sorted = [...playerStates]
+        .map((p, i) => ({ ...p, origIndex: i }))
+        .filter((p) => !p.hasFolded && p.chipStack > 0)
       const after = sorted.find((p) => p.seatIndex > startingSeatIndex)
       startIndex = after ? after.origIndex : (sorted[0]?.origIndex ?? 0)
     }
@@ -201,7 +211,12 @@ function getAllowedActions(state: BettingState, player: PlayerState): readonly B
 
   const playerIndex = state.playerStates.indexOf(player)
   const isBB = state.bbPlayerIndex !== null && playerIndex === state.bbPlayerIndex
-  const isBBOption = isBB && state.bettingRound === 1 && state.bigBlindAmount !== null && state.currentBet === state.bigBlindAmount && player.totalBet === state.bigBlindAmount
+  const isBBOption =
+    isBB &&
+    state.bettingRound === 1 &&
+    state.bigBlindAmount !== null &&
+    state.currentBet === state.bigBlindAmount &&
+    player.totalBet === state.bigBlindAmount
 
   if (isBBOption) {
     actions.push('CHECK')
@@ -216,7 +231,10 @@ function getAllowedActions(state: BettingState, player: PlayerState): readonly B
     actions.push('CHECK')
   }
 
-  if (state.currentBet > player.totalBet && player.chipStack >= state.currentBet - player.totalBet) {
+  if (
+    state.currentBet > player.totalBet &&
+    player.chipStack >= state.currentBet - player.totalBet
+  ) {
     actions.push('CALL')
   }
 

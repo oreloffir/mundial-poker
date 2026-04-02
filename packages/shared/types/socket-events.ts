@@ -45,9 +45,19 @@ export interface RoundPausePayload {
 export interface FixtureResultPayload {
   readonly fixtureId: string
   readonly homeTeamId: string
-  readonly homeTeam: { readonly id: string; readonly name: string; readonly code: string; readonly flagUrl: string }
+  readonly homeTeam: {
+    readonly id: string
+    readonly name: string
+    readonly code: string
+    readonly flagUrl: string
+  }
   readonly awayTeamId: string
-  readonly awayTeam: { readonly id: string; readonly name: string; readonly code: string; readonly flagUrl: string }
+  readonly awayTeam: {
+    readonly id: string
+    readonly name: string
+    readonly code: string
+    readonly flagUrl: string
+  }
   readonly homeGoals: number
   readonly awayGoals: number
   readonly hasPenalties: boolean
@@ -60,7 +70,10 @@ export interface PlayerScoredPayload {
   readonly seatIndex: number
   readonly username: string
   readonly isBot: boolean
-  readonly hand: readonly { readonly teamId: string; readonly team: { readonly name: string; readonly code: string; readonly flagUrl: string } }[]
+  readonly hand: readonly {
+    readonly teamId: string
+    readonly team: { readonly name: string; readonly code: string; readonly flagUrl: string }
+  }[]
   readonly cardScores: readonly {
     readonly teamId: string
     readonly team: { readonly name: string; readonly code: string; readonly flagUrl: string }
@@ -69,7 +82,11 @@ export interface PlayerScoredPayload {
       readonly homeGoals: number
       readonly awayGoals: number
       readonly side: 'home' | 'away'
-      readonly opponentTeam?: { readonly name: string; readonly code: string; readonly flagUrl: string } | null
+      readonly opponentTeam?: {
+        readonly name: string
+        readonly code: string
+        readonly flagUrl: string
+      } | null
     }
     readonly baseScore: number
     readonly goalBonus: number
@@ -158,7 +175,9 @@ export interface ServerToClientEvents {
     readonly amount: number
     readonly type: 'SB' | 'BB'
   }) => void
-  'players:update': (players: readonly { readonly userId: string; readonly chips: number }[]) => void
+  'players:update': (
+    players: readonly { readonly userId: string; readonly chips: number }[],
+  ) => void
   error: (payload: { readonly code: string; readonly message: string }) => void
 }
 

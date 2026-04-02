@@ -25,11 +25,37 @@ const mockDb = {
 }
 
 // Chain all methods to return `this`
-for (const fn of [mockSelect, mockFrom, mockWhere, mockLimit, mockOrderBy, mockInnerJoin, mockInsert, mockValues, mockReturning, mockUpdate, mockSet, mockDelete, mockLeftJoin, mockGroupBy]) {
+for (const fn of [
+  mockSelect,
+  mockFrom,
+  mockWhere,
+  mockLimit,
+  mockOrderBy,
+  mockInnerJoin,
+  mockInsert,
+  mockValues,
+  mockReturning,
+  mockUpdate,
+  mockSet,
+  mockDelete,
+  mockLeftJoin,
+  mockGroupBy,
+]) {
   fn.mockReturnValue({
-    select: mockSelect, from: mockFrom, where: mockWhere, limit: mockLimit, orderBy: mockOrderBy,
-    innerJoin: mockInnerJoin, insert: mockInsert, values: mockValues, returning: mockReturning,
-    update: mockUpdate, set: mockSet, delete: mockDelete, leftJoin: mockLeftJoin, groupBy: mockGroupBy,
+    select: mockSelect,
+    from: mockFrom,
+    where: mockWhere,
+    limit: mockLimit,
+    orderBy: mockOrderBy,
+    innerJoin: mockInnerJoin,
+    insert: mockInsert,
+    values: mockValues,
+    returning: mockReturning,
+    update: mockUpdate,
+    set: mockSet,
+    delete: mockDelete,
+    leftJoin: mockLeftJoin,
+    groupBy: mockGroupBy,
     catch: mockCatch,
   })
 }
@@ -40,7 +66,12 @@ vi.mock('../../db/index.js', () => ({ db: mockDb }))
 const emittedEvents: { event: string; data: unknown }[] = []
 
 // ─── Import real betting service (pure logic, no DB for init/getAllowedActions) ──
-import { initBettingRound, clearBettingState, getAllowedActions, isBettingRoundComplete } from '../modules/game/betting.service.js'
+import {
+  initBettingRound,
+  clearBettingState,
+  getAllowedActions,
+  isBettingRoundComplete,
+} from '../modules/game/betting.service.js'
 import { calculateBlindPositions } from '../modules/game/blinds.service.js'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -207,9 +238,14 @@ describe('Group 3: Timeout', () => {
     const current = state.playerStates[state.currentPlayerIndex]!
     const { startBetTimer } = await import('../modules/game/betting.service.js')
 
-    startBetTimer('timeout-fold', current.userId, ['FOLD', 'CALL', 'RAISE', 'ALL_IN'], async (_r, _u, action) => {
-      firedAction = action
-    })
+    startBetTimer(
+      'timeout-fold',
+      current.userId,
+      ['FOLD', 'CALL', 'RAISE', 'ALL_IN'],
+      async (_r, _u, action) => {
+        firedAction = action
+      },
+    )
 
     vi.advanceTimersByTime(30_000)
     await vi.runAllTimersAsync()
@@ -279,19 +315,31 @@ describe('Group 4: Edge cases', () => {
 
     for (const roundNumber of [1, 2, 3]) {
       const state = initBettingRound(`t14-round-${roundNumber}`, players, roundNumber)
-      expect(state.bettingRound, `round ${roundNumber}: bettingRound field must be ${roundNumber}`).toBe(roundNumber)
+      expect(
+        state.bettingRound,
+        `round ${roundNumber}: bettingRound field must be ${roundNumber}`,
+      ).toBe(roundNumber)
 
       // Simulate all players having acted (as applyAction would do)
       const completedState = {
         ...state,
         playerStates: state.playerStates.map((p) => ({ ...p, hasActed: true })),
       }
-      expect(isBettingRoundComplete(completedState), `round ${roundNumber} state should be complete`).toBe(true)
+      expect(
+        isBettingRoundComplete(completedState),
+        `round ${roundNumber} state should be complete`,
+      ).toBe(true)
 
       if (roundNumber < 3) {
-        expect(completedState.bettingRound < 3, `round ${roundNumber}: gate must be true to continue to next round`).toBe(true)
+        expect(
+          completedState.bettingRound < 3,
+          `round ${roundNumber}: gate must be true to continue to next round`,
+        ).toBe(true)
       } else {
-        expect(completedState.bettingRound < 3, 'round 3: gate must be false to trigger WAITING_FOR_RESULTS').toBe(false)
+        expect(
+          completedState.bettingRound < 3,
+          'round 3: gate must be false to trigger WAITING_FOR_RESULTS',
+        ).toBe(false)
       }
 
       clearBettingState(`t14-round-${roundNumber}`)
@@ -305,8 +353,12 @@ describe('Group 4: Edge cases', () => {
     initBettingRound('cleanup-test', makePlayers(3), 2)
     const { startBetTimer, cleanupBetTimers } = await import('../modules/game/betting.service.js')
 
-    startBetTimer('cleanup-test', 'user-0', ['CHECK'], async () => { fired++ })
-    startBetTimer('cleanup-test', 'user-1', ['CHECK'], async () => { fired++ })
+    startBetTimer('cleanup-test', 'user-0', ['CHECK'], async () => {
+      fired++
+    })
+    startBetTimer('cleanup-test', 'user-1', ['CHECK'], async () => {
+      fired++
+    })
 
     vi.advanceTimersByTime(15_000)
     cleanupBetTimers('cleanup-test')

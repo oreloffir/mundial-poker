@@ -19,13 +19,13 @@ Sprint 3 is about **hardening and polish**. No big new features this sprint. Ins
 
 ### Your task files
 
-| Developer | File |
-|-----------|------|
-| **Soni** | [`soni-tasks.md`](./soni-tasks.md) |
-| **Joni** | [`joni-tasks.md`](./joni-tasks.md) |
-| **Mark** | [`mark-tasks.md`](./mark-tasks.md) |
-| **Doni** | Design review in `jira/sprint-2/shared/showdown-polish.md` (carry-over) |
-| **Devsi** | [`devsi-tasks.md`](./devsi-tasks.md) |
+| Developer | File                                                                    |
+| --------- | ----------------------------------------------------------------------- |
+| **Soni**  | [`soni-tasks.md`](./soni-tasks.md)                                      |
+| **Joni**  | [`joni-tasks.md`](./joni-tasks.md)                                      |
+| **Mark**  | [`mark-tasks.md`](./mark-tasks.md)                                      |
+| **Doni**  | Design review in `jira/sprint-2/shared/showdown-polish.md` (carry-over) |
+| **Devsi** | [`devsi-tasks.md`](./devsi-tasks.md)                                    |
 
 ### Shared tickets (cross-team)
 
@@ -49,21 +49,25 @@ Sprint 3 is about **hardening and polish**. No big new features this sprint. Ins
 ## Sprint scope
 
 ### Soni (Backend)
+
 - **S8** — Live match API research + prototype (football-data.org or API-Football)
 - **S9** — Test seed endpoint for Mark (`/api/test/seed-game` creates a table mid-round)
 - **S10** — (Optional) Extract phaseTracker from game.service.ts
 
 ### Joni (Frontend)
+
 - **J13** — Restore full-screen overlay + apply Doni's 9 polish fixes
 - **J14** — Fix bet-timer intercepting chip button clicks (Mark's blocker)
 - **J15** — Wire `opponentTeam` data on score sub-cards
 
 ### Mark (QA)
+
 - **M5** — Fix betting test suite (after J14 lands)
 - **M6** — Unskip mobile tests, selector audit + testid requests
 - **M7** — Showdown flow E2E tests (after J13 lands)
 
 ### Devsi (DevOps)
+
 - **D1** — Infrastructure plan for June launch (answers Soni's questions about Redis, scaling, deployment)
 
 ---
@@ -94,6 +98,7 @@ S8: Live API research              │                          M6: Mobile tests
 ## Definition of done
 
 Same as Sprint 2:
+
 - [ ] Code reviewed
 - [ ] Tests for new logic (80%+)
 - [ ] `pnpm typecheck` clean
@@ -106,6 +111,7 @@ Same as Sprint 2:
 ## End-of-sprint target
 
 Play a full 5-round game and verify:
+
 1. Full-screen showdown overlay renders correctly (no table bleed, centered cards, visible bottom strip)
 2. Score breakdowns show team flags + "vs opponent" + color-coded bonuses
 3. Betting chip buttons are clickable (no timer intercept)

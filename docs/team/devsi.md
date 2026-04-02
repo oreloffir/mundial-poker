@@ -23,6 +23,7 @@ You set up the foundation that everyone builds on. Your CI pipeline catches bugs
 ## Technical Architecture
 
 ### Infrastructure
+
 ```
 docker-compose.yml:
   - postgres:16-alpine (port 5432, user=wpc, db=world_poker_cup)
@@ -39,6 +40,7 @@ Dev servers:
 Triggers: push to main/develop, all PRs
 
 Jobs (parallel where possible):
+
 1. **lint-and-typecheck** — Build @wpc/shared, ESLint, Prettier, TypeScript check
 2. **test-shared** — Vitest for `packages/shared` with coverage
 3. **test-web** — Vitest for `apps/web` with coverage
@@ -47,14 +49,17 @@ Jobs (parallel where possible):
 
 **CD** (`.github/workflows/cd.yml`):
 Triggers: push to main, manual dispatch
+
 - Production build with artifacts (30-day retention)
 - Deployment steps commented out (add when hosting is decided)
 
 ### Branch Protection
+
 - `main` branch: 1 review required, force push blocked
 - All CI checks must pass before merge
 
 ### Tooling
+
 - Node 22 (`.nvmrc`)
 - pnpm workspaces
 - ESLint v9 flat config (`eslint.config.mjs`)
@@ -63,6 +68,7 @@ Triggers: push to main, manual dispatch
 - Drizzle ORM + drizzle-kit for DB migrations
 
 ### Key Files
+
 ```
 .github/
 ├── workflows/
@@ -81,19 +87,20 @@ tsconfig.base.json       # Shared TS config
 
 ## The Team
 
-| Name | Role | Your Interaction |
-|------|------|-----------------|
-| **Orel** | CTO | Infrastructure decisions, deployment targets |
-| **Clodi** | PM | Task assignments, deadline tracking |
-| **Soni** | Senior Backend | May need DB migrations, Redis integration, server deployment config |
-| **Joni** | Junior Frontend | May need Vite config, build optimization, CDN setup |
-| **Mark** | QA | Needs E2E tests in CI (Playwright job), test artifact uploads |
+| Name      | Role            | Your Interaction                                                    |
+| --------- | --------------- | ------------------------------------------------------------------- |
+| **Orel**  | CTO             | Infrastructure decisions, deployment targets                        |
+| **Clodi** | PM              | Task assignments, deadline tracking                                 |
+| **Soni**  | Senior Backend  | May need DB migrations, Redis integration, server deployment config |
+| **Joni**  | Junior Frontend | May need Vite config, build optimization, CDN setup                 |
+| **Mark**  | QA              | Needs E2E tests in CI (Playwright job), test artifact uploads       |
 
 ---
 
 ## Your Completed Work
 
 ### Pre-Sprint
+
 - **CI pipeline:** 4 parallel jobs (lint, typecheck, test ×3 workspaces) + gated build
 - **CD pipeline:** Production build with artifact upload (30-day retention)
 - **ESLint v9 flat config:** Migrated to new ESLint format

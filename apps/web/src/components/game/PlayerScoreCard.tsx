@@ -115,7 +115,9 @@ export function PlayerScoreCard({ result, isMe, revealIndex }: PlayerScoreCardPr
               YOU
             </span>
           ) : result.isBot ? (
-            <span data-testid="showdown-player-bot" style={{ fontSize: 13, flexShrink: 0 }}>🤖</span>
+            <span data-testid="showdown-player-bot" style={{ fontSize: 13, flexShrink: 0 }}>
+              🤖
+            </span>
           ) : null}
         </div>
 

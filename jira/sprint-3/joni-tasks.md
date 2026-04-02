@@ -145,12 +145,14 @@ Soni added `opponentTeam: { name, code, flagUrl }` to the `CardScoreData.fixture
 Heads up — Soni has been asked to do a **teaching code review** on your next PR (likely J13 or J14). This isn't a gatekeeping exercise. It's a learning investment.
 
 He'll leave detailed comments on:
+
 - TypeScript patterns (generics, type assertions, when to use `as never` vs proper typing)
 - React patterns (useEffect deps, conditional rendering, hook ordering)
 - CSS/animation (keyframe timing, GPU acceleration, what causes reflow)
 - Architecture (component structure, socket event wiring, store state resets)
 
 **What to do with his comments:**
+
 - Read every comment carefully — he's explaining WHY, not just WHAT
 - Ask follow-up questions directly on the PR if something isn't clear
 - Apply the patterns he teaches to future code — not just the file he reviewed
@@ -165,10 +167,13 @@ This is the code review session on store types and CSS animations you asked for,
 _Update after each task._
 
 ### J14 — Bet-Timer Click Intercept Fix
+
 **Status:** Done — added `pointerEvents: 'none'` to `data-testid="bet-timer"` container in `BettingControls.tsx`. The flex-1 timer div was sitting on top of the chip denomination buttons; pointer-events passthrough fixes click interception without affecting visual rendering.
 
 ### J13 — Full-Screen Overlay + 9 Polish Fixes
+
 **Status:** Done — all 9 Doni fixes implemented. Recreated `RoundResultsOverlay.tsx` (position:fixed, 3-zone layout), `PlayerScoreCard.tsx` (rank badge, YOU/🤖 mutual exclusion, score breakdown for isMe only), `RevealedPlayerMini.tsx` (72×64px strip cards). Deleted `SeatScorePopup.tsx`. Updated `PokerTable.tsx` to render overlay at showdownPhase=reveals. Typecheck: 0 errors.
 
 ### J15 — opponentTeam Wiring
+
 **Status:** Done (bundled with J13) — added `opponentTeam` to `CardScoreData.fixture` type in `TeamScoreSubCard.tsx`. "vs 🇸🇳 Senegal" line renders at 10px Outfit var(--text-muted), null-safe.

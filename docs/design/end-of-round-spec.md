@@ -38,6 +38,7 @@ BETTING COMPLETE
 ```
 
 **Rationale:**
+
 - Phases 1–2 keep the social layer (seeing other players' seats/reactions) during match wait
 - Phase 4 gets full canvas because the score breakdown story needs space to breathe
 - Phase 5 returns to table because chip movement and winner reaction should be social
@@ -76,6 +77,7 @@ BETTING COMPLETE
 ```
 
 **Fixture tile state — pending (VS):**
+
 ```
 ┌──────────┐
 │    🏳️    │   ← homeFlag (emoji, 1.2rem)
@@ -87,14 +89,17 @@ BETTING COMPLETE
 │   SRB    │   ← awayTeamCode
 └──────────┘
 ```
+
 Width: `var(--fixture-tile-w)` = 72px desktop, 56px mobile
 Border: `1px solid rgba(255,255,255,0.07)` (dim)
 Background: `rgba(13,20,36,0.40)`
 
 **"Matches in Progress" badge (below tiles):**
+
 ```
   ● Matches in Progress...
 ```
+
 - Dot: 6px circle, `--gold`, `animation: blink 1.5s infinite`
 - Text: 11px, `--text-dim`, font-semibold
 - Pill background: `rgba(5,10,24,0.75)`, `border: 1px solid var(--border)`, `border-radius: 20px`, `padding: 4px 12px`
@@ -110,6 +115,7 @@ Background: `rgba(13,20,36,0.40)`
 **Each reveal animates in place on the pitch tile.**
 
 **Fixture tile state — finished (with score):**
+
 ```
 ┌──────────┐
 │    🇧🇷    │   ← homeFlag
@@ -123,16 +129,19 @@ Background: `rgba(13,20,36,0.40)`
 │   SRB    │   ← --text-muted (loser)
 └──────────┘
 ```
+
 Border on finish: `1px solid rgba(212,168,67,0.45)` (gold upgrade from dim)
 Background on finish: `rgba(13,20,36,0.55)`
 Animation on reveal: `tile-reveal 0.4s ease-out` (already defined in CSS)
 
 **Score number color rules:**
+
 - Win side (more goals): `--green-glow` (#2ecc71)
 - Draw (equal goals): `--gold` (#d4a843)
 - Loss side (fewer goals): `--text-muted` (#556680)
 
 **Team code color rules (same logic):**
+
 - Win: `--green-glow`
 - Draw: `--gold`
 - Loss: `--text-muted`
@@ -165,6 +174,7 @@ Animation on reveal: `tile-reveal 0.4s ease-out` (already defined in CSS)
 ```
 
 **Overlay container:**
+
 - `position: absolute inset-0 z-40`
 - `background: rgba(5,10,24,0.78)`
 - `backdropFilter: blur(12px)`
@@ -172,6 +182,7 @@ Animation on reveal: `tile-reveal 0.4s ease-out` (already defined in CSS)
 - Exit animation: `opacity 0, scale(0.96)` over 200ms
 
 **Card:**
+
 - `background: var(--bg-card)` = `#0d1424`
 - `border: 1px solid var(--border)`
 - `border-radius: 20px`
@@ -179,6 +190,7 @@ Animation on reveal: `tile-reveal 0.4s ease-out` (already defined in CSS)
 - `box-shadow: 0 24px 60px rgba(0,0,0,0.6)`
 
 **Content:**
+
 - Football emoji: 32px
 - "Calculating Scores": `font-cinzel 20px font-bold --gold gold-glow-subtle`
 - Progress bar: fills left-to-right over 1.6s
@@ -223,10 +235,12 @@ Animation on reveal: `tile-reveal 0.4s ease-out` (already defined in CSS)
 ```
 
 **Overlay background:**
+
 - `rgba(5,10,24,0.88)` + `backdrop-filter: blur(16px)`
 - z-index: 40
 
 **Header bar** (top, full-width, 40px tall):
+
 - Left: "Round 3 Results" — `font-cinzel 13px font-bold --gold`
 - Right: Progress dots — one dot per player, filled gold for revealed, dim for pending
   - Dot: 6px circle, gap: 4px
@@ -235,6 +249,7 @@ Animation on reveal: `tile-reveal 0.4s ease-out` (already defined in CSS)
 
 **Already-revealed mini-cards** (bottom strip, 72px height):
 Shows previously revealed players as compact summary cards.
+
 - Appear from left, slide in with `fade-in-up 0.4s ease-out`
 - See 4C for spec
 
@@ -275,6 +290,7 @@ Desktop (max-width: 520px, centered):
 ```
 
 **Score card container:**
+
 ```
 background: linear-gradient(145deg, var(--bg-card), var(--surface))
 border: 1px solid rgba(212,168,67,0.25)
@@ -288,6 +304,7 @@ box-shadow: 0 32px 80px rgba(0,0,0,0.7)
 On winner reveal, upgrade border: `1px solid var(--gold)` + `box-shadow: 0 0 40px rgba(212,168,67,0.35), 0 32px 80px rgba(0,0,0,0.7)`
 
 **Player header row:**
+
 - Rank badge: `#2` in rounded pill — `background: rgba(255,255,255,0.06)`, `font-outfit font-black 12px`, `--text-dim`
   - Winner: `background: rgba(212,168,67,0.15)`, `color: --gold`, trophy icon 🏆
 - Avatar: 48px circle — initial letter on `--surface` bg (Joni can add real avatars later)
@@ -298,6 +315,7 @@ Divider: `1px solid rgba(255,255,255,0.06)`, margin: 12px 0
 
 **Team Score Sub-card:**
 Two cards side by side (gap: 12px). Each:
+
 ```
 background: rgba(5,10,24,0.5)
 border: 1px solid rgba(255,255,255,0.06)
@@ -307,17 +325,21 @@ flex: 1
 ```
 
 **Sub-card header (match info):**
+
 ```
 🇧🇷 BRAZIL                    ← flag emoji + team name, 13px font-outfit font-bold
 vs 🇷🇸 Serbia                 ← "vs" 10px --text-muted + other team
 3 – 0                         ← score, font-outfit font-black 18px, win color --green-glow
 ```
+
 Score color rules (same as fixture tiles):
+
 - Win side: `--green-glow`
 - Draw: `--gold`
 - Loss: `--text-muted`
 
 **Score breakdown rows** (appear sequentially — staggered 150ms each):
+
 ```
 Win         +5 pts    ← label: 11px --text-dim | value: 11px --green-glow font-semibold
 High Scorer +4 pts    ← only shown if goalBonus > 0
@@ -325,21 +347,25 @@ Clean Sheet +2 pts    ← only shown if cleanSheetBonus > 0
 Penalties   +1 pt     ← only shown if penaltyModifier > 0
                       ← negative modifier: color --red
 ```
+
 If no bonus rows (e.g. draw, no bonuses): Show only the base score row.
 
 Separator: `1px solid rgba(255,255,255,0.04)`, margin: 8px 0
 
 **Sub-total row:**
+
 ```
 ★  11 pts    ← star icon + total, font-outfit font-black 13px --gold
 ```
 
 **Grand total row** (below both cards, centered):
+
 ```
 ══════════════════
   TOTAL  14 pts     ← font-cinzel 16px font-bold --gold gold-glow-subtle
 ══════════════════
 ```
+
 Score animates with `score-tick` keyframe on each count step.
 
 ### 4C — Already-Revealed Mini Cards (bottom strip)
@@ -355,6 +381,7 @@ Max 4 visible; if 5 players, last two compress.
 │  #3       │   ← 8px --text-muted
 └───────────┘
 ```
+
 ```
 width: 72px
 background: rgba(5,10,24,0.6)
@@ -362,6 +389,7 @@ border: 1px solid rgba(212,168,67,0.15)
 border-radius: 12px
 padding: 6px 8px
 ```
+
 Animation in: `fade-in-up 0.4s ease-out`
 
 ---
@@ -373,6 +401,7 @@ Animation in: `fade-in-up 0.4s ease-out`
 **Return to table — overlay FADES OUT** (opacity 0 over 400ms, then display:none).
 
 **Enhanced WinnerBanner in table center:**
+
 ```
 ╔══════════════════════════════╗
 ║  🏆                          ║
@@ -382,6 +411,7 @@ Animation in: `fade-in-up 0.4s ease-out`
 ```
 
 Current `WinnerBanner` is close. Enhancements:
+
 - Add gold shimmer top-border: `3px gradient(90deg, transparent, --gold, transparent)` animated scan
 - Add crown/trophy: 🏆 at 24px above name
 - In split pots (multiple winners): "3-way split!" sub-line, smaller chip amounts per winner
@@ -390,6 +420,7 @@ Current `WinnerBanner` is close. Enhancements:
 
 **Chip update visual (PlayerSeat):**
 When `players:update` fires, each seat's chip count should:
+
 - If increased: flash `--green-glow`, `chip-increase` animation (already defined in CSS)
 - If decreased: flash `--red`, `chip-decrease` animation (already defined in CSS)
 
@@ -461,6 +492,7 @@ At `@media (max-height: 500px) and (orientation: landscape)`:
 Event icons: `.mobile-landscape-hide` (already implemented in FixtureBoard).
 
 **Phase 3 (calculating):**
+
 - Card: `padding: 16px 28px`, text: `16px`, progress bar: `width: 160px`
 - Same overlay, just tighter
 
@@ -490,6 +522,7 @@ Mobile landscape (h<500px):
 ```
 
 Key changes:
+
 - Score card: `max-height: calc(100vh - 28px)`, `padding: 10px 12px`
 - Team sub-cards: always side-by-side (same as desktop, good)
 - Sub-card text: reduce to 10px for names, 12px for scores
@@ -503,27 +536,28 @@ Key changes:
 
 ### New components to create:
 
-| Component | File | Notes |
-|-----------|------|-------|
-| `RoundResultsOverlay` | `components/game/RoundResultsOverlay.tsx` | Phase 3+4 overlay wrapper |
-| `PlayerScoreCard` | `components/game/PlayerScoreCard.tsx` | Phase 4 main card (4B) |
-| `TeamScoreSubCard` | `components/game/TeamScoreSubCard.tsx` | Each team's breakdown (extracted from above) |
-| `RevealedPlayerMini` | `components/game/RevealedPlayerMini.tsx` | Phase 4 bottom strip items (4C) |
-| `CalculatingOverlay` | `components/game/CalculatingOverlay.tsx` | Phase 3 transition |
-| `WinnerBanner` | Already exists in `PokerTable.tsx` | Extract + enhance |
+| Component             | File                                      | Notes                                        |
+| --------------------- | ----------------------------------------- | -------------------------------------------- |
+| `RoundResultsOverlay` | `components/game/RoundResultsOverlay.tsx` | Phase 3+4 overlay wrapper                    |
+| `PlayerScoreCard`     | `components/game/PlayerScoreCard.tsx`     | Phase 4 main card (4B)                       |
+| `TeamScoreSubCard`    | `components/game/TeamScoreSubCard.tsx`    | Each team's breakdown (extracted from above) |
+| `RevealedPlayerMini`  | `components/game/RevealedPlayerMini.tsx`  | Phase 4 bottom strip items (4C)              |
+| `CalculatingOverlay`  | `components/game/CalculatingOverlay.tsx`  | Phase 3 transition                           |
+| `WinnerBanner`        | Already exists in `PokerTable.tsx`        | Extract + enhance                            |
 
 ### Components to update:
 
-| Component | File | What changes |
-|-----------|------|-------------|
-| `FixtureBoard` | `components/game/FixtureBoard.tsx` | Accept `fixtures` with full team objects (homeTeam/awayTeam), use team names in score reveal |
-| `WaitingBadge` | `PokerTable.tsx` (inline) | Extract to own file, add phase prop: `'waiting' \| 'calculating'` |
-| `ShowdownOverlay` | `components/game/ShowdownOverlay.tsx` | **DELETE** — replaced by `RoundResultsOverlay` |
-| `WaitingOverlay` | `components/game/WaitingOverlay.tsx` | **DELETE** — replaced by Phase 1 inline state |
+| Component         | File                                  | What changes                                                                                 |
+| ----------------- | ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `FixtureBoard`    | `components/game/FixtureBoard.tsx`    | Accept `fixtures` with full team objects (homeTeam/awayTeam), use team names in score reveal |
+| `WaitingBadge`    | `PokerTable.tsx` (inline)             | Extract to own file, add phase prop: `'waiting' \| 'calculating'`                            |
+| `ShowdownOverlay` | `components/game/ShowdownOverlay.tsx` | **DELETE** — replaced by `RoundResultsOverlay`                                               |
+| `WaitingOverlay`  | `components/game/WaitingOverlay.tsx`  | **DELETE** — replaced by Phase 1 inline state                                                |
 
 ### Store changes (Joni to discuss with Soni):
 
 New state needed in `gameStore.ts`:
+
 ```typescript
 // New phase state
 readonly roundPhase: 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'
@@ -546,17 +580,17 @@ readonly setWinnerData: (data: RoundWinnerEvent | null) => void
 
 ## Color Reference for This Feature
 
-| Element | Color | Token |
-|---------|-------|-------|
-| Win result | `#2ecc71` | `--green-glow` |
-| Draw result | `#d4a843` | `--gold` |
-| Loss result | `#556680` | `--text-muted` |
-| Score total | `#f0cc5b` | `--gold-bright` |
-| Bonus label | `#8899b0` | `--text-dim` |
-| Negative modifier | `#e74c3c` | `--red` |
-| Card bg | `#0d1424` | `--bg-card` |
-| Sub-card bg | `rgba(5,10,24,0.5)` | custom (darker inset) |
-| Overlay bg | `rgba(5,10,24,0.88)` | custom |
+| Element           | Color                | Token                 |
+| ----------------- | -------------------- | --------------------- |
+| Win result        | `#2ecc71`            | `--green-glow`        |
+| Draw result       | `#d4a843`            | `--gold`              |
+| Loss result       | `#556680`            | `--text-muted`        |
+| Score total       | `#f0cc5b`            | `--gold-bright`       |
+| Bonus label       | `#8899b0`            | `--text-dim`          |
+| Negative modifier | `#e74c3c`            | `--red`               |
+| Card bg           | `#0d1424`            | `--bg-card`           |
+| Sub-card bg       | `rgba(5,10,24,0.5)`  | custom (darker inset) |
+| Overlay bg        | `rgba(5,10,24,0.88)` | custom                |
 
 ---
 
@@ -604,5 +638,5 @@ Row: Sub-total
 
 ---
 
-*Doni — Design Lead*
-*Next: Player Avatar System (due April 10)*
+_Doni — Design Lead_
+_Next: Player Avatar System (due April 10)_

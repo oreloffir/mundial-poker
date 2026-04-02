@@ -31,7 +31,11 @@ export async function createTable(page: Page, options: TableOptions = {}): Promi
     await page.waitForTimeout(300)
   }
 
-  await page.locator('button').filter({ hasText: /^Create$/ }).last().click()
+  await page
+    .locator('button')
+    .filter({ hasText: /^Create$/ })
+    .last()
+    .click()
   await page.waitForTimeout(3000)
 
   return page.url()

@@ -2,7 +2,12 @@ import { eq, sql, and, ne, desc } from 'drizzle-orm'
 import { db } from '../../db/index.js'
 import { tables, tablePlayers, users } from '../../db/schema.js'
 
-const STATUS_SORT_ORDER: Record<string, number> = { WAITING: 0, IN_PROGRESS: 1, PAUSED_FOR_MATCHES: 2, COMPLETED: 3 }
+const STATUS_SORT_ORDER: Record<string, number> = {
+  WAITING: 0,
+  IN_PROGRESS: 1,
+  PAUSED_FOR_MATCHES: 2,
+  COMPLETED: 3,
+}
 
 export async function findAll(includeCompleted = false) {
   let query = db
@@ -28,7 +33,9 @@ export async function findAll(includeCompleted = false) {
   }
 
   const result = await query
-  return result.sort((a, b) => (STATUS_SORT_ORDER[a.status] ?? 9) - (STATUS_SORT_ORDER[b.status] ?? 9))
+  return result.sort(
+    (a, b) => (STATUS_SORT_ORDER[a.status] ?? 9) - (STATUS_SORT_ORDER[b.status] ?? 9),
+  )
 }
 
 export async function findById(id: string) {

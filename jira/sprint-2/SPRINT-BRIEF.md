@@ -15,12 +15,12 @@ Sprint 2 fixes that. We're restructuring the entire post-betting flow to create 
 
 ### Your task files
 
-| Developer | File | Focus |
-|-----------|------|-------|
-| **Soni** | [`soni-tasks.md`](./soni-tasks.md) | S5: timeout fix, S6: showdown event restructure, S7: integration tests |
-| **Joni** | [`joni-tasks.md`](./joni-tasks.md) | J10: BB read-only fix, J11: testids + TS, J12: showdown frontend experience |
-| **Mark** | [`mark-qa.md`](./mark-qa.md) | E2E suite formalization + Sprint 2 QA |
-| **Doni** | Separate prompt | UX design for showdown flow (all 5 phases) |
+| Developer | File                               | Focus                                                                       |
+| --------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| **Soni**  | [`soni-tasks.md`](./soni-tasks.md) | S5: timeout fix, S6: showdown event restructure, S7: integration tests      |
+| **Joni**  | [`joni-tasks.md`](./joni-tasks.md) | J10: BB read-only fix, J11: testids + TS, J12: showdown frontend experience |
+| **Mark**  | [`mark-qa.md`](./mark-qa.md)       | E2E suite formalization + Sprint 2 QA                                       |
+| **Doni**  | Separate prompt                    | UX design for showdown flow (all 5 phases)                                  |
 
 ### How to reach me
 
@@ -43,20 +43,24 @@ If this phase feels amazing, the whole game feels amazing. If it's flat, the gam
 ## Sprint scope
 
 ### Backend (Soni)
+
 - **S5** — Fix timeout timing (30s bug from Sprint 1)
 - **S6** — Restructure showdown event flow: progressive fixture reveals, per-player scoring events with enriched data, proper winner event
 - **S7** — Server integration tests (13 tests for game engine)
 
 ### Frontend (Joni)
+
 - **J10** — BB field read-only fix (Sprint 1 carry-over)
 - **J11** — TestIDs + TypeScript error fixes
 - **J12** — Showdown frontend experience: consume S6's new events, build the visual reveal sequence with score breakdowns
 
 ### Design (Doni)
+
 - UX mockups for the 5 showdown phases (matches in progress → fixture reveals → score calculation → player reveals → winner announcement)
 - Score breakdown card design (the hero element)
 
 ### QA (Mark)
+
 - Formalize Playwright E2E suite into the repo
 - QA the new showdown flow once it lands
 
@@ -86,16 +90,16 @@ Showdown UX mockups ─────┐       S5: Fix timeout (day 1)          J1
 
 ## Suggested daily schedule
 
-| Day | Soni | Joni | Doni | Mark |
-|-----|------|------|------|------|
-| Apr 2 | S5: timeout fix | J10: BB read-only + J11: testids | Showdown UX research | E2E suite setup |
-| Apr 3 | S6: progressive fixtures | J10/J11 wrap up | Showdown phase mockups | E2E test conversion |
-| Apr 4 | S6: per-player scoring | Start J12 scaffold | Score breakdown card | E2E test conversion |
-| Apr 5 | S6: winner event + cleanup | J12: fixture reveal UI | Mockup review with Clodi | Sprint 2 QA plan |
-| Apr 6 | S6 wrap up | J12: player score reveal | Iterate on feedback | — |
-| Apr 7 | S7: integration tests | J12: winner + transitions | — | Batch testing |
-| Apr 8 | S7 continued | J12: polish + mobile | — | Integration test |
-| Apr 9 | Sprint review | Sprint review | Sprint review | Sprint review |
+| Day   | Soni                       | Joni                             | Doni                     | Mark                |
+| ----- | -------------------------- | -------------------------------- | ------------------------ | ------------------- |
+| Apr 2 | S5: timeout fix            | J10: BB read-only + J11: testids | Showdown UX research     | E2E suite setup     |
+| Apr 3 | S6: progressive fixtures   | J10/J11 wrap up                  | Showdown phase mockups   | E2E test conversion |
+| Apr 4 | S6: per-player scoring     | Start J12 scaffold               | Score breakdown card     | E2E test conversion |
+| Apr 5 | S6: winner event + cleanup | J12: fixture reveal UI           | Mockup review with Clodi | Sprint 2 QA plan    |
+| Apr 6 | S6 wrap up                 | J12: player score reveal         | Iterate on feedback      | —                   |
+| Apr 7 | S7: integration tests      | J12: winner + transitions        | —                        | Batch testing       |
+| Apr 8 | S7 continued               | J12: polish + mobile             | —                        | Integration test    |
+| Apr 9 | Sprint review              | Sprint review                    | Sprint review            | Sprint review       |
 
 ---
 

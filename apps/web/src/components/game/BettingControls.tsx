@@ -48,7 +48,8 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
   const timePercent = (timeLeft / prompt.timeoutMs) * 100
   const timeSeconds = Math.ceil(timeLeft / 1000)
   const isAllowed = (action: string) => prompt.allowedActions.includes(action)
-  const timerColor = timeLeft > 10000 ? 'var(--green-glow)' : timeLeft > 5000 ? 'var(--gold)' : 'var(--red)'
+  const timerColor =
+    timeLeft > 10000 ? 'var(--green-glow)' : timeLeft > 5000 ? 'var(--gold)' : 'var(--red)'
   const isUrgent = timeLeft > 0 && timeLeft <= 5000
 
   const raiseDisabled = raiseAmount < prompt.minimumBet
@@ -84,7 +85,15 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
           }}
         >
           <span style={{ fontSize: '0.8rem', lineHeight: 1 }}>{card.team.flagUrl}</span>
-          <span style={{ fontSize: '5px', fontWeight: 800, color: 'rgba(255,255,255,0.8)', lineHeight: 1, letterSpacing: '0.02em' }}>
+          <span
+            style={{
+              fontSize: '5px',
+              fontWeight: 800,
+              color: 'rgba(255,255,255,0.8)',
+              lineHeight: 1,
+              letterSpacing: '0.02em',
+            }}
+          >
             {card.team.code}
           </span>
         </div>
@@ -110,8 +119,15 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
   )
 
   const timerBar = (
-    <div data-testid="bet-timer" className="flex items-center gap-2 flex-1 min-w-0" style={{ pointerEvents: 'none' }}>
-      <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+    <div
+      data-testid="bet-timer"
+      className="flex items-center gap-2 flex-1 min-w-0"
+      style={{ pointerEvents: 'none' }}
+    >
+      <div
+        className="flex-1 h-1 rounded-full overflow-hidden"
+        style={{ background: 'rgba(255,255,255,0.06)' }}
+      >
         <div
           className="h-full rounded-full transition-all duration-100"
           style={{
@@ -123,7 +139,11 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
       </div>
       <span
         className="text-xs font-mono font-bold flex-shrink-0 tabular-nums"
-        style={{ color: timerColor, minWidth: '2.5ch', ...(isUrgent ? { animation: 'blink 0.7s ease-in-out infinite' } : {}) }}
+        style={{
+          color: timerColor,
+          minWidth: '2.5ch',
+          ...(isUrgent ? { animation: 'blink 0.7s ease-in-out infinite' } : {}),
+        }}
       >
         {timeSeconds}s
       </span>
@@ -151,10 +171,17 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
               opacity: wouldExceed ? 0.28 : 1,
               transform: isPressed ? 'scale(0.88) translateY(1px)' : undefined,
               cursor: wouldExceed ? 'not-allowed' : 'pointer',
-              filter: wouldExceed ? 'none' : isPressed ? 'drop-shadow(0 0 6px rgba(212,168,67,0.5))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
+              filter: wouldExceed
+                ? 'none'
+                : isPressed
+                  ? 'drop-shadow(0 0 6px rgba(212,168,67,0.5))'
+                  : 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
             }}
           >
-            <PokerChip size={36} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+            <PokerChip
+              size={36}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+            />
             <span
               className="relative font-bold"
               style={{
@@ -171,7 +198,14 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
       })}
       <button
         onClick={() => setRaiseAmount(prompt.minimumBet)}
-        style={{ fontSize: 'var(--chip-btn-font-size)', color: 'var(--text-muted)', padding: '0 6px', background: 'none', border: 'none', cursor: 'pointer' }}
+        style={{
+          fontSize: 'var(--chip-btn-font-size)',
+          color: 'var(--text-muted)',
+          padding: '0 6px',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+        }}
       >
         ↩
       </button>
@@ -191,7 +225,9 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
               padding: 'var(--preset-padding)',
               fontSize: 'var(--preset-font-size)',
               background: isActive ? 'rgba(212,168,67,0.12)' : 'rgba(255,255,255,0.05)',
-              border: isActive ? '1px solid rgba(212,168,67,0.5)' : '1px solid rgba(255,255,255,0.1)',
+              border: isActive
+                ? '1px solid rgba(212,168,67,0.5)'
+                : '1px solid rgba(255,255,255,0.1)',
               color: isActive ? 'var(--gold-bright)' : 'var(--text-dim)',
             }}
           >
@@ -205,7 +241,6 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
   // ─── Unified layout (replaces separate desktop/mobile) ───────────────────
   return (
     <div data-testid="betting-controls" className="space-y-1.5">
-
       {/* ── Raise drawer — slides up from above the action bar ── */}
       {isAllowed('RAISE') && (
         <div
@@ -232,13 +267,19 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
                 Raise to:{' '}
                 <span
                   className="font-outfit font-black"
-                  style={{ fontSize: 'var(--btn-font-size)', color: raiseDisabled ? 'var(--red)' : 'var(--gold-bright)' }}
+                  style={{
+                    fontSize: 'var(--btn-font-size)',
+                    color: raiseDisabled ? 'var(--red)' : 'var(--gold-bright)',
+                  }}
                 >
                   {raiseIsAllIn ? 'All In' : raiseAmount}
                 </span>
               </span>
               <button
-                onClick={() => { setRaiseExpanded(false); onAction('RAISE', raiseAmount) }}
+                onClick={() => {
+                  setRaiseExpanded(false)
+                  onAction('RAISE', raiseAmount)
+                }}
                 disabled={raiseDisabled}
                 className="rounded-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{
@@ -252,8 +293,18 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
                 {raiseIsAllIn ? 'All In' : `Raise ${raiseAmount}`}
               </button>
               <button
-                onClick={() => { setRaiseExpanded(false); setRaiseAmount(prompt.minimumBet) }}
-                style={{ fontSize: 'var(--preset-font-size)', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px' }}
+                onClick={() => {
+                  setRaiseExpanded(false)
+                  setRaiseAmount(prompt.minimumBet)
+                }}
+                style={{
+                  fontSize: 'var(--preset-font-size)',
+                  color: 'var(--text-muted)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px 6px',
+                }}
               >
                 ✕ Cancel
               </button>

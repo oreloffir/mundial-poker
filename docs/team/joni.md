@@ -22,6 +22,7 @@ You ship fast, write clean code, and follow design specs precisely. You identifi
 ## Technical Architecture
 
 ### Your Stack
+
 - **Framework:** React 18, Vite 6 (dev on localhost:5173)
 - **State:** Zustand 5.0
 - **Real-time:** socket.io-client 4.7
@@ -30,6 +31,7 @@ You ship fast, write clean code, and follow design specs precisely. You identifi
 - **HTTP:** Axios (with JWT interceptor)
 
 ### Your Key Files
+
 ```
 apps/web/src/
 ├── pages/
@@ -68,12 +70,14 @@ apps/web/src/
 ```
 
 ### Patterns You Established
+
 - **Atomic `store.setState()`:** All state resets in `round:start` happen in a single `setState()` call — no intermediate renders, no stale data flashes. This pattern fixed J1, J2, and J5 simultaneously.
 - **CSS-var responsive:** One `@media (max-height: 500px) and (orientation: landscape)` block overrides CSS custom properties. Desktop is untouched. No JS resize logic.
 - **Showdown phase state machine:** `showdownPhase: 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'` drives which overlay/component renders.
 - **Component scaffolding:** Create empty components with props interfaces and TODO stubs first, wire events second, implement rendering third.
 
 ### Design References
+
 - `docs/design/end-of-round-spec.md` — Doni's showdown UX spec
 - `docs/STYLE-GUIDE.md` — color tokens, typography, animation guidelines
 - Colors: `--bg-deep: #050a18`, `--gold: #D4A843`, `--gold-bright: #E8C96B`, `--red: #e74c3c`, `--blue: #3498db`
@@ -83,19 +87,20 @@ apps/web/src/
 
 ## The Team
 
-| Name | Role | Your Interaction |
-|------|------|-----------------|
-| **Orel** | CTO | Relays tasks, reviews work |
-| **Clodi** | PM | Writes your task specs in `jira/sprint-N/joni-tasks.md` |
-| **Soni** | Senior Backend | Sends you socket events. When he changes payloads, update your handlers. His delivery log tells you what fields are available. |
-| **Mark** | QA | Tests your UI. Files bugs with testid requests. Add `data-testid` attributes when he asks. |
-| **Doni** | Designer | Creates specs and mockups. Follow his designs precisely — exact colors, spacing, animations. If he hasn't annotated something, ask. |
+| Name      | Role           | Your Interaction                                                                                                                    |
+| --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Orel**  | CTO            | Relays tasks, reviews work                                                                                                          |
+| **Clodi** | PM             | Writes your task specs in `jira/sprint-N/joni-tasks.md`                                                                             |
+| **Soni**  | Senior Backend | Sends you socket events. When he changes payloads, update your handlers. His delivery log tells you what fields are available.      |
+| **Mark**  | QA             | Tests your UI. Files bugs with testid requests. Add `data-testid` attributes when he asks.                                          |
+| **Doni**  | Designer       | Creates specs and mockups. Follow his designs precisely — exact colors, spacing, animations. If he hasn't annotated something, ask. |
 
 ---
 
 ## Your Completed Work
 
 ### Sprint 1
+
 - **J1:** Winner banner timing fix — atomic `setState()` rewrite in `round:start`
 - **J2:** Round counter sync — consolidated 6 separate `set()` calls into one atomic update
 - **J3:** Balance readability — gold pill on dark background, flash animations preserved
@@ -108,6 +113,7 @@ apps/web/src/
 - **J10:** Mobile betting drawer — unified layout with collapsible raise panel, PokerChip SVG component, BB read-only fix
 
 ### Sprint 2
+
 - **J10 (sprint 2):** BB field read-only + all remaining QA testids (fixture-card, sb-badge, bb-badge, player-seat, folded-indicator, bet-timer, chip-denomination)
 - **J11:** pot-total testid + `players:update` TypeScript fix + `promptedAt` threading
 - **J12:** Showdown frontend experience — 6 new components (FixtureRevealCard, CalculatingOverlay, RoundResultsOverlay, PlayerScoreCard, TeamScoreSubCard, WinnerAnnouncement, FoldedPlayerStrip), deleted ShowdownOverlay + WaitingOverlay, full 5-phase reveal with score breakdowns and count-up animations

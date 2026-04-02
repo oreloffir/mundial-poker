@@ -1,4 +1,5 @@
 # Flow Audit v2 — Sprint 3
+
 **Authored by:** Mark (QA Lead)
 **Date:** April 2, 2026
 **Requested by:** Clodi
@@ -230,6 +231,7 @@ Same state as I1 (the reveals fired very quickly — first 3 popups appeared wit
 ![v2 Desktop I3 All Revealed](../../../assets/screenshots/v2-desktop-I3-all-revealed.png)
 
 All 5 score popups visible simultaneously above their seats:
+
 - Top-left: **7 pts**
 - Top-right: **4 PTS**
 - Left: **9 PTS** (with flag cards showing BEL/DEN)
@@ -241,6 +243,7 @@ All opponent cards face-up. All team assignments visible. The winner's seat (rig
 Centre pitch: **"Storm-Dan92 wins! +220 chips"** — the winner banner has appeared with the 🏆 trophy emoji. It sits over the pot area, on the pitch, with the full table still visible around it. The chip amount is clear.
 
 **This design is significantly better than the full-screen overlay.** The player can see:
+
 1. Their own score
 2. Everyone else's score
 3. Who won and by how much
@@ -266,7 +269,7 @@ Multiple score popups above seats on the compact mobile layout. Opponent cards f
 
 Timing: the banner appeared while all reveals were still showing and persisted through to the K screenshot (~2 rounds of screenshot intervals = ~8–10s visible). Soni's 3s delay + 7s round start is working.
 
-**What's great:** The player can immediately see *why* Storm-Dan92 won (14 pts vs everyone else's lower scores), *what* they're getting (+220 chips), and *how their own hand compared* (8 pts, mid-table). All without leaving the table.
+**What's great:** The player can immediately see _why_ Storm-Dan92 won (14 pts vs everyone else's lower scores), _what_ they're getting (+220 chips), and _how their own hand compared_ (8 pts, mid-table). All without leaving the table.
 
 ### Mobile
 
@@ -304,32 +307,33 @@ Same — Round 2 live on mobile. New cards, new fixtures, clean state. Betting a
 
 ## Desktop vs Mobile — Full Comparison
 
-| Feature | Desktop 1400×900 | Mobile 667×375 |
-|---------|-----------------|----------------|
-| Landing | ✅ | ✅ |
-| Lobby load | ✅ | ✅ |
-| Create modal | ✅ Full, Cancel visible | ✅ Scrollable, usable |
-| Table redirect | ✅ | ✅ |
-| Table design | ✅ Stadium + pitch, stunning | ✅ Scales, atmosphere holds |
-| Chips 0 glitch (D2) | ⚠️ BUG-S3-04 | ⚠️ BUG-S3-04 |
-| Cards dealt | ✅ Flag assignments clear | ✅ |
-| Betting controls | ✅ All 3 rounds | ✅ All 3 rounds |
-| No fixture scores during betting | ✅ **Confirmed** | ✅ **Confirmed** |
-| Fixture reveals on table | ✅ "1 of 5 matches" badge | ✅ |
-| All 5 fixtures revealed | ✅ | ✅ |
-| Calculating state visible | ⚠️ Blink — under 1s | ⚠️ Same |
-| Inline score popups | ✅ Above each seat | ✅ |
-| Opponent cards flip face-up | ✅ National flags visible | ✅ |
-| Own cards always visible | ✅ | ✅ |
-| Winner glow on seat | ✅ Gold border animation | ✅ |
-| Winner banner (pitch, not overlay) | ✅ ~10s, all context visible | ✅ |
-| Clean transition to Round 2 | ✅ | ✅ |
+| Feature                            | Desktop 1400×900             | Mobile 667×375              |
+| ---------------------------------- | ---------------------------- | --------------------------- |
+| Landing                            | ✅                           | ✅                          |
+| Lobby load                         | ✅                           | ✅                          |
+| Create modal                       | ✅ Full, Cancel visible      | ✅ Scrollable, usable       |
+| Table redirect                     | ✅                           | ✅                          |
+| Table design                       | ✅ Stadium + pitch, stunning | ✅ Scales, atmosphere holds |
+| Chips 0 glitch (D2)                | ⚠️ BUG-S3-04                 | ⚠️ BUG-S3-04                |
+| Cards dealt                        | ✅ Flag assignments clear    | ✅                          |
+| Betting controls                   | ✅ All 3 rounds              | ✅ All 3 rounds             |
+| No fixture scores during betting   | ✅ **Confirmed**             | ✅ **Confirmed**            |
+| Fixture reveals on table           | ✅ "1 of 5 matches" badge    | ✅                          |
+| All 5 fixtures revealed            | ✅                           | ✅                          |
+| Calculating state visible          | ⚠️ Blink — under 1s          | ⚠️ Same                     |
+| Inline score popups                | ✅ Above each seat           | ✅                          |
+| Opponent cards flip face-up        | ✅ National flags visible    | ✅                          |
+| Own cards always visible           | ✅                           | ✅                          |
+| Winner glow on seat                | ✅ Gold border animation     | ✅                          |
+| Winner banner (pitch, not overlay) | ✅ ~10s, all context visible | ✅                          |
+| Clean transition to Round 2        | ✅                           | ✅                          |
 
 ---
 
 ## Bugs Found (This Run)
 
 ### BUG-S3-04 — LOW (pre-existing, still open)
+
 Header shows "Chips 0" between bots joining and `round:start` firing. Cosmetic — balance is correct, display lags by ~3s. Visible in D2 screenshot for both passes.
 
 ---

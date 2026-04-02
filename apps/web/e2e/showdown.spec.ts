@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { guestLogin } from './helpers/auth.helper'
 import { setupGame } from './helpers/table.helper'
-import { playAllBettingPhases, waitForWinnerBanner, waitForWinnerBannerGone, getRoundNumber } from './helpers/game.helper'
+import {
+  playAllBettingPhases,
+  waitForWinnerBanner,
+  waitForWinnerBannerGone,
+  getRoundNumber,
+} from './helpers/game.helper'
 
 // ---------------------------------------------------------------------------
 // Showdown Flow E2E — Sprint 3 M7
@@ -87,9 +92,9 @@ test.describe('Showdown Flow', () => {
     // Wait for all fixtures (~30s) then expect the calculating overlay
     await page.waitForTimeout(30000)
 
-    await expect(
-      page.locator('[data-testid="showdown-calculating"]'),
-    ).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('[data-testid="showdown-calculating"]')).toBeVisible({
+      timeout: 10000,
+    })
 
     await page.screenshot({ path: 'e2e/screenshots/showdown-calculating-overlay.png' })
   })
@@ -102,9 +107,7 @@ test.describe('Showdown Flow', () => {
     // Allow time for fixtures + calculating state to pass
     await page.waitForTimeout(33000)
 
-    await expect(
-      page.locator('[data-testid="showdown-overlay"]'),
-    ).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('[data-testid="showdown-overlay"]')).toBeVisible({ timeout: 15000 })
 
     // Should display "Round N Results" or similar header
     const header = page.locator('[data-testid="showdown-round-header"]')
@@ -252,7 +255,6 @@ test.describe('Showdown Flow', () => {
 
     expect(numAfter).toBe(numBefore + 1)
   })
-
 })
 
 // ---------------------------------------------------------------------------

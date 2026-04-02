@@ -15,7 +15,10 @@ function getNextActiveSeat(afterSeat: number, players: readonly ActivePlayer[]):
   return after ?? sorted[0]!
 }
 
-export function calculateBlindPositions(dealerSeatIndex: number, activePlayers: readonly ActivePlayer[]): BlindPositions {
+export function calculateBlindPositions(
+  dealerSeatIndex: number,
+  activePlayers: readonly ActivePlayer[],
+): BlindPositions {
   const eligible = activePlayers.filter((p) => p.chipStack > 0)
   if (eligible.length < 2) {
     throw new Error('Not enough players with chips for blind positions')
@@ -37,7 +40,10 @@ export function calculateBlindPositions(dealerSeatIndex: number, activePlayers: 
   return { sbSeatIndex: sbPlayer.seatIndex, bbSeatIndex: bbPlayer.seatIndex }
 }
 
-export function calculateNextActiveSeat(afterSeat: number, activePlayers: readonly ActivePlayer[]): number {
+export function calculateNextActiveSeat(
+  afterSeat: number,
+  activePlayers: readonly ActivePlayer[],
+): number {
   const eligible = activePlayers.filter((p) => p.chipStack > 0)
   if (eligible.length === 0) return afterSeat
   return getNextActiveSeat(afterSeat, eligible).seatIndex

@@ -138,33 +138,40 @@ export function resolveDemoFixturesProgressive(
   const timers: NodeJS.Timeout[] = []
 
   fixtureIds.forEach((fixtureId, i) => {
-    const timer = setTimeout(async () => {
-      try {
-        const result = generateDemoResult()
-        await db
-          .update(fixtures)
-          .set({
-            homeGoals: result.homeScore,
-            awayGoals: result.awayScore,
-            homePenaltiesScored: result.homePenalties ?? 0,
-            homePenaltiesMissed: result.homePenalties === 0 ? 1 : 0,
-            awayPenaltiesScored: result.awayPenalties ?? 0,
-            awayPenaltiesMissed: result.awayPenalties === 0 ? 1 : 0,
-            status: 'FINISHED',
-            updatedAt: new Date(),
+    const timer = setTimeout(
+      async () => {
+        try {
+          const result = generateDemoResult()
+          await db
+            .update(fixtures)
+            .set({
+              homeGoals: result.homeScore,
+              awayGoals: result.awayScore,
+              homePenaltiesScored: result.homePenalties ?? 0,
+              homePenaltiesMissed: result.homePenalties === 0 ? 1 : 0,
+              awayPenaltiesScored: result.awayPenalties ?? 0,
+              awayPenaltiesMissed: result.awayPenalties === 0 ? 1 : 0,
+              status: 'FINISHED',
+              updatedAt: new Date(),
+            })
+            .where(eq(fixtures.id, fixtureId))
+
+          onEachResolved(fixtureId, result)
+          console.log('DemoService - fixtureResolved', {
+            fixtureId,
+            index: i,
+            result: `${result.homeScore}-${result.awayScore}`,
           })
-          .where(eq(fixtures.id, fixtureId))
 
-        onEachResolved(fixtureId, result)
-        console.log('DemoService - fixtureResolved', { fixtureId, index: i, result: `${result.homeScore}-${result.awayScore}` })
-
-        if (i === fixtureIds.length - 1) {
-          onAllResolved()
+          if (i === fixtureIds.length - 1) {
+            onAllResolved()
+          }
+        } catch (error) {
+          console.error('DemoService - resolveDemoFixture - error', { fixtureId, error })
         }
-      } catch (error) {
-        console.error('DemoService - resolveDemoFixture - error', { fixtureId, error })
-      }
-    }, (i + 1) * intervalMs)
+      },
+      (i + 1) * intervalMs,
+    )
     timers.push(timer)
   })
 

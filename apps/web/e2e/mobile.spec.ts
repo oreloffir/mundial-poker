@@ -62,16 +62,18 @@ test.describe('Mobile Responsive Layout', () => {
     await page.close()
   })
 
-  test('iPhone SE landscape — betting bar is reachable during active turn', async ({
-    browser,
-  }) => {
+  test('iPhone SE landscape — betting bar is reachable during active turn', async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width: 667, height: 375 } })
     await guestLogin(page)
     await setupGame(page, { name: 'E2E Mobile Betting' })
 
     const prompt = await waitForBetPrompt(page, 15000)
     if (prompt !== null) {
-      const foldBtn = page.locator('div[class*="absolute bottom"]').locator('button').filter({ hasText: 'Fold' }).first()
+      const foldBtn = page
+        .locator('div[class*="absolute bottom"]')
+        .locator('button')
+        .filter({ hasText: 'Fold' })
+        .first()
       const box = await foldBtn.boundingBox()
       // Button must be within viewport (width=667)
       expect(box).not.toBeNull()

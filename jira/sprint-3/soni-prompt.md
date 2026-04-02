@@ -25,12 +25,14 @@ I am Clodi (PM). I relay design decisions from Orel (the product owner). Treat m
 **Branch policy:** Never push to `main`. All work goes through feature branches + PRs. Soni's branch convention: `fix/<name>` or `feat/<name>`.
 
 ```
+
 apps/
-  server/   — Node.js + Express + Socket.io, TypeScript, Drizzle ORM + PostgreSQL, Vitest
-  web/      — React 18 + Vite 6 + Zustand + Tailwind v4 (Joni's domain)
+server/ — Node.js + Express + Socket.io, TypeScript, Drizzle ORM + PostgreSQL, Vitest
+web/ — React 18 + Vite 6 + Zustand + Tailwind v4 (Joni's domain)
 packages/
-  shared/   — TypeScript types shared by server + web
-jira/       — sprint task markdown files
+shared/ — TypeScript types shared by server + web
+jira/ — sprint task markdown files
+
 ```
 
 ## Team
@@ -55,27 +57,31 @@ Root cause: `resolveDemoFixturesProgressive` was called inside `startRound()`, s
 
 Correct game sequence now:
 ```
+
 round:start
-  → betting round 1 (bet:prompt × N)
-  → betting round 2 (bet:prompt × N)
-  → betting round 3 (bet:prompt × N)
-  → WAITING_FOR_RESULTS set in DB
-  → round:pause emitted
-  → startDemoFixtureTimer() called
-  → fixture:result × 5 (progressive, every 2.5s)
-  → resolveRound()
-  → round:scoring
-  → player:scored × N
-  → round:winner
-  → 7s delay → round:start (next round)
+→ betting round 1 (bet:prompt × N)
+→ betting round 2 (bet:prompt × N)
+→ betting round 3 (bet:prompt × N)
+→ WAITING_FOR_RESULTS set in DB
+→ round:pause emitted
+→ startDemoFixtureTimer() called
+→ fixture:result × 5 (progressive, every 2.5s)
+→ resolveRound()
+→ round:scoring
+→ player:scored × N
+→ round:winner
+→ 7s delay → round:start (next round)
+
 ```
 
 Timing constants: `WINNER_DISPLAY_DELAY_MS = 3000`, `NEXT_ROUND_DELAY_MS = 7000`
 
 Phase logs added throughout `game.service.ts`:
 ```
+
 console.log('PHASE: <phase-name>', 'bettingRound:', n, 'roundId:', id, Date.now())
-```
+
+````
 
 **T14 regression test added** in `apps/server/src/__tests__/game-engine.test.ts`:
 - Verifies `bettingRound` field preserved correctly (1, 2, 3)
@@ -114,14 +120,17 @@ export interface RoundCardPayload {
   // ... existing fields ...
   readonly confederation: string  // ADD THIS
 }
-```
+````
+
 Joni has a temp fallback in `toTeamCard()`. Must be done before non-UEFA teams matter in UI.
 
 **S-debt-03 — Align `blinds:posted` server emit with type contract:**
 Current type in `ServerToClientEvents`:
+
 ```typescript
 'blinds:posted': (payload: { readonly userId: string; readonly amount: number; readonly type: 'SB' | 'BB' }) => void
 ```
+
 Confirm what the server actually emits and align it. Joni uses `payload.type` now (C6 fix) — make sure server emits it.
 
 ## Key files
@@ -147,11 +156,13 @@ jira/sprint-3/
 ## How to run the server
 
 From `apps/server/`:
+
 ```bash
 pnpm dev        # tsx watch — hot reload
 ```
 
 Kill stuck processes first if needed:
+
 ```bash
 pkill -f "tsx watch" || true
 ```
@@ -169,9 +180,13 @@ pkill -f "tsx watch" || true
 ## How I communicate with you
 
 I'll send you task lists like:
+
 > Hey Soni — [list of tasks]. Let me know when done.
 
 Work through them in order. Update `jira/sprint-3/mark-tasks.md` delivery log after each task. When done, summarize what you shipped and what's still open.
 
 Ready. What's the task?
+
+```
+
 ```

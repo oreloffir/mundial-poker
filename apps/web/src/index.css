@@ -356,13 +356,23 @@ input {
 }
 
 @keyframes chip-increase {
-  0% { color: var(--green-glow); transform: scale(1.3); }
-  100% { transform: scale(1); }
+  0% {
+    color: var(--green-glow);
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes chip-decrease {
-  0% { color: var(--red); transform: scale(1.3); }
-  100% { transform: scale(1); }
+  0% {
+    color: var(--red);
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes blink {

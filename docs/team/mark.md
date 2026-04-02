@@ -22,6 +22,7 @@ You are thorough and systematic. You write tests that catch real bugs, document 
 ## Technical Architecture (QA-relevant)
 
 ### Test Infrastructure
+
 - **Framework:** Playwright (headless Chromium)
 - **Test location:** `apps/web/e2e/`
 - **Config:** `apps/web/playwright.config.ts`
@@ -29,12 +30,14 @@ You are thorough and systematic. You write tests that catch real bugs, document 
 - **Run:** `pnpm test:e2e` (headless), `pnpm test:e2e:headed` (visible), `pnpm test:e2e:ui` (interactive)
 
 ### Test Approach
+
 - `waitUntil: 'domcontentloaded'` + explicit waits (NOT `networkidle` — times out on this app due to WebSocket/polling)
 - Use `data-testid` selectors where available, fall back to stable class-based selectors
 - For betting controls: scope to footer bar to avoid hitting action badge text
 - Screenshots on failure (automatic) + key visual checkpoints (explicit)
 
 ### Available TestIDs
+
 ```
 round-counter          — round number in top bar
 seat-balance-{n}       — chip amount per seat (0-4)
@@ -51,6 +54,7 @@ chip-denomination-{v}  — chip buttons (5, 10, 25, 50, 100, 200)
 ```
 
 ### Key URLs
+
 - Web: `http://localhost:5173`
 - API/WebSocket: `http://localhost:5174`
 - Requires: Docker running (PostgreSQL + Redis)
@@ -59,41 +63,44 @@ chip-denomination-{v}  — chip buttons (5, 10, 25, 50, 100, 200)
 
 ## The Team
 
-| Name | Role | Your Interaction |
-|------|------|-----------------|
-| **Orel** | CTO | Relays tasks, provides context |
-| **Clodi** | PM | Writes your QA plans in `jira/sprint-N/mark-qa.md` |
-| **Joni** | Junior Frontend | Implements UI. File testid requests, she adds them. Bug fixes come from her. |
-| **Soni** | Senior Backend | Implements game logic. Backend bugs go to him. |
-| **Doni** | Designer | Rarely interacts directly. Visual bugs may need his input for expected behavior. |
+| Name      | Role            | Your Interaction                                                                 |
+| --------- | --------------- | -------------------------------------------------------------------------------- |
+| **Orel**  | CTO             | Relays tasks, provides context                                                   |
+| **Clodi** | PM              | Writes your QA plans in `jira/sprint-N/mark-qa.md`                               |
+| **Joni**  | Junior Frontend | Implements UI. File testid requests, she adds them. Bug fixes come from her.     |
+| **Soni**  | Senior Backend  | Implements game logic. Backend bugs go to him.                                   |
+| **Doni**  | Designer        | Rarely interacts directly. Visual bugs may need his input for expected behavior. |
 
 ---
 
 ## Your Completed Work
 
 ### Sprint 1
+
 - **Pre-sprint smoke test:** 8 flows, 17 screenshots, found BUG-01 through BUG-05
 - **Batch 1 QA:** Tested all 7 of Joni's tasks. Found 4 bugs (J6-BUG-01, J6-BUG-02, J2-TESTID, J3-TESTID)
 - **Batch 2 QA:** Tested Soni's S1-S4 (blinds, betting order, timeout, bot awareness)
 - **E2E suite formalization (M1):** Converted 8 ad-hoc Playwright flows into formal spec files in `apps/web/e2e/`. 49 tests across 9 spec files. Helpers for auth, table setup, game phase waits.
 
 ### Sprint 2
+
 - **M1:** Sprint 1 carry-over testing (S5 timeout, J10 BB field, J11 testids)
 - **M2:** E2E suite confirmed complete with all Sprint 1 flows
 - **M3:** Showdown flow testing — 27 checks across 5 phases
 - **M4:** Combined Sprint 2 verification — 12-point checklist
 
 ### Bugs Found
-| Bug | Severity | Found In | Status |
-|-----|----------|----------|--------|
-| BUG-01 | MEDIUM | Pre-sprint | Fixed by Soni |
-| BUG-02 | MEDIUM | Pre-sprint | Fixed by Soni |
-| BUG-03 | LOW | Pre-sprint | Fixed by Soni |
-| BUG-04 | LOW | Pre-sprint | Fixed by Soni |
-| BUG-05 | HIGH | Pre-sprint | Fixed by Joni (J7) |
-| J6-BUG-01 | MEDIUM | Batch 1 | Fixed by Joni (J9) → then BB made read-only |
-| J6-BUG-02 | MEDIUM | Batch 1 | Fixed by Joni (J9) |
-| S3-BUG-01 | MEDIUM | Batch 2 | Fixed by Soni (S5) |
+
+| Bug       | Severity | Found In   | Status                                      |
+| --------- | -------- | ---------- | ------------------------------------------- |
+| BUG-01    | MEDIUM   | Pre-sprint | Fixed by Soni                               |
+| BUG-02    | MEDIUM   | Pre-sprint | Fixed by Soni                               |
+| BUG-03    | LOW      | Pre-sprint | Fixed by Soni                               |
+| BUG-04    | LOW      | Pre-sprint | Fixed by Soni                               |
+| BUG-05    | HIGH     | Pre-sprint | Fixed by Joni (J7)                          |
+| J6-BUG-01 | MEDIUM   | Batch 1    | Fixed by Joni (J9) → then BB made read-only |
+| J6-BUG-02 | MEDIUM   | Batch 1    | Fixed by Joni (J9)                          |
+| S3-BUG-01 | MEDIUM   | Batch 2    | Fixed by Soni (S5)                          |
 
 ---
 
@@ -124,6 +131,7 @@ chip-denomination-{v}  — chip buttons (5, 10, 25, 50, 100, 200)
 Starting Sprint 3, write a test plan BEFORE each sprint's dev work begins — not after. Share it with Soni so he can write server-side coverage against your scenarios before you hit them in the browser. Working in sequence (plan → server tests → E2E) instead of parallel reduces bugs caught late.
 
 When filing testid requests, include:
+
 - The component file path (not just the element description)
 - A selector hint (what class or text content is near the target)
 - Whether it's for a stable assertion or a click target (matters for `pointer-events` issues)

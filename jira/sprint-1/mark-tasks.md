@@ -30,29 +30,29 @@ You've been running Playwright tests as ad-hoc scripts from `_scripts/` with scr
 
 2. **Convert your existing 8 flows into test files:**
 
-   | Flow | File | Priority |
-   |------|------|----------|
-   | Landing page loads | `landing.spec.ts` | P1 |
-   | Guest login → lobby | `auth.spec.ts` | P1 |
-   | Create table + add bots | `table-setup.spec.ts` | P1 |
-   | Full game round (deal → bet → showdown) | `game-round.spec.ts` | P1 |
-   | Raise bet flow | `betting.spec.ts` | P1 |
-   | Fold flow | `betting.spec.ts` | P1 |
-   | Lobby table states (waiting/in-progress/completed) | `lobby.spec.ts` | P2 |
-   | 2-player game (heads-up) | `heads-up.spec.ts` | P2 |
+   | Flow                                               | File                  | Priority |
+   | -------------------------------------------------- | --------------------- | -------- |
+   | Landing page loads                                 | `landing.spec.ts`     | P1       |
+   | Guest login → lobby                                | `auth.spec.ts`        | P1       |
+   | Create table + add bots                            | `table-setup.spec.ts` | P1       |
+   | Full game round (deal → bet → showdown)            | `game-round.spec.ts`  | P1       |
+   | Raise bet flow                                     | `betting.spec.ts`     | P1       |
+   | Fold flow                                          | `betting.spec.ts`     | P1       |
+   | Lobby table states (waiting/in-progress/completed) | `lobby.spec.ts`       | P2       |
+   | 2-player game (heads-up)                           | `heads-up.spec.ts`    | P2       |
 
 3. **Add new test flows for Sprint 1 features:**
 
-   | Flow | File | What to verify |
-   |------|------|----------------|
-   | Blind config in Create Table modal | `table-setup.spec.ts` | SB input, BB auto-fills read-only, table creates with custom blinds |
-   | Blind badges visible during game | `game-round.spec.ts` | SB (blue) and BB (gold) badges on correct seats, rotate each round |
-   | Blind deduction at round start | `game-round.spec.ts` | Pot starts at SB+BB, player chips decrease |
-   | Timer countdown visible | `game-round.spec.ts` | Timer text shows during player turn |
-   | Chip balance readability | `game-round.spec.ts` | `data-testid="seat-balance-{n}"` elements exist with numeric content |
-   | Round counter updates | `game-round.spec.ts` | `data-testid="round-counter"` increments each round |
-   | No stale cards between rounds | `game-round.spec.ts` | Fixture board empty between rounds (no ghost cards) |
-   | Mobile landscape layout | `mobile.spec.ts` | Set viewport to 667x375, verify no overflow, all seats visible |
+   | Flow                               | File                  | What to verify                                                       |
+   | ---------------------------------- | --------------------- | -------------------------------------------------------------------- |
+   | Blind config in Create Table modal | `table-setup.spec.ts` | SB input, BB auto-fills read-only, table creates with custom blinds  |
+   | Blind badges visible during game   | `game-round.spec.ts`  | SB (blue) and BB (gold) badges on correct seats, rotate each round   |
+   | Blind deduction at round start     | `game-round.spec.ts`  | Pot starts at SB+BB, player chips decrease                           |
+   | Timer countdown visible            | `game-round.spec.ts`  | Timer text shows during player turn                                  |
+   | Chip balance readability           | `game-round.spec.ts`  | `data-testid="seat-balance-{n}"` elements exist with numeric content |
+   | Round counter updates              | `game-round.spec.ts`  | `data-testid="round-counter"` increments each round                  |
+   | No stale cards between rounds      | `game-round.spec.ts`  | Fixture board empty between rounds (no ghost cards)                  |
+   | Mobile landscape layout            | `mobile.spec.ts`      | Set viewport to 667x375, verify no overflow, all seats visible       |
 
 4. **Test helpers and fixtures:**
    - Create a `helpers/` dir with:
@@ -155,6 +155,7 @@ These 3 items came out of your QA report. You don't fix them yourself — coordi
 **Assignee:** Joni (bundled into her next task)
 **Decision from Orel:** BB field will become **read-only**, auto-calculated as 2x SB. User only controls SB. No validation needed because BB can't be wrong.
 **Your job:** Once Joni ships this, verify:
+
 - BB field is visually read-only (greyed out or disabled appearance)
 - Changing SB auto-updates BB to 2x
 - BB field cannot be manually edited
@@ -171,6 +172,7 @@ _Updated: April 1, 2026 — Marker_
 ---
 
 ### M1 — Playwright E2E Suite
+
 **Status:** ✅ Complete
 
 **Files created:**
@@ -200,6 +202,7 @@ apps/web/e2e/.gitignore               — ignores screenshots/, report/, test-re
 ```
 
 **To run (after `pnpm install` in apps/web):**
+
 ```bash
 pnpm test:e2e           # headless
 pnpm test:e2e:headed    # headed (visible browser)
@@ -207,6 +210,7 @@ pnpm test:e2e:ui        # Playwright interactive UI
 ```
 
 **Notes:**
+
 - Tests require dev server on `:5173` + game server on `:5174` + Docker DB running
 - `networkidle` is intentionally avoided — documented in `playwright.config.ts`
 - 8 new testids needed from Joni — see `e2e/TESTID-REQUESTS.md`
@@ -214,24 +218,27 @@ pnpm test:e2e:ui        # Playwright interactive UI
 ---
 
 ### M2 — Bug Fix Coordination
+
 **Status:** ✅ Complete
 
-| Item | Decision | Action | Status |
-|------|----------|--------|--------|
-| S3-BUG-01 — timeout at ~40-45s | Bug — should fire at 30s | Soni to fix server config | ⏳ Waiting for Soni — re-verify when shipped |
-| Bot all-in behavior (Check 3b) | NOT a bug — bots check/call only, all-in is side effect of underfunded call | Document as known limitation (Sprint 2: smarter AI) | ✅ Documented below |
-| J6-BUG-01 — BB field | Orel decision: BB becomes read-only, auto-calculated as 2×SB | Joni to ship read-only BB | ⏳ Waiting for Joni — re-verify when shipped |
+| Item                           | Decision                                                                    | Action                                              | Status                                       |
+| ------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------- |
+| S3-BUG-01 — timeout at ~40-45s | Bug — should fire at 30s                                                    | Soni to fix server config                           | ⏳ Waiting for Soni — re-verify when shipped |
+| Bot all-in behavior (Check 3b) | NOT a bug — bots check/call only, all-in is side effect of underfunded call | Document as known limitation (Sprint 2: smarter AI) | ✅ Documented below                          |
+| J6-BUG-01 — BB field           | Orel decision: BB becomes read-only, auto-calculated as 2×SB                | Joni to ship read-only BB                           | ⏳ Waiting for Joni — re-verify when shipped |
 
 **Known Limitation — Bot All-In Behavior:**
 Bots only CHECK or CALL. When a player raises, bots call the full amount regardless of strategy. If a bot's chip stack is less than the call amount, the call becomes an automatic ALL_IN via betting validation. With high raises and limited starting chips (500), bots go broke within a few rounds. This is expected behavior with the current simplified bot AI. Smarter bot strategy (fold/raise logic) is planned for Sprint 2.
 
 **Re-verification checklist for S3-BUG-01 (when Soni ships fix):**
+
 - [ ] Sit idle on your turn for exactly 30s
 - [ ] Auto-action fires within 30s ±2s tolerance
 - [ ] Timer UI shows countdown from ~30 (not ~40)
 - [ ] Game continues normally after auto-action
 
 **Re-verification checklist for J6-BUG-01 (when Joni ships fix):**
+
 - [ ] BB field is greyed out / visually read-only
 - [ ] Changing SB auto-updates BB to 2×SB
 - [ ] BB field cannot be manually edited

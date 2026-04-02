@@ -34,9 +34,7 @@ test.describe('Table Setup', () => {
   test('Start Game button enabled with 5 players', async ({ page }) => {
     await createTable(page, { name: 'E2E Start Test' })
     await addBots(page, 4)
-    await expect(
-      page.locator('button').filter({ hasText: 'Start Game' }).first(),
-    ).toBeEnabled()
+    await expect(page.locator('button').filter({ hasText: 'Start Game' }).first()).toBeEnabled()
   })
 
   // Sprint 1 — J6: Blind config in Create Table modal
@@ -109,7 +107,11 @@ test.describe('Table Setup', () => {
       await numInputs.nth(1).dispatchEvent('input')
       await page.waitForTimeout(400)
 
-      await page.locator('button').filter({ hasText: /^Create$/ }).last().click()
+      await page
+        .locator('button')
+        .filter({ hasText: /^Create$/ })
+        .last()
+        .click()
       await page.waitForTimeout(3000)
       expect(page.url()).toMatch(/\/table\/[a-f0-9-]{36}/)
     })

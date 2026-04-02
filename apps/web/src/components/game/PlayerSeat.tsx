@@ -109,7 +109,17 @@ function FaceUpMiniCard({ card }: { readonly card: { team: { flagUrl: string; co
       }}
     >
       <span style={{ fontSize: 'var(--card-flag-size)', lineHeight: 1 }}>{card.team.flagUrl}</span>
-      <span style={{ fontSize: 'var(--card-code-size)', fontWeight: 'bold', color: 'white', lineHeight: 1, letterSpacing: '0.05em' }}>{card.team.code}</span>
+      <span
+        style={{
+          fontSize: 'var(--card-code-size)',
+          fontWeight: 'bold',
+          color: 'white',
+          lineHeight: 1,
+          letterSpacing: '0.05em',
+        }}
+      >
+        {card.team.code}
+      </span>
     </div>
   )
 }
@@ -160,7 +170,11 @@ export function PlayerSeat({
     return (
       <div
         className="rounded-full flex items-center justify-center"
-        style={{ width: 'var(--avatar-size)', height: 'var(--avatar-size)', border: '2px dashed rgba(212,168,67,0.12)' }}
+        style={{
+          width: 'var(--avatar-size)',
+          height: 'var(--avatar-size)',
+          border: '2px dashed rgba(212,168,67,0.12)',
+        }}
       >
         <span className="text-[10px]" style={{ color: 'var(--text-muted)', opacity: 0.4 }}>
           Empty
@@ -171,7 +185,8 @@ export function PlayerSeat({
 
   const inShowdown = !!scoreResult
   const timeLeftMs = turnTimeoutMs ? (timePercent / 100) * turnTimeoutMs : 0
-  const ringColor = timeLeftMs > 10000 ? 'var(--green-glow)' : timeLeftMs > 5000 ? 'var(--gold)' : 'var(--red)'
+  const ringColor =
+    timeLeftMs > 10000 ? 'var(--green-glow)' : timeLeftMs > 5000 ? 'var(--gold)' : 'var(--red)'
   const dashOffset = RING_CIRCUMFERENCE * (1 - timePercent / 100)
   const dimmed = (isFolded || player.isEliminated) && !inShowdown
   const avatarColor = getAvatarColor(player.username)
@@ -197,9 +212,7 @@ export function PlayerSeat({
       }}
     >
       {/* Inline score popup — shown above seat when this player has been scored */}
-      {inShowdown && (
-        <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />
-      )}
+      {inShowdown && <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />}
 
       {/* Action badge */}
       {lastAction && !inShowdown && <ActionBadge {...lastAction} />}
@@ -293,8 +306,16 @@ export function PlayerSeat({
             className="text-[10px] font-bold px-1.5 py-0.5 rounded"
             style={
               blindPosition === 'SB'
-                ? { background: 'rgba(52,152,219,0.25)', color: '#5dade2', border: '1px solid rgba(52,152,219,0.4)' }
-                : { background: 'rgba(212,168,67,0.2)', color: 'var(--gold-bright)', border: '1px solid rgba(212,168,67,0.4)' }
+                ? {
+                    background: 'rgba(52,152,219,0.25)',
+                    color: '#5dade2',
+                    border: '1px solid rgba(52,152,219,0.4)',
+                  }
+                : {
+                    background: 'rgba(212,168,67,0.2)',
+                    color: 'var(--gold-bright)',
+                    border: '1px solid rgba(212,168,67,0.4)',
+                  }
             }
           >
             {blindPosition}
@@ -322,7 +343,10 @@ export function PlayerSeat({
             transition: 'border-color 0.3s ease',
           }}
         >
-          <PokerChip size={14} style={{ flexShrink: 0, filter: 'drop-shadow(0 0 4px rgba(212,168,67,0.4))' }} />
+          <PokerChip
+            size={14}
+            style={{ flexShrink: 0, filter: 'drop-shadow(0 0 4px rgba(212,168,67,0.4))' }}
+          />
           <span
             className="font-outfit font-black text-xs leading-none"
             style={{

@@ -13,10 +13,10 @@ This is our first structured sprint. I've written detailed task briefs for each 
 
 ### Your task files
 
-| Developer | File | Task Count |
-|-----------|------|------------|
-| **Soni** (Senior Dev) | [`soni-tasks.md`](./soni-tasks.md) | 4 tasks |
-| **Joni** (Junior Dev) | [`joni-tasks.md`](./joni-tasks.md) | 6 tasks |
+| Developer             | File                               | Task Count |
+| --------------------- | ---------------------------------- | ---------- |
+| **Soni** (Senior Dev) | [`soni-tasks.md`](./soni-tasks.md) | 4 tasks    |
+| **Joni** (Junior Dev) | [`joni-tasks.md`](./joni-tasks.md) | 6 tasks    |
 
 ### How to reach me
 
@@ -41,11 +41,13 @@ On the UI side, we have bugs that make the game feel unpolished: winner banners 
 ## Sprint scope
 
 ### Backend (Soni)
+
 - **Blind system** — SB/BB position assignment, forced bet collection, proper betting order
 - **Timeout enforcement** — server-side 30s auto-fold so no player can freeze the game
 - **Bot awareness** — bots work correctly with the new blind system
 
 ### Frontend (Joni)
+
 - **Bug fixes** — winner banner timing, round counter sync, stale cards cleanup
 - **UI polish** — chip balance readability (gold on dark pill)
 - **New features** — blind position badges (SB/BB), blind config in table creation modal
@@ -80,16 +82,16 @@ S4: Blind-Aware Bot Logic
 
 ## Suggested daily schedule
 
-| Day | Soni | Joni |
-|-----|------|------|
-| Wed Apr 1 | S1: Blind positions & collection | J1: Winner banner timing fix |
-| Thu Apr 2 | S1 continued + S4: bot blind awareness | J2: Round counter sync + J3: Balance readability |
-| Fri Apr 3 | S2: Betting order fix | J5: Stale cards cleanup + J6: CreateTableModal blinds |
-| Sat Apr 4 | S2 continued + code review | J4: Blind badges (stub with mock data) |
-| Sun Apr 5 | S3: Server-side bet timeout | J4: Integrate with real S1 data |
-| Mon Apr 6 | S3 continued + integration testing | Bug bash, polish, cross-testing |
-| Tue Apr 7 | Final fixes, merge conflicts, QA | Final fixes, merge conflicts, QA |
-| Wed Apr 8 | Sprint review & demo | Sprint review & demo |
+| Day       | Soni                                   | Joni                                                  |
+| --------- | -------------------------------------- | ----------------------------------------------------- |
+| Wed Apr 1 | S1: Blind positions & collection       | J1: Winner banner timing fix                          |
+| Thu Apr 2 | S1 continued + S4: bot blind awareness | J2: Round counter sync + J3: Balance readability      |
+| Fri Apr 3 | S2: Betting order fix                  | J5: Stale cards cleanup + J6: CreateTableModal blinds |
+| Sat Apr 4 | S2 continued + code review             | J4: Blind badges (stub with mock data)                |
+| Sun Apr 5 | S3: Server-side bet timeout            | J4: Integrate with real S1 data                       |
+| Mon Apr 6 | S3 continued + integration testing     | Bug bash, polish, cross-testing                       |
+| Tue Apr 7 | Final fixes, merge conflicts, QA       | Final fixes, merge conflicts, QA                      |
+| Wed Apr 8 | Sprint review & demo                   | Sprint review & demo                                  |
 
 ---
 

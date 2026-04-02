@@ -1,8 +1,9 @@
 # Mobile Polish — Joni's Fix List
+
 **From:** Doni
 **For:** Joni
 **Date:** April 2, 2026
-**Source:** Mark's 667×375 mobile landscape audit (v2-mobile-* screenshots)
+**Source:** Mark's 667×375 mobile landscape audit (v2-mobile-\* screenshots)
 **Branch:** `fix/mobile-polish`
 
 Implement these in order. Items 1–5 are blocking for demo quality. Items 6–8 are polish.
@@ -35,15 +36,17 @@ Flag this to Clodi as a wiring gap from J13.
 **Fix — two changes:**
 
 **Step 1:** In `CreateTableModal.tsx`, add a class to the inner modal div (line 81):
+
 ```tsx
 // Before:
-className="relative w-full max-w-md shadow-2xl rounded-2xl p-7"
+className = 'relative w-full max-w-md shadow-2xl rounded-2xl p-7'
 
 // After:
-className="relative w-full max-w-md shadow-2xl rounded-2xl p-7 create-table-modal-content"
+className = 'relative w-full max-w-md shadow-2xl rounded-2xl p-7 create-table-modal-content'
 ```
 
 **Step 2:** In `index.css`, inside the `@media (max-height: 500px) and (orientation: landscape)` block (after line 440), add:
+
 ```css
 /* Create Table modal — compress spacing to fit 375px landscape height */
 .create-table-modal-content {
@@ -78,6 +81,7 @@ className="relative w-full max-w-md shadow-2xl rounded-2xl p-7 create-table-moda
 **Problem:** `--chip-btn-size: 28px` on mobile landscape. Players need to quickly add 5, 10, 25, 50, 100, 200 chips with a finger, often with <10 seconds on the timer. At 28px, adjacent chips are ~2px apart and finger accuracy at that size produces frequent mis-taps.
 
 **Fix — `index.css`, inside the mobile landscape block:**
+
 ```css
 /* Before: */
 --chip-btn-size: 28px;
@@ -101,24 +105,27 @@ className="relative w-full max-w-md shadow-2xl rounded-2xl p-7 create-table-moda
 **Fix — two parts:**
 
 **Step 1:** In `FixtureBoard.tsx`, add class `fixture-team-code` to both team code spans (lines ~114 and ~177):
+
 ```tsx
 // Home team code span — Before:
-className="text-[8px] font-bold mt-0.5"
+className = 'text-[8px] font-bold mt-0.5'
 
 // After:
-className="text-[8px] font-bold mt-0.5 fixture-team-code"
+className = 'text-[8px] font-bold mt-0.5 fixture-team-code'
 ```
+
 ```tsx
 // Away team code span — Before:
-className="text-[8px] font-bold mt-0.5"
+className = 'text-[8px] font-bold mt-0.5'
 
 // After:
-className="text-[8px] font-bold mt-0.5 fixture-team-code"
+className = 'text-[8px] font-bold mt-0.5 fixture-team-code'
 ```
 
 **Step 2:** No change needed for desktop (8px is correct at 72px tile width). On mobile, the tile narrows to 56px so the text actually needs to stay at 8px — the fix here is to widen the tile slightly:
 
 In `index.css`, inside the mobile landscape block:
+
 ```css
 /* Before: */
 --fixture-tile-w: 56px;
@@ -140,12 +147,13 @@ In `index.css`, inside the mobile landscape block:
 **Problem:** The "End session" button renders as `wpc-btn-ghost text-xs py-2 px-4`. `text-xs` = 12px, `py-2` = 8px vertical padding = ~28px total height. iOS minimum touch target is 44px. On mobile the nav height is `h-16` (64px), so there's room to grow without layout changes.
 
 **Fix — `Lobby.tsx` line 71:**
+
 ```tsx
 // Before:
-className="wpc-btn-ghost text-xs py-2 px-4"
+className = 'wpc-btn-ghost text-xs py-2 px-4'
 
 // After:
-className="wpc-btn-ghost text-xs py-2 px-4 min-h-[36px]"
+className = 'wpc-btn-ghost text-xs py-2 px-4 min-h-[36px]'
 ```
 
 **Why:** `min-h-[36px]` brings the touch target to 36px. This doesn't reach 44px but it's a meaningful improvement for a ghost button in a nav bar where horizontal centering is already provided by the nav's `flex items-center`. Getting to 44px would require `py-3.5` which would make the ghost button look oversized relative to the brand text next to it.
@@ -158,11 +166,12 @@ className="wpc-btn-ghost text-xs py-2 px-4 min-h-[36px]"
 **Component:** `SeatScorePopup.tsx` + `index.css`
 **Severity:** MEDIUM — this is the moment players find out their score
 
-**Problem:** The per-card breakdown row in `SeatScorePopup` uses `fontSize: 9` (9px) for content like `BRA W +7 | GER D +3`. On a 40px avatar at mobile landscape scale, this text is approximately 3mm tall on screen. The total score at `fontSize: 17` is readable, but the breakdown that explains *why* is not.
+**Problem:** The per-card breakdown row in `SeatScorePopup` uses `fontSize: 9` (9px) for content like `BRA W +7 | GER D +3`. On a 40px avatar at mobile landscape scale, this text is approximately 3mm tall on screen. The total score at `fontSize: 17` is readable, but the breakdown that explains _why_ is not.
 
 **Fix — two parts:**
 
 **Step 1:** In `SeatScorePopup.tsx`, add a class to the breakdown row container (line 64):
+
 ```tsx
 // Before:
 <div className="flex items-center gap-1.5">
@@ -172,6 +181,7 @@ className="wpc-btn-ghost text-xs py-2 px-4 min-h-[36px]"
 ```
 
 **Step 2:** In `index.css`, inside the mobile landscape block:
+
 ```css
 /* SeatScorePopup — bump breakdown text for readability */
 .seat-score-breakdown,
@@ -193,6 +203,7 @@ className="wpc-btn-ghost text-xs py-2 px-4 min-h-[36px]"
 **Problem:** `--preset-padding: 2px 8px` on mobile landscape. The Min / ½ Pot / Pot / All In preset buttons have only 2px of vertical padding, making them approximately 18–20px tall. These are secondary to the chip buttons but still need to be tappable.
 
 **Fix — `index.css`, inside the mobile landscape block:**
+
 ```css
 /* Before: */
 --preset-padding: 2px 8px;
@@ -214,6 +225,7 @@ className="wpc-btn-ghost text-xs py-2 px-4 min-h-[36px]"
 **Problem:** The fixture board is positioned at `top: '22%'` of the table pitch. On mobile landscape, the table pitch height is `calc(100vh - 36px)` = 339px. 22% = ~75px from the top of the pitch. With the top bar at 36px, the fixture tiles sit at roughly 36 + 75 = 111px from the top of the viewport — this is fine, but the "Matches in Progress" waiting badge that appears below the tiles gets very close to the center pot display, compressing both.
 
 **Fix — `PokerTable.tsx` line 253:**
+
 ```tsx
 // Before:
 style={{ top: '22%', left: '50%', transform: 'translateX(-50%)' }}
@@ -235,6 +247,7 @@ style={{ top: '18%', left: '50%', transform: 'translateX(-50%)' }}
 **Problem:** `--preset-font-size: 0.5625rem` = ~9px on mobile landscape. "Min", "½ Pot", "Pot", "All In" labels are barely readable at this size.
 
 **Fix — `index.css`, inside the mobile landscape block:**
+
 ```css
 /* Before: */
 --preset-font-size: 0.5625rem;
@@ -249,16 +262,16 @@ style={{ top: '18%', left: '50%', transform: 'translateX(-50%)' }}
 
 ## Summary Table
 
-| # | Component | Change | Severity |
-|---|-----------|--------|----------|
-| 1 | `CreateTableModal.tsx` + `index.css` | Reduce internal spacing in mobile landscape | HIGH |
-| 2 | `index.css` | `--chip-btn-size: 28px → 32px` on mobile | HIGH |
-| 3 | `FixtureBoard.tsx` + `index.css` | `--fixture-tile-w: 56px → 60px` on mobile | MEDIUM |
-| 4 | `Lobby.tsx` | Add `min-h-[36px]` to End session button | MEDIUM |
-| 5 | `SeatScorePopup.tsx` + `index.css` | Breakdown text `9px → 10px` on mobile | MEDIUM |
-| 6 | `index.css` | `--preset-padding: 2px 8px → 4px 8px` on mobile | LOW |
-| 7 | `PokerTable.tsx` | Fixture board `top: 22% → 18%` | LOW |
-| 8 | `index.css` | `--preset-font-size: 0.5625rem → 0.625rem` on mobile | LOW |
+| #   | Component                            | Change                                               | Severity |
+| --- | ------------------------------------ | ---------------------------------------------------- | -------- |
+| 1   | `CreateTableModal.tsx` + `index.css` | Reduce internal spacing in mobile landscape          | HIGH     |
+| 2   | `index.css`                          | `--chip-btn-size: 28px → 32px` on mobile             | HIGH     |
+| 3   | `FixtureBoard.tsx` + `index.css`     | `--fixture-tile-w: 56px → 60px` on mobile            | MEDIUM   |
+| 4   | `Lobby.tsx`                          | Add `min-h-[36px]` to End session button             | MEDIUM   |
+| 5   | `SeatScorePopup.tsx` + `index.css`   | Breakdown text `9px → 10px` on mobile                | MEDIUM   |
+| 6   | `index.css`                          | `--preset-padding: 2px 8px → 4px 8px` on mobile      | LOW      |
+| 7   | `PokerTable.tsx`                     | Fixture board `top: 22% → 18%`                       | LOW      |
+| 8   | `index.css`                          | `--preset-font-size: 0.5625rem → 0.625rem` on mobile | LOW      |
 
 ---
 

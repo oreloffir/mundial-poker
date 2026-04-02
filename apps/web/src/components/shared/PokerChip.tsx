@@ -84,14 +84,28 @@ export function PokerChip({ size = 24, className, style }: PokerChipProps) {
       </g>
 
       {/* === Thin gold highlight just inside the rim === */}
-      <circle cx="32" cy="32" r="28.5" fill="none" stroke="rgba(245,224,128,0.35)" strokeWidth="0.75" />
+      <circle
+        cx="32"
+        cy="32"
+        r="28.5"
+        fill="none"
+        stroke="rgba(245,224,128,0.35)"
+        strokeWidth="0.75"
+      />
 
       {/* === Navy chip body === */}
       <circle cx="32" cy="32" r="23" fill={`url(#${id}-body)`} />
 
       {/* === Inner label ring (gold) === */}
       <circle cx="32" cy="32" r="19.5" fill="none" stroke="#d4a843" strokeWidth="1" />
-      <circle cx="32" cy="32" r="18.5" fill="none" stroke="rgba(212,168,67,0.18)" strokeWidth="0.5" />
+      <circle
+        cx="32"
+        cy="32"
+        r="18.5"
+        fill="none"
+        stroke="rgba(212,168,67,0.18)"
+        strokeWidth="0.5"
+      />
 
       {/* === Football panel pattern ===
           Six small hex-dot panels arranged hexagonally at r≈13 from center,

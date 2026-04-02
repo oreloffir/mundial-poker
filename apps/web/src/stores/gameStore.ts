@@ -1,5 +1,13 @@
 import { create } from 'zustand'
-import type { Table, Round, TeamCard, BettingRound, Fixture, ShowdownResult, CardScoreData } from '@wpc/shared'
+import type {
+  Table,
+  Round,
+  TeamCard,
+  BettingRound,
+  Fixture,
+  ShowdownResult,
+  CardScoreData,
+} from '@wpc/shared'
 
 // ─── J12 Showdown Phase Types ────────────────────────────────────────────────
 
@@ -23,9 +31,19 @@ export type ShowdownPhase = 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'r
 export interface FixtureResultEvent {
   readonly fixtureId: string
   readonly homeTeamId: string
-  readonly homeTeam: { readonly id: string; readonly name: string; readonly code: string; readonly flagUrl: string }
+  readonly homeTeam: {
+    readonly id: string
+    readonly name: string
+    readonly code: string
+    readonly flagUrl: string
+  }
   readonly awayTeamId: string
-  readonly awayTeam: { readonly id: string; readonly name: string; readonly code: string; readonly flagUrl: string }
+  readonly awayTeam: {
+    readonly id: string
+    readonly name: string
+    readonly code: string
+    readonly flagUrl: string
+  }
   readonly homeGoals: number
   readonly awayGoals: number
   readonly hasPenalties: boolean
@@ -168,15 +186,36 @@ export const useGameStore = create<GameState>((set) => ({
   addFoldedPlayer: (userId) => set((s) => ({ foldedPlayerIds: [...s.foldedPlayerIds, userId] })),
   setRevealedFixtureCount: (count) => set({ revealedFixtureCount: count }),
   triggerPotFlash: () => set((s) => ({ potFlashKey: s.potFlashKey + 1 })),
-  resetRoundState: () => set({ playerActions: {}, foldedPlayerIds: [], activeTurn: null, betPrompt: null, myTurn: false, potFlashKey: 0, sbSeatIndex: null, bbSeatIndex: null }),
+  resetRoundState: () =>
+    set({
+      playerActions: {},
+      foldedPlayerIds: [],
+      activeTurn: null,
+      betPrompt: null,
+      myTurn: false,
+      potFlashKey: 0,
+      sbSeatIndex: null,
+      bbSeatIndex: null,
+    }),
   setBlindPositions: (sb, bb) => set({ sbSeatIndex: sb, bbSeatIndex: bb }),
   setError: (error) => set({ error }),
   reset: () => set(initialState),
   // J12: showdown phase actions
   setShowdownPhase: (phase) => set({ showdownPhase: phase }),
   addFixtureResult: (result) => set((s) => ({ fixtureResults: [...s.fixtureResults, result] })),
-  addPlayerScoreReveal: (result) => set((s) => ({ playerScoreReveals: [...s.playerScoreReveals, result], currentRevealIndex: s.playerScoreReveals.length })),
+  addPlayerScoreReveal: (result) =>
+    set((s) => ({
+      playerScoreReveals: [...s.playerScoreReveals, result],
+      currentRevealIndex: s.playerScoreReveals.length,
+    })),
   setCurrentRevealIndex: (index) => set({ currentRevealIndex: index }),
   setWinnerData: (data) => set({ winnerData: data }),
-  resetShowdownPhase: () => set({ showdownPhase: 'idle', fixtureResults: [], playerScoreReveals: [], currentRevealIndex: -1, winnerData: null }),
+  resetShowdownPhase: () =>
+    set({
+      showdownPhase: 'idle',
+      fixtureResults: [],
+      playerScoreReveals: [],
+      currentRevealIndex: -1,
+      winnerData: null,
+    }),
 }))

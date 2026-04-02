@@ -36,7 +36,7 @@ function toTeamCard(c: RoundCardPayload): TeamCard {
       code: c.teamCode,
       flagUrl: c.flagEmoji,
       tier: c.tier as TeamTier,
-      confederation: 'UEFA' as Confederation,  // ← BUG: every team tagged as UEFA
+      confederation: 'UEFA' as Confederation, // ← BUG: every team tagged as UEFA
       fifaRanking: c.fifaRanking,
     },
   }
@@ -50,6 +50,7 @@ This doesn't break the current UI because `confederation` isn't rendered anywher
 **Fix (two parts):**
 
 Part 1 — Soni will add `confederation` to `RoundCardPayload` in `packages/shared/types/socket-events.ts`:
+
 ```typescript
 export interface RoundCardPayload {
   readonly teamId: string
@@ -57,13 +58,14 @@ export interface RoundCardPayload {
   readonly teamCode: string
   readonly flagEmoji: string
   readonly tier: string
-  readonly confederation: string   // ADD THIS
+  readonly confederation: string // ADD THIS
   readonly fifaRanking: number
   readonly fixtureId: string
 }
 ```
 
 Part 2 — Once the field exists, update the cast:
+
 ```typescript
 confederation: c.confederation as Confederation,
 ```
@@ -127,12 +129,12 @@ I'm filing this as a Soni task (schema alignment). For now your workaround is ac
 ```typescript
 if (ri.resolvedFixtures?.length) {
   for (const f of ri.resolvedFixtures) {
-    store.getState().addFixtureResult(f as never)  // ← as never
+    store.getState().addFixtureResult(f as never) // ← as never
   }
 }
 if (ri.revealedPlayerScores?.length) {
   for (const s of ri.revealedPlayerScores) {
-    store.getState().addPlayerScoreReveal(s as never)  // ← as never
+    store.getState().addPlayerScoreReveal(s as never) // ← as never
   }
 }
 ```
@@ -165,7 +167,8 @@ const handleAddBot = async () => {
       useGameStore.getState().setTable(data.data.table)
     }
   } catch {
-    /* */          // ← user sees nothing, loading spinner stops, that's it
+    /* */
+    // ← user sees nothing, loading spinner stops, that's it
   } finally {
     setBotLoading(false)
   }
@@ -176,7 +179,8 @@ const handleStartGame = async () => {
     await api.post(`/tables/${tableId}/start`)
     refreshState()
   } catch {
-    /* */          // ← game start fails silently
+    /* */
+    // ← game start fails silently
   }
 }
 ```
@@ -207,11 +211,13 @@ This pattern (swallowing API errors) is the most common source of "it just didn'
 Two options:
 
 Option A — Remove `store` from deps and add a comment:
+
 ```typescript
   }, [tableId]) // store is stable (Zustand module ref) — not a reactive dep
 ```
 
 Option B — Declare store ref outside useEffect:
+
 ```typescript
 const storeRef = useRef(useGameStore)
 // use storeRef.current inside effect
@@ -229,7 +235,7 @@ Either is fine. Just don't leave it ambiguous.
 ```typescript
 socket.on('blinds:posted', (payload) => {
   store.getState().setPlayerAction(payload.userId, {
-    action: 'CALL',   // ← wrong — this is a blind, not a call
+    action: 'CALL', // ← wrong — this is a blind, not a call
     amount: payload.amount,
     timestamp: Date.now(),
   })
@@ -242,7 +248,7 @@ The `BADGE_STYLES` in `PlayerSeat.tsx` doesn't have entries for `'SB'` or `'BB'`
 
 ```typescript
 store.getState().setPlayerAction(payload.userId, {
-  action: payload.type,   // 'SB' or 'BB'
+  action: payload.type, // 'SB' or 'BB'
   amount: payload.amount,
   timestamp: Date.now(),
 })
@@ -330,6 +336,7 @@ Not blocking — but if you find yourself using an IIFE in JSX, that's usually a
 This hook is 393 lines handling: socket setup, 14 event listeners, reconnect replay, winner banner delay, 3 callbacks. That's a lot of surface area for one hook.
 
 Worth knowing for S4: when we add live match API events, this file grows again. Consider splitting:
+
 - `useSocketSetup(tableId)` — socket init, cleanup, join/leave
 - `useRoundEvents(socket, store)` — `round:start`, `round:pause`, `round:winner`
 - `useBettingEvents(socket, store, userId)` — `bet:prompt`, `bet:update`, `blinds:posted`
@@ -341,33 +348,33 @@ Not a blocking concern for this PR. I'm flagging it so you have an architectural
 
 ## Contract Check
 
-| Event | Socket-Events Type | Handler | Status |
-|---|---|---|---|
-| `round:start` | `RoundStartPayload` | Uses typed fields (`sbSeatIndex`, `bbSeatIndex` ✓) | ✅ Aligned |
-| `round:winner` | `RoundWinnerPayload` | `data.winnerIds`, `data.totalPot` ✓ | ✅ Aligned |
-| `bet:prompt` | `BetPromptPayload` | All fields used correctly ✓ | ✅ Aligned |
-| `bet:update` | `BetUpdatePayload` | `payload.pot`, `payload.chips` ✓ | ✅ Aligned |
-| `fixture:result` | `FixtureResultPayload` | Passed directly to store — correct ✓ | ✅ Aligned |
-| `player:scored` | `PlayerScoredPayload` | Passed directly to store — correct ✓ | ✅ Aligned |
-| `table:state` | `GameState` (wrong shape) | `as unknown as {...}` workaround | ⚠️ C2 — Soni fix pending |
-| `blinds:posted` | `{ userId, amount, type }` | Sets `action: 'CALL'` — wrong | ⚠️ C6 — fix in follow-up |
-| `board:reveal` | `readonly TeamCard[]` | `as never[]` unnecessary | ⚠️ C7 — easy fix |
+| Event            | Socket-Events Type         | Handler                                            | Status                   |
+| ---------------- | -------------------------- | -------------------------------------------------- | ------------------------ |
+| `round:start`    | `RoundStartPayload`        | Uses typed fields (`sbSeatIndex`, `bbSeatIndex` ✓) | ✅ Aligned               |
+| `round:winner`   | `RoundWinnerPayload`       | `data.winnerIds`, `data.totalPot` ✓                | ✅ Aligned               |
+| `bet:prompt`     | `BetPromptPayload`         | All fields used correctly ✓                        | ✅ Aligned               |
+| `bet:update`     | `BetUpdatePayload`         | `payload.pot`, `payload.chips` ✓                   | ✅ Aligned               |
+| `fixture:result` | `FixtureResultPayload`     | Passed directly to store — correct ✓               | ✅ Aligned               |
+| `player:scored`  | `PlayerScoredPayload`      | Passed directly to store — correct ✓               | ✅ Aligned               |
+| `table:state`    | `GameState` (wrong shape)  | `as unknown as {...}` workaround                   | ⚠️ C2 — Soni fix pending |
+| `blinds:posted`  | `{ userId, amount, type }` | Sets `action: 'CALL'` — wrong                      | ⚠️ C6 — fix in follow-up |
+| `board:reveal`   | `readonly TeamCard[]`      | `as never[]` unnecessary                           | ⚠️ C7 — easy fix         |
 
 ---
 
 ## What to Track
 
-| ID | Severity | Owner | Action |
-|---|---|---|---|
-| C1 | HIGH | Joni + Soni | Fix hardcoded `'UEFA'` (temp fallback) + Soni adds `confederation` to `RoundCardPayload` |
-| C2 | MEDIUM | Soni | Update `GameState` / add `TableStatePayload` in `packages/shared/` |
-| C3 | MEDIUM | Joni | Update casts once C2 is done |
-| C4 | MEDIUM | Joni | Add error handling to `handleAddBot` + `handleStartGame` |
-| C5 | MEDIUM | Joni | Remove `store` from deps array |
-| C6 | MEDIUM | Joni | Use `payload.type` for blind badge + add SB/BB badge styles |
-| C7 | LOW | Joni | Remove unnecessary `as never[]` in `board:reveal` |
-| C8 | LOW | Joni | Remove `key={player.chips}` from chip badge div |
-| C9 | LOW | Joni | Optional: extract `ActionBadge` component |
+| ID  | Severity | Owner       | Action                                                                                   |
+| --- | -------- | ----------- | ---------------------------------------------------------------------------------------- |
+| C1  | HIGH     | Joni + Soni | Fix hardcoded `'UEFA'` (temp fallback) + Soni adds `confederation` to `RoundCardPayload` |
+| C2  | MEDIUM   | Soni        | Update `GameState` / add `TableStatePayload` in `packages/shared/`                       |
+| C3  | MEDIUM   | Joni        | Update casts once C2 is done                                                             |
+| C4  | MEDIUM   | Joni        | Add error handling to `handleAddBot` + `handleStartGame`                                 |
+| C5  | MEDIUM   | Joni        | Remove `store` from deps array                                                           |
+| C6  | MEDIUM   | Joni        | Use `payload.type` for blind badge + add SB/BB badge styles                              |
+| C7  | LOW      | Joni        | Remove unnecessary `as never[]` in `board:reveal`                                        |
+| C8  | LOW      | Joni        | Remove `key={player.chips}` from chip badge div                                          |
+| C9  | LOW      | Joni        | Optional: extract `ActionBadge` component                                                |
 
 ---
 

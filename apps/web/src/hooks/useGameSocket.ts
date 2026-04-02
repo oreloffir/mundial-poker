@@ -144,40 +144,40 @@ export function useGameSocket(tableId: string) {
         // J1 + J2 + J5: single atomic update — clears all stale state and sets new round
         // in one render tick, preventing intermediate renders with stale data
         store.setState({
-        // Clear all card/showdown/betting state (J5)
-        fixtures: [],
-        revealedFixtureCount: 0,
-        myHand: payload.cards.map(toTeamCard),
-        showdownResults: null,
-        playerActions: {},
-        foldedPlayerIds: [],
-        activeTurn: null,
-        betPrompt: null,
-        myTurn: false,
-        potFlashKey: 0,
-        waitingForResults: false,
-        // J4: wire real blind seat indices from Soni's S1 payload
-        sbSeatIndex: payload.sbSeatIndex ?? null,
-        bbSeatIndex: payload.bbSeatIndex ?? null,
-        // J12: reset showdown phase state machine
-        showdownPhase: 'idle',
-        fixtureResults: [],
-        playerScoreReveals: [],
-        currentRevealIndex: -1,
-        winnerData: null,
-        // New round state set atomically with the reset (J2 — roundNumber updates first)
-        currentRound: {
-          id: payload.roundId,
-          tableId,
-          roundNumber: payload.roundNumber,
-          status: 'BOARD_REVEALED' as never,
-          board: [],
-          hands: [],
-          bettingRounds: [],
-          pot: 0,
-          dealerSeatIndex: payload.dealerSeatIndex,
+          // Clear all card/showdown/betting state (J5)
           fixtures: [],
-        },
+          revealedFixtureCount: 0,
+          myHand: payload.cards.map(toTeamCard),
+          showdownResults: null,
+          playerActions: {},
+          foldedPlayerIds: [],
+          activeTurn: null,
+          betPrompt: null,
+          myTurn: false,
+          potFlashKey: 0,
+          waitingForResults: false,
+          // J4: wire real blind seat indices from Soni's S1 payload
+          sbSeatIndex: payload.sbSeatIndex ?? null,
+          bbSeatIndex: payload.bbSeatIndex ?? null,
+          // J12: reset showdown phase state machine
+          showdownPhase: 'idle',
+          fixtureResults: [],
+          playerScoreReveals: [],
+          currentRevealIndex: -1,
+          winnerData: null,
+          // New round state set atomically with the reset (J2 — roundNumber updates first)
+          currentRound: {
+            id: payload.roundId,
+            tableId,
+            roundNumber: payload.roundNumber,
+            status: 'BOARD_REVEALED' as never,
+            board: [],
+            hands: [],
+            bettingRounds: [],
+            pot: 0,
+            dealerSeatIndex: payload.dealerSeatIndex,
+            fixtures: [],
+          },
         })
       }
 
@@ -371,7 +371,7 @@ export function useGameSocket(tableId: string) {
       socket.off('error')
       disconnectSocket()
     }
-  // C5: store is the Zustand store constructor — stable reference, never changes, not a reactive dep
+    // C5: store is the Zustand store constructor — stable reference, never changes, not a reactive dep
   }, [tableId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendBetAction = useCallback(

@@ -11,5 +11,9 @@ export async function guestLogin(page: Page): Promise<void> {
 }
 
 export async function getGuestUsername(page: Page): Promise<string | null> {
-  return page.locator('nav span').first().textContent().catch(() => null)
+  return page
+    .locator('nav span')
+    .first()
+    .textContent()
+    .catch(() => null)
 }

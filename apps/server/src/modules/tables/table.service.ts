@@ -181,6 +181,9 @@ export async function cleanupStaleTables(): Promise<void> {
     .returning({ id: tables.id })
 
   if (result.length > 0) {
-    console.log('TableService - cleanupStaleTables', { cleaned: result.length, ids: result.map((r) => r.id) })
+    console.log('TableService - cleanupStaleTables', {
+      cleaned: result.length,
+      ids: result.map((r) => r.id),
+    })
   }
 }

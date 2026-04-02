@@ -59,12 +59,16 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
 
         // Use fixtureResult data if available (S6 progressive flow)
         const result = resultMap.get(f.id)
-        const isNewResult = result !== undefined && fixtureResults[fixtureResults.length - 1]?.fixtureId === f.id
+        const isNewResult =
+          result !== undefined && fixtureResults[fixtureResults.length - 1]?.fixtureId === f.id
         const isMyFixture = myFixtureIds.has(f.id)
 
-        const homeGoals = result?.homeGoals ?? (f.homeGoals ?? null)
-        const awayGoals = result?.awayGoals ?? (f.awayGoals ?? null)
-        const finished = homeGoals !== null && awayGoals !== null && (result !== undefined || f.status === 'FINISHED')
+        const homeGoals = result?.homeGoals ?? f.homeGoals ?? null
+        const awayGoals = result?.awayGoals ?? f.awayGoals ?? null
+        const finished =
+          homeGoals !== null &&
+          awayGoals !== null &&
+          (result !== undefined || f.status === 'FINISHED')
 
         const homeTeamFlag = result?.homeTeam?.flagUrl ?? f.homeFlag
         const awayTeamFlag = result?.awayTeam?.flagUrl ?? f.awayFlag
@@ -76,9 +80,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         const isDraw = finished && homeGoals === awayGoals
 
         const hasPenalties = result?.hasPenalties ?? false
-        const events = finished
-          ? getEventIcons(homeGoals!, awayGoals!, hasPenalties)
-          : []
+        const events = finished ? getEventIcons(homeGoals!, awayGoals!, hasPenalties) : []
 
         return (
           <div

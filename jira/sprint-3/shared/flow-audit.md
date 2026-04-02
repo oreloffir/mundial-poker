@@ -1,4 +1,5 @@
 # Flow Audit — Sprint 3
+
 **Authored by:** Mark (QA Lead)
 **Date:** April 2, 2026
 **Requested by:** Clodi
@@ -12,19 +13,19 @@ Screenshots at every phase A–K. This is a UX diary — what a real player sees
 
 ## TL;DR
 
-| Phase | Desktop 1400×900 | Mobile 667×375 |
-|-------|-----------------|----------------|
-| A — Landing | ✅ Strong branding | ✅ Compact, works |
-| B — Lobby | ✅ Fully loaded, clean empty state | ✅ Tables listed |
-| C — Create Table Modal | ✅ Full modal, Cancel visible | ✅ Slightly clipped bottom |
-| D1 — Empty Table | ✅ **FIXED** — stadium table renders | ✅ Works |
-| D2 — With Bots | ✅ 5/5 bots, Start Game active | ✅ Works |
-| E — Cards Dealt | ✅ Round 1 live, full betting bar | ✅ Round 1 live |
-| F — Betting | ✅ Fold/Check/Call/Raise/All In | ✅ All controls visible |
+| Phase                  | Desktop 1400×900                       | Mobile 667×375                         |
+| ---------------------- | -------------------------------------- | -------------------------------------- |
+| A — Landing            | ✅ Strong branding                     | ✅ Compact, works                      |
+| B — Lobby              | ✅ Fully loaded, clean empty state     | ✅ Tables listed                       |
+| C — Create Table Modal | ✅ Full modal, Cancel visible          | ✅ Slightly clipped bottom             |
+| D1 — Empty Table       | ✅ **FIXED** — stadium table renders   | ✅ Works                               |
+| D2 — With Bots         | ✅ 5/5 bots, Start Game active         | ✅ Works                               |
+| E — Cards Dealt        | ✅ Round 1 live, full betting bar      | ✅ Round 1 live                        |
+| F — Betting            | ✅ Fold/Check/Call/Raise/All In        | ✅ All controls visible                |
 | G/H — Showdown Reveals | ✅ Overlay working, sequential reveals | ✅ Slide-up panel, table visible above |
-| I — Player Reveals | ✅ Captured mid-sequence (2of5, 4of5) | ✅ Captured 2of5 and 5of5 |
-| J — Winner Banner | ⚠️ Not captured in named shot | ⚠️ Not captured in named shot |
-| K — Transition | ✅ Round 2 in progress | ✅ Round 2 active |
+| I — Player Reveals     | ✅ Captured mid-sequence (2of5, 4of5)  | ✅ Captured 2of5 and 5of5              |
+| J — Winner Banner      | ⚠️ Not captured in named shot          | ⚠️ Not captured in named shot          |
+| K — Transition         | ✅ Round 2 in progress                 | ✅ Round 2 active                      |
 
 **Everything works. One residual display glitch (Chips 0 during bot-join window). Winner banner timing not aligned with screenshot intervals — need follow-up.**
 
@@ -189,7 +190,7 @@ Progress indicator top-right: **2 of 5** with gold dot filled, remaining dots em
 
 **Observation:** The overlay header shows the human player's card flags and chip count (490). The "hand preview" feature (myHand + myChips in header) from Joni's post-playtesting fix is present and working. While waiting for other reveals, the player can glance at their own score context.
 
-**Observation:** The score cards don't show whether the player won or lost yet — that comes with the winner announcement. The suspense structure is correct: reveal everyone's score, *then* crown the winner.
+**Observation:** The score cards don't show whether the player won or lost yet — that comes with the winner announcement. The suspense structure is correct: reveal everyone's score, _then_ crown the winner.
 
 ### Desktop — Round 2 (Transition)
 
@@ -212,6 +213,7 @@ The mobile-specific fix is visible here — the overlay doesn't block the entire
 ![Mobile G2 Showdown Final](../../../assets/screenshots/mobile-G2-fixture-reveal.png)
 
 **5 of 5** — all players revealed. Hawk-Tony40 scored **12** (ranked #5, winner). Complete leaderboard at bottom:
+
 - Guest-FBU: 3
 - Slim-Gus24: 3
 - Inon-Jai89: 9
@@ -265,6 +267,7 @@ Same. Round 2, new fixtures, betting active.
 ## Bugs Found (This Run)
 
 ### BUG-S3-04 — LOW: Chips 0 in header during bot-join window
+
 **Header shows "Chips 0" after bots join, before first game state refresh.**
 The `?? 0` fix from BUG-S3-03 resolved "Chips undefined" but the player chip count (500) still doesn't display until after `round:start` fires. Cosmetic — the actual balance isn't lost, it's just not reflected in the header during the ~3s window between all bots joining and the game starting.
 
@@ -274,25 +277,25 @@ The `?? 0` fix from BUG-S3-03 resolved "Chips undefined" but the player chip cou
 
 ## Desktop vs Mobile — Full Comparison
 
-| Feature | Desktop 1400×900 | Mobile 667×375 |
-|---------|-----------------|----------------|
-| Landing page | ✅ Full branding | ✅ Compact, intact |
-| Lobby load (<5s) | ✅ Loads fully | ✅ Loads fully |
-| Lobby empty state | ✅ Clear CTA | ✅ Tables listed |
-| Create Table modal | ✅ Full, Cancel visible | ✅ Slightly clipped, usable |
-| Table redirect (BUG-S2-03) | ✅ **FIXED** | ✅ Was already working |
-| Table visual design | ✅ Stadium + pitch — stunning | ✅ Scales well in landscape |
-| Add bots | ✅ 4/4 bots join | ✅ 4/4 bots join |
-| Start Game | ✅ Gold, active | ✅ Active |
-| Chips 0 display glitch | ⚠️ Shows "Chips 0" after bots join | ⚠️ Same |
-| Cards dealt | ✅ Flag-card assignments clear | ✅ Clear |
-| Betting controls | ✅ Fold/Call/Raise/All In | ✅ All four fit in landscape bar |
-| Live fixture scores mid-hand | ✅ Visible on pitch | ✅ Visible |
-| Showdown overlay | ✅ Full-screen takeover | ✅ Slide-up panel, table above |
-| Sequential player reveals | ✅ 2of5, 4of5 captured | ✅ 2of5, 5of5 captured |
-| Score leaderboard | ✅ Building left to right | ✅ Full scoreboard |
-| Winner banner | ⚠️ Exists but not captured | ⚠️ Exists but not captured |
-| Round transition | ✅ Clean, Round 2 active | ✅ Clean |
+| Feature                      | Desktop 1400×900                   | Mobile 667×375                   |
+| ---------------------------- | ---------------------------------- | -------------------------------- |
+| Landing page                 | ✅ Full branding                   | ✅ Compact, intact               |
+| Lobby load (<5s)             | ✅ Loads fully                     | ✅ Loads fully                   |
+| Lobby empty state            | ✅ Clear CTA                       | ✅ Tables listed                 |
+| Create Table modal           | ✅ Full, Cancel visible            | ✅ Slightly clipped, usable      |
+| Table redirect (BUG-S2-03)   | ✅ **FIXED**                       | ✅ Was already working           |
+| Table visual design          | ✅ Stadium + pitch — stunning      | ✅ Scales well in landscape      |
+| Add bots                     | ✅ 4/4 bots join                   | ✅ 4/4 bots join                 |
+| Start Game                   | ✅ Gold, active                    | ✅ Active                        |
+| Chips 0 display glitch       | ⚠️ Shows "Chips 0" after bots join | ⚠️ Same                          |
+| Cards dealt                  | ✅ Flag-card assignments clear     | ✅ Clear                         |
+| Betting controls             | ✅ Fold/Call/Raise/All In          | ✅ All four fit in landscape bar |
+| Live fixture scores mid-hand | ✅ Visible on pitch                | ✅ Visible                       |
+| Showdown overlay             | ✅ Full-screen takeover            | ✅ Slide-up panel, table above   |
+| Sequential player reveals    | ✅ 2of5, 4of5 captured             | ✅ 2of5, 5of5 captured           |
+| Score leaderboard            | ✅ Building left to right          | ✅ Full scoreboard               |
+| Winner banner                | ⚠️ Exists but not captured         | ⚠️ Exists but not captured       |
+| Round transition             | ✅ Clean, Round 2 active           | ✅ Clean                         |
 
 ---
 

@@ -67,7 +67,11 @@ async function runFullFlow(page: Page, prefix: 'desktop' | 'mobile') {
 
   await page.locator('input[type="text"]').first().fill(`Audit Table ${prefix}`)
   await page.waitForTimeout(300)
-  await page.locator('button').filter({ hasText: /^Create$/ }).last().click()
+  await page
+    .locator('button')
+    .filter({ hasText: /^Create$/ })
+    .last()
+    .click()
   await page.waitForTimeout(4000)
 
   // ── D1. Empty Table ──────────────────────────────────────────────────────
@@ -150,10 +154,12 @@ async function runFullFlow(page: Page, prefix: 'desktop' | 'mobile') {
   await shot(page, `v2-${prefix}-J-winner`)
 
   // ── K. Next Round Transition ─────────────────────────────────────────────
-  await page.waitForSelector('[data-testid="winner-banner"]', {
-    state: 'hidden',
-    timeout: 30000,
-  }).catch(() => {})
+  await page
+    .waitForSelector('[data-testid="winner-banner"]', {
+      state: 'hidden',
+      timeout: 30000,
+    })
+    .catch(() => {})
   await page.waitForTimeout(2000)
   await shot(page, `v2-${prefix}-K-next-round`)
 }

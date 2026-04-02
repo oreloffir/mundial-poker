@@ -21,6 +21,7 @@ Mark's QA confirmed the server auto-timeout fires at ~40–45s while the client 
 ### Likely root cause to investigate first
 
 In `game.service.ts`, `startBetTimer` is called at two sites:
+
 - Line ~163: when `startBettingRound` prompts the first player
 - Line ~409: inside `handleBetAction` when the next prompt is emitted
 
@@ -29,6 +30,7 @@ In `game.service.ts`, `startBetTimer` is called at two sites:
 If that re-prompt happens ~10–15s into the original 30s countdown, the server won't act until 30s after the re-prompt, while the client is still counting down from the original start. Net effect: server fires ~40–45s after the client timer started.
 
 **Decision you need to make and document:**
+
 - **Option A (per-prompt, current behavior):** Each re-prompt restarts the 30s clock. Correct when BB gets the option — they deserve a full 30s to decide on their option, even if they waited for action to come back. This is standard in online poker.
 - **Option B (wall-clock budget):** Total time per turn is capped at 30s regardless of re-prompts. Simpler from a user perspective, harder to implement.
 
@@ -85,6 +87,7 @@ Recommendation: **Option A is correct poker behavior.** The real bug is likely s
 The showdown phase is where Mundial Poker's magic happens — poker meets football, and the player sees HOW their teams performed. But the current server dumps all data at once, killing any drama.
 
 **Current flow (server side):**
+
 1. Betting completes → `WAITING_FOR_RESULTS`
 2. Emit `round:pause` → 30 seconds pass → all 5 demo fixtures resolve simultaneously
 3. Emit `round:results` with ALL fixture scores + ALL card scores + pot distribution (one giant payload)
@@ -93,6 +96,7 @@ The showdown phase is where Mundial Poker's magic happens — poker meets footba
 6. Status → `COMPLETE`
 
 **Problems:**
+
 - All 5 match results appear simultaneously — no drama, no "will my team win?"
 - Player sees "12 pts" but never sees WHY (5 base + 4 goal bonus + 2 clean sheet + 1 penalty)
 - `cardScores` include `teamId` but not the team object or fixture data — frontend can't show the breakdown story
@@ -160,8 +164,11 @@ BETTING COMPLETE
    - Update each fixture in DB individually
 
 2. **Scoring phase signal** — After all fixtures resolved, emit `round:scoring`:
+
    ```typescript
-   { roundId: string }
+   {
+     roundId: string
+   }
    ```
 
 3. **Per-player score reveal** — Instead of one `round:showdown` with everyone, emit `player:scored` one at a time:
@@ -197,6 +204,7 @@ BETTING COMPLETE
    - The frontend should be able to render the full story from one payload: "Brazil 🇧🇷 vs Serbia 🇷🇸 → 3-0 → Win (5pts) + High Scorer (4pts) + Clean Sheet (2pts) = 11pts"
 
 4. **Winner event** — After all players revealed, 2-second delay, then emit `round:winner`:
+
    ```typescript
    {
      winnerIds: string[]
@@ -212,14 +220,15 @@ BETTING COMPLETE
    - `round:scoring`
    - `player:scored`
    - `round:winner`
-   Remove: `round:results`, `round:showdown`
+     Remove: `round:results`, `round:showdown`
 
 7. **Timing constants** in `game.service.ts`:
+
    ```typescript
-   const FIXTURE_REVEAL_INTERVAL_MS = 5_000   // 5s between each fixture
-   const SCORING_PAUSE_MS = 2_000              // 2s "calculating" pause
-   const PLAYER_REVEAL_INTERVAL_MS = 2_500     // 2.5s between each player
-   const WINNER_DISPLAY_DELAY_MS = 2_000       // 2s after last player
+   const FIXTURE_REVEAL_INTERVAL_MS = 5_000 // 5s between each fixture
+   const SCORING_PAUSE_MS = 2_000 // 2s "calculating" pause
+   const PLAYER_REVEAL_INTERVAL_MS = 2_500 // 2.5s between each player
+   const WINNER_DISPLAY_DELAY_MS = 2_000 // 2s after last player
    ```
 
 8. **CardScores DB enrichment** — When reading cardScores for `player:scored`, JOIN with teams and fixtures tables. Don't just send IDs.
@@ -265,6 +274,7 @@ BETTING COMPLETE
 ### Context
 
 We have 26 unit tests covering `blinds.service` and `betting.service` in isolation. What we don't have:
+
 - Tests for the full round lifecycle (`startRound` → dealing → blind collection → betting → showdown)
 - Tests for `game.service.ts` (the orchestrator) — no test coverage at all
 - Fake-timer tests for the S3 timeout behavior
@@ -281,6 +291,7 @@ Mark is running manual Playwright tests. They're good for UI smoke testing but s
 **Mocking strategy:** Mock the database (`db`) and Socket.io (`io`) at the module level. Do not use a real database for these tests — the unit tests already prove DB schema correctness.
 
 **What to mock:**
+
 ```typescript
 vi.mock('../../db', () => ({ db: mockDb }))
 vi.mock('../../lib/socket', () => ({ emitToRoom: vi.fn() }))
@@ -289,6 +300,7 @@ vi.mock('../../lib/socket', () => ({ emitToRoom: vi.fn() }))
 **Test scenarios to cover:**
 
 ### Group 1: Round lifecycle (3 tests)
+
 ```
 T1: startRound with 2 active players → blind collection → first bet:prompt emitted
 T2: Full round — all bots check → showdown triggered → winner emitted
@@ -296,6 +308,7 @@ T3: Last-player-standing — all but one fold → pot awarded immediately, no sh
 ```
 
 ### Group 2: Betting order (4 tests)
+
 ```
 T4: 4-player pre-flop → UTG prompted first (not SB or BB)
 T5: BB option — all players check/call BB → BB receives CHECK+RAISE options
@@ -304,6 +317,7 @@ T7: Post-flop — first prompt goes to SB (or next active after dealer)
 ```
 
 ### Group 3: Timeout (3 tests, fake timers)
+
 ```
 T8: Timer fires at exactly 30_000ms → auto-CHECK emitted when CHECK allowed
 T9: Timer fires at exactly 30_000ms → auto-FOLD emitted when CHECK not allowed
@@ -311,6 +325,7 @@ T10: Player acts at 15_000ms → timer cancelled → no auto-action at 30_000ms
 ```
 
 ### Group 4: Edge cases (3 tests)
+
 ```
 T11: Player with stack < blind → goes all-in for available chips
 T12: Heads-up (2 players) → dealer = SB, opponent = BB
@@ -343,19 +358,23 @@ T13: Round end before all timers fire → cleanupBetTimers cancels pending timer
 ## Delivery Log
 
 ### S5 — Fix Timeout Drift (S3-BUG-01)
+
 **Status:** ✅ Done
 **Root cause:** Client-side timer drift. The BettingControls `useEffect` deps were `[prompt.minimumBet, prompt.timeoutMs]` — when BB gets re-prompted (option) with the same values, the effect doesn't re-run and `startTimeRef` stays at the original prompt time. Meanwhile server resets to a fresh 30s.
 **Fix (both sides):**
+
 - Server: added `promptedAt: Date.now()` to `bet:prompt` payload
 - Client: BettingControls uses `promptedAt` as timer start + useEffect dep, so re-prompts always reset the countdown
 - Also: moved DB status update in `startBettingRound()` to fire-and-forget after the prompt (was blocking before emit)
-**Decision:** Option A (per-prompt reset) — standard poker behavior. Each re-prompt gets a full 30s.
-**Tests:** 3 regression tests added (timer fires at 30s, auto-FOLD, cancel on action). 29 total tests passing.
-**Files:** `game.service.ts`, `betting.service.ts`, `BettingControls.tsx`, `useGameSocket.ts`, `gameStore.ts`, `socket-events.ts`
+  **Decision:** Option A (per-prompt reset) — standard poker behavior. Each re-prompt gets a full 30s.
+  **Tests:** 3 regression tests added (timer fires at 30s, auto-FOLD, cancel on action). 29 total tests passing.
+  **Files:** `game.service.ts`, `betting.service.ts`, `BettingControls.tsx`, `useGameSocket.ts`, `gameStore.ts`, `socket-events.ts`
 
 ### S6 — Restructure Scoring & Showdown Event Flow
+
 **Status:** ✅ Done
 **New event flow:**
+
 1. `fixture:result` — emitted 5 times, every 5s during 30s wait, with full team data (name, code, flagUrl) + score + penalty flag
 2. `round:scoring` — transition signal after all fixtures resolved
 3. `player:scored` — emitted per non-folded player, lowest score first, 2.5s apart, with enriched `cardScores` containing full team + fixture objects (side, goals, breakdown: base/goal/cs/penalty)
@@ -365,6 +384,7 @@ T13: Round end before all timers fire → cleanupBetTimers cancels pending timer
 **Old events deprecated:** `round:results` and `round:showdown` still in shared types (marked `@deprecated`) but no longer emitted by the server. Joni can remove frontend handlers when ready.
 
 **Timing constants:**
+
 - `FIXTURE_REVEAL_INTERVAL_MS = 5_000` (5s between fixtures)
 - `SCORING_PAUSE_MS = 2_000` (2s calculating pause)
 - `PLAYER_REVEAL_INTERVAL_MS = 2_500` (2.5s between player reveals)
@@ -372,6 +392,7 @@ T13: Round end before all timers fire → cleanupBetTimers cancels pending timer
 - `NEXT_ROUND_DELAY_MS = 4_000` (4s before next round)
 
 **Files changed:**
+
 - `apps/server/src/modules/game/demo.service.ts` — new `resolveDemoFixturesProgressive()` with per-fixture callback
 - `apps/server/src/modules/game/game.service.ts` — progressive fixture reveal in `startRound()`, restructured `resolveRound()` with sequential player reveals
 - `packages/shared/types/socket-events.ts` — new `FixtureResultPayload`, `PlayerScoredPayload`, `RoundWinnerPayload` types
@@ -379,26 +400,31 @@ T13: Round end before all timers fire → cleanupBetTimers cancels pending timer
 **Joni unblocked:** J12 can now wire up: `fixture:result` → `addFixtureResult`, `round:scoring` → `setShowdownPhase('calculating')`, `player:scored` → `addPlayerScoreReveal`, `round:winner` → `setWinnerData`. All payload shapes match Joni's scaffolded types exactly.
 
 ### S7 — Server Integration Test Suite
+
 **Status:** ✅ Done
 **File:** `apps/server/src/__tests__/game-engine.test.ts` (13 tests)
 
 **Group 1: Round lifecycle (3 tests)**
+
 - T1: Blind seeding — pot=15, currentBet=10, UTG prompted first
 - T2: All check through — round completes correctly
 - T3: Last player standing — single active player detected
 
 **Group 2: Betting order (4 tests)**
+
 - T4: 4-player pre-flop — UTG at seat 3 (not SB or BB)
 - T5: BB option — CHECK+RAISE when no raise beyond BB
 - T6: BB loses option — CALL required when raise exceeds BB
 - T7: Post-flop — starts at SB seat (seat 1)
 
 **Group 3: Timeout (3 tests, vi.useFakeTimers)**
+
 - T8: Auto-CHECK fires at exactly 30_000ms
 - T9: Auto-FOLD fires when CHECK not in allowedActions
 - T10: Timer cancelled at 15s — no auto-action at 30s
 
 **Group 4: Edge cases (3 tests)**
+
 - T11: Short stack (3 chips) goes all-in for blind
 - T12: Heads-up — dealer=SB, opponent=BB
 - T13: cleanupBetTimers cancels all pending timers for a round
@@ -417,6 +443,7 @@ T13: Round end before all timers fire → cleanupBetTimers cancels pending timer
 ### Context
 
 The frontend score sub-card wants to display both teams in the fixture:
+
 ```
 🇧🇷 Brazil
 vs 🇷🇸 Serbia → 3-0
