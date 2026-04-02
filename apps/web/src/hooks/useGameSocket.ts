@@ -3,8 +3,9 @@ import { getSocket, disconnectSocket } from '@/lib/socket'
 import { useGameStore } from '@/stores/gameStore'
 import { useAuthStore } from '@/stores/authStore'
 import type { BetAction, TeamCard, TeamTier, Confederation } from '@wpc/shared'
-import type { RoundCardPayload } from '@wpc/shared'
+import type { RoundCardPayload, FixtureResultPayload, PlayerScoredPayload } from '@wpc/shared'
 
+// C1 fix: use confederation from payload; falls back to 'UEFA' until Soni adds the field (TODO S4)
 function toTeamCard(c: RoundCardPayload): TeamCard {
   return {
     teamId: c.teamId,
@@ -15,7 +16,7 @@ function toTeamCard(c: RoundCardPayload): TeamCard {
       code: c.teamCode,
       flagUrl: c.flagEmoji,
       tier: c.tier as TeamTier,
-      confederation: 'UEFA' as Confederation,
+      confederation: (c.confederation ?? 'UEFA') as Confederation,
       fifaRanking: c.fifaRanking,
     },
   }
@@ -40,6 +41,9 @@ export function useGameSocket(tableId: string) {
       }
     })
 
+    // C2: GameState type doesn't match the actual table:state payload shape — the server sends
+    // a richer `roundInfo` envelope not reflected in GameState. Tracked as Soni's debt (S-debt-01).
+    // Once GameState is updated server-side, remove this cast and wire types properly.
     socket.on('table:state', (rawState) => {
       const state = rawState as unknown as {
         table: typeof rawState.table
@@ -62,8 +66,8 @@ export function useGameSocket(tableId: string) {
           }
           waitingForResults: boolean
           currentPhase?: string
-          resolvedFixtures?: unknown[]
-          revealedPlayerScores?: unknown[]
+          resolvedFixtures?: FixtureResultPayload[]
+          revealedPlayerScores?: PlayerScoredPayload[]
           activePlayerId?: string | null
           currentBet?: number
         }
@@ -110,14 +114,15 @@ export function useGameSocket(tableId: string) {
 
         // SF-01b: Reconnect state recovery — replay accumulated phase data
         if (ri.currentPhase) {
+          // C3 fix: cast to proper types instead of `never` (consequence of C2 GameState mismatch)
           if (ri.resolvedFixtures?.length) {
             for (const f of ri.resolvedFixtures) {
-              store.getState().addFixtureResult(f as never)
+              store.getState().addFixtureResult(f as FixtureResultPayload)
             }
           }
           if (ri.revealedPlayerScores?.length) {
             for (const s of ri.revealedPlayerScores) {
-              store.getState().addPlayerScoreReveal(s as never)
+              store.getState().addPlayerScoreReveal(s as PlayerScoredPayload)
             }
           }
           const phaseToShowdown: Record<string, string> = {
@@ -189,16 +194,20 @@ export function useGameSocket(tableId: string) {
       applyRoundStart()
     })
 
+    // C6 fix: use payload.type ('SB'|'BB') so the badge shows the blind position, not 'CALL'
     socket.on('blinds:posted', (payload) => {
       store.getState().setPlayerAction(payload.userId, {
-        action: 'CALL',
+        action: payload.type,
         amount: payload.amount,
         timestamp: Date.now(),
       })
     })
 
+    // C7: board:reveal sends RawFixture[] at runtime but ServerToClientEvents types it as
+    // TeamCard[] (stale) and setFixtures expects Fixture[] (shared type). Both mismatches are
+    // Soni's debt (S-debt-01). Cast through unknown rather than `never[]` to document intent.
     socket.on('board:reveal', (fixtureData) => {
-      const fixtureArray = fixtureData as never[]
+      const fixtureArray = fixtureData as unknown as readonly import('@wpc/shared').Fixture[]
       store.getState().setFixtures(fixtureArray)
       store.getState().setRevealedFixtureCount(0)
       fixtureArray.forEach((_, i) => {
@@ -362,7 +371,8 @@ export function useGameSocket(tableId: string) {
       socket.off('error')
       disconnectSocket()
     }
-  }, [tableId, store])
+  // C5: store is the Zustand store constructor — stable reference, never changes, not a reactive dep
+  }, [tableId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendBetAction = useCallback(
     (action: BetAction, amount: number) => {

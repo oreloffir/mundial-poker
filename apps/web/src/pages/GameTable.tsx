@@ -57,7 +57,7 @@ export function GameTable() {
         useGameStore.getState().setTable(data.data.table)
       }
     } catch {
-      /* */
+      setError('Failed to add bot — try again')
     } finally {
       setBotLoading(false)
     }
@@ -68,7 +68,7 @@ export function GameTable() {
       await api.post(`/tables/${tableId}/start`)
       refreshState()
     } catch {
-      /* */
+      setError('Failed to start game — try again')
     }
   }
 
