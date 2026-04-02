@@ -13,6 +13,7 @@ import {
 } from '../../db/schema.js'
 import { NotFoundError, GameError } from '../../shared/errors.js'
 import { stateGet, stateSet, stateDel } from '../../lib/game-state-store.js'
+import { getRoundPhaseState, updateRoundPhase, clearRoundPhase } from './phase-tracker.js'
 import { dealCards } from './dealing.service.js'
 import {
   initBettingRound,
@@ -51,48 +52,6 @@ const NEXT_ROUND_DELAY_MS = 7_000
 
 const activeTimers = new Map<string, { readonly cancel: () => void }>()
 
-// ─── Round phase tracking (for reconnect state recovery) ─────────────────────
-
-type RoundPhase = 'dealing' | 'betting' | 'waiting' | 'fixtures' | 'scoring' | 'reveals' | 'winner'
-
-interface RoundPhaseState {
-  readonly roundId: string
-  readonly currentPhase: RoundPhase
-  readonly resolvedFixtures: readonly FixtureResultPayload[]
-  readonly revealedPlayerScores: readonly PlayerScoredPayload[]
-  readonly bettingRound: number
-  readonly currentBet: number
-  readonly pot: number
-  readonly activePlayerId: string | null
-}
-
-export async function getRoundPhaseState(tableId: string): Promise<RoundPhaseState | undefined> {
-  return stateGet<RoundPhaseState>('phase', tableId)
-}
-
-async function updateRoundPhase(
-  tableId: string,
-  update: Partial<RoundPhaseState> & { roundId: string },
-): Promise<void> {
-  const existing = await stateGet<RoundPhaseState>('phase', tableId)
-  await stateSet<RoundPhaseState>('phase', tableId, {
-    roundId: update.roundId,
-    currentPhase: update.currentPhase ?? existing?.currentPhase ?? 'dealing',
-    resolvedFixtures: update.resolvedFixtures ?? existing?.resolvedFixtures ?? [],
-    revealedPlayerScores: update.revealedPlayerScores ?? existing?.revealedPlayerScores ?? [],
-    bettingRound: update.bettingRound ?? existing?.bettingRound ?? 0,
-    currentBet: update.currentBet ?? existing?.currentBet ?? 0,
-    pot: update.pot ?? existing?.pot ?? 0,
-    activePlayerId:
-      update.activePlayerId !== undefined
-        ? update.activePlayerId
-        : (existing?.activePlayerId ?? null),
-  })
-}
-
-async function clearRoundPhase(tableId: string): Promise<void> {
-  await stateDel('phase', tableId)
-}
 
 interface RoundBlindInfo {
   readonly dealerSeatIndex: number

@@ -13,6 +13,7 @@ import {
 } from '../../db/schema.js'
 import { verifyToken } from '../auth/auth.service.js'
 import * as gameService from './game.service.js'
+import { getRoundPhaseState } from './phase-tracker.js'
 import { getBettingState, getAllowedActions } from './betting.service.js'
 import type { BetAction, ClientToServerEvents, GameState, ServerToClientEvents } from '@wpc/shared'
 
@@ -128,7 +129,7 @@ async function getTableState(tableId: string, userId: string): Promise<GameState
     }
   }
 
-  const phaseState = await gameService.getRoundPhaseState(tableId)
+  const phaseState = await getRoundPhaseState(tableId)
   if (roundInfo && phaseState) {
     roundInfo = {
       ...roundInfo,
