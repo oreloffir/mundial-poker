@@ -112,7 +112,7 @@ async function getTableState(tableId: string, userId: string) {
       })
     }
 
-    const bettingState = getBettingState(activeRound.id)
+    const bettingState = await getBettingState(activeRound.id)
     let betPrompt: unknown | null = null
     if (bettingState) {
       const currentPlayer = bettingState.playerStates[bettingState.currentPlayerIndex]
@@ -142,7 +142,7 @@ async function getTableState(tableId: string, userId: string) {
     }
   }
 
-  const phaseState = gameService.getRoundPhaseState(tableId)
+  const phaseState = await gameService.getRoundPhaseState(tableId)
   if (roundInfo && phaseState) {
     roundInfo = {
       ...roundInfo,

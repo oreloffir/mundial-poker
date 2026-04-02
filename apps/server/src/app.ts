@@ -4,6 +4,8 @@ import cors from 'cors'
 import http from 'node:http'
 import { Server } from 'socket.io'
 import { ZodError } from 'zod'
+import { config } from './config.js'
+import { connectRedis } from './lib/redis.js'
 import { authRouter } from './modules/auth/auth.controller.js'
 import { createTableRouter } from './modules/tables/table.controller.js'
 import { matchDataRouter } from './modules/match-data/match-data.controller.js'
@@ -14,11 +16,9 @@ import { cleanupStaleTables } from './modules/tables/table.service.js'
 import { AppError } from './shared/errors.js'
 import type { Request, Response, NextFunction } from 'express'
 
-const PORT = parseInt(process.env.PORT ?? '3001', 10)
-
 const app = express()
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3000'], credentials: true }))
+app.use(cors({ origin: config.corsOrigins, credentials: true }))
 app.use(express.json())
 
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -48,7 +48,7 @@ const server = http.createServer(app)
 
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: config.corsOrigins,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -57,17 +57,26 @@ const io = new Server(server, {
 setupGameSocket(io)
 app.use('/api/tables', createTableRouter(io))
 
-if (process.env.NODE_ENV !== 'production') {
+if (config.nodeEnv !== 'production') {
   app.use('/api/test', createTestRouter(io))
-  console.log('App - testRoutes - registered', { env: process.env.NODE_ENV ?? 'development' })
+  console.log('App - testRoutes - registered', { env: config.nodeEnv })
 }
 
-server.listen(PORT, () => {
-  console.log('App - started', { port: PORT, env: process.env.NODE_ENV ?? 'development' })
-  ensureBotsExist().catch((err) => console.error('App - ensureBotsExist - failed', { error: err }))
-  cleanupStaleTables().catch((err) =>
-    console.error('App - cleanupStaleTables - failed', { error: err }),
-  )
+async function start(): Promise<void> {
+  await connectRedis()
+
+  server.listen(config.port, () => {
+    console.log('App - started', { port: config.port, env: config.nodeEnv })
+    ensureBotsExist().catch((err) => console.error('App - ensureBotsExist - failed', { error: err }))
+    cleanupStaleTables().catch((err) =>
+      console.error('App - cleanupStaleTables - failed', { error: err }),
+    )
+  })
+}
+
+start().catch((err) => {
+  console.error('App - startFailed', { error: err })
+  process.exit(1)
 })
 
 export { app, server, io }

@@ -234,7 +234,34 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 - All 43 tests still pass
 
 ### S13 — Redis Migration
-**Status:** Not started
+**Status:** COMPLETE (Apr 2)
+
+**Files created:**
+- `apps/server/src/config.ts` — centralized env config (port, databaseUrl, redisUrl, jwtSecret, nodeEnv, corsOrigins) with local defaults
+- `apps/server/src/lib/redis.ts` — Redis client with connect/disconnect, error handling, graceful degradation
+- `apps/server/src/lib/game-state-store.ts` — abstraction over Redis: `stateGet<T>`, `stateSet<T>`, `stateDel` with 2h TTL, in-memory Map fallback
+
+**Files modified:**
+- `apps/server/src/app.ts` — uses `config` for port/cors/env, calls `connectRedis()` on startup, async `start()` function
+- `apps/server/src/db/index.ts` — uses `config.databaseUrl` instead of raw `process.env`
+- `apps/server/src/modules/game/betting.service.ts` — `activeBettingStates` Map → Redis (`betting:{roundId}`). `getBettingState`, `initBettingRound`, `clearBettingState` now async
+- `apps/server/src/modules/game/game.service.ts` — `roundBlindCache` → Redis (`blinds:{roundId}`), `roundPhaseMap` → Redis (`phase:{tableId}`), `roundFixtureDataCache` → Redis (`fixture-data:{roundId}`, Maps serialized to plain objects). All phase functions async
+- `apps/server/src/modules/game/bot.service.ts` — async `getBettingState` call
+- `apps/server/src/modules/game/game.socket.ts` — async `getBettingState` and `getRoundPhaseState`
+- `apps/server/src/modules/test/test.service.ts` — async `getBettingState`, `cancelRoundTimers`
+- Both test files — async `initBettingRound`, `clearBettingState`
+
+**What stayed in-memory:**
+- `activeTimers` — timer abort controllers (can't serialize)
+- `betTimers` — setTimeout IDs (can't serialize)
+
+**Graceful degradation:** If Redis is unavailable, `game-state-store.ts` automatically falls back to in-memory Maps with a warning log. Tests run without Redis and all 43 pass.
+
+**Verified:**
+- Server starts with Redis connected: `Redis - connected { url: 'redis://localhost:6379' }`
+- All 43 tests pass (in-memory fallback)
+- Server typecheck clean
+- Devsi handoff doc created: `jira/sprint-4/shared/devsi-dockerize-handoff.md`
 
 ### S14 — DB Migrations
 **Status:** Not started

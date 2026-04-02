@@ -1,6 +1,7 @@
 import { db } from '../../db/index.js'
 import { bets } from '../../db/schema.js'
 import { GameError } from '../../shared/errors.js'
+import { stateGet, stateSet, stateDel } from '../../lib/game-state-store.js'
 import type { BetAction } from '@wpc/shared'
 
 interface PlayerState {
@@ -23,7 +24,8 @@ export interface BettingState {
   readonly bigBlindAmount: number | null
 }
 
-const activeBettingStates = new Map<string, BettingState>()
+const STORE_PREFIX = 'betting'
+
 const betTimers = new Map<string, NodeJS.Timeout>()
 
 const BET_TIMEOUT_MS = 30_000
@@ -45,7 +47,7 @@ export function startBetTimer(
 
   const timer = setTimeout(async () => {
     betTimers.delete(key)
-    const state = getBettingState(roundId)
+    const state = await getBettingState(roundId)
     if (!state) return
     const player = state.playerStates[state.currentPlayerIndex]
     if (!player || player.userId !== userId) return
@@ -79,12 +81,12 @@ export function cleanupBetTimers(roundId: string): void {
   }
 }
 
-export function getBettingState(roundId: string): BettingState | undefined {
-  return activeBettingStates.get(roundId)
+export async function getBettingState(roundId: string): Promise<BettingState | undefined> {
+  return stateGet<BettingState>(STORE_PREFIX, roundId)
 }
 
-export function clearBettingState(roundId: string): void {
-  activeBettingStates.delete(roundId)
+export async function clearBettingState(roundId: string): Promise<void> {
+  await stateDel(STORE_PREFIX, roundId)
   cleanupBetTimers(roundId)
 }
 
@@ -98,7 +100,7 @@ interface BlindSeedInfo {
   readonly bigBlind: number
 }
 
-export function initBettingRound(
+export async function initBettingRound(
   roundId: string,
   players: readonly {
     readonly userId: string
@@ -109,7 +111,7 @@ export function initBettingRound(
   bettingRoundNumber: number,
   blindInfo?: BlindSeedInfo,
   startingSeatIndex?: number,
-): BettingState {
+): Promise<BettingState> {
   let playerStates: PlayerState[] = players.map((p) => ({
     userId: p.userId,
     seatIndex: p.seatIndex,
@@ -168,7 +170,7 @@ export function initBettingRound(
     bigBlindAmount,
   }
 
-  activeBettingStates.set(roundId, state)
+  await stateSet(STORE_PREFIX, roundId, state)
   console.log('BettingService - initBettingRound', {
     roundId,
     bettingRound: bettingRoundNumber,
@@ -396,7 +398,7 @@ export async function applyAction(
     pot: state.pot + betAmount,
   }
 
-  activeBettingStates.set(state.roundId, newState)
+  await stateSet(STORE_PREFIX, state.roundId, newState)
   console.log('BettingService - applyAction', {
     roundId: state.roundId,
     userId,
