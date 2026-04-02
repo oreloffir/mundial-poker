@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
-import type { TablePlayer, ShowdownResult, TeamCard } from '@wpc/shared'
+import type { TablePlayer, TeamCard } from '@wpc/shared'
 import { PokerChip } from '@/components/shared/PokerChip'
+import { getAvatarColor } from '@/utils/avatarColor'
+import type { PlayerScoredData } from '@/stores/gameStore'
+import { SeatScorePopup } from './SeatScorePopup'
 
 interface PlayerAction {
   readonly action: string
@@ -16,7 +19,8 @@ interface PlayerSeatProps {
   readonly turnTimeoutMs: number | null
   readonly lastAction: PlayerAction | null
   readonly isFolded: boolean
-  readonly showdownResult: ShowdownResult | null
+  readonly scoreResult: PlayerScoredData | null
+  readonly isCurrent: boolean
   readonly isWinner: boolean
   readonly cards: readonly TeamCard[] | null
   readonly hasCards: boolean
@@ -33,14 +37,9 @@ const BADGE_STYLES: Record<string, { bg: string; text: string; border: string }>
   RAISE: { bg: 'rgba(212,168,67,0.15)', text: 'var(--gold)', border: 'rgba(212,168,67,0.3)' },
   FOLD: { bg: 'rgba(231,76,60,0.15)', text: 'var(--red)', border: 'rgba(231,76,60,0.3)' },
   ALL_IN: { bg: 'rgba(212,168,67,0.2)', text: 'var(--gold-bright)', border: 'var(--gold-dim)' },
-}
-
-const AVATAR_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12']
-
-function getAvatarColor(name: string): string {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]!
+  // C6: blind posts use payload.type ('SB'|'BB') as the action key
+  SB: { bg: 'rgba(52,152,219,0.15)', text: '#5dade2', border: 'rgba(52,152,219,0.3)' },
+  BB: { bg: 'rgba(212,168,67,0.15)', text: 'var(--gold-bright)', border: 'rgba(212,168,67,0.4)' },
 }
 
 function formatAction(action: string, amount: number): string {
@@ -48,6 +47,31 @@ function formatAction(action: string, amount: number): string {
   if (action === 'CALL') return `Call ${amount}`
   if (action === 'ALL_IN') return 'All In!'
   return action.charAt(0) + action.slice(1).toLowerCase()
+}
+
+// C9: extracted from inline IIFE in render to a named component
+function ActionBadge({ action, amount, timestamp }: PlayerAction) {
+  const badge = BADGE_STYLES[action]
+  if (!badge) return null
+  return (
+    <div
+      key={timestamp}
+      className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+      style={{ animation: 'badge-pop 2s ease-out forwards' }}
+    >
+      <span
+        className="text-[9px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap"
+        style={{
+          background: badge.bg,
+          color: badge.text,
+          border: `1px solid ${badge.border}`,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+        }}
+      >
+        {formatAction(action, amount)}
+      </span>
+    </div>
+  )
 }
 
 function FaceDownCard() {
@@ -71,7 +95,7 @@ function FaceDownCard() {
   )
 }
 
-function FaceUpMiniCard({ card }: { readonly card: TeamCard }) {
+function FaceUpMiniCard({ card }: { readonly card: { team: { flagUrl: string; code: string } } }) {
   return (
     <div
       className="rounded-[10px] flex flex-col items-center justify-center gap-1 overflow-hidden"
@@ -98,7 +122,8 @@ export function PlayerSeat({
   turnTimeoutMs,
   lastAction,
   isFolded,
-  showdownResult,
+  scoreResult,
+  isCurrent,
   isWinner,
   cards,
   hasCards,
@@ -144,7 +169,7 @@ export function PlayerSeat({
     )
   }
 
-  const inShowdown = !!showdownResult
+  const inShowdown = !!scoreResult
   const timeLeftMs = turnTimeoutMs ? (timePercent / 100) * turnTimeoutMs : 0
   const ringColor = timeLeftMs > 10000 ? 'var(--green-glow)' : timeLeftMs > 5000 ? 'var(--gold)' : 'var(--red)'
   const dashOffset = RING_CIRCUMFERENCE * (1 - timePercent / 100)
@@ -152,8 +177,9 @@ export function PlayerSeat({
   const avatarColor = getAvatarColor(player.username)
 
   const showFaceUp = isCurrentUser && cards && cards.length > 0
+  // When scored, show opponent cards face-up (flip) — otherwise face-down while in round
+  const showScoredCards = !isCurrentUser && inShowdown && scoreResult.hand.length > 0
   const showFaceDown = !isCurrentUser && hasCards && !inShowdown && !isFolded
-  const showShowdownCards = inShowdown && showdownResult.hand.length > 0
 
   return (
     <div
@@ -170,50 +196,32 @@ export function PlayerSeat({
         transition: 'all 0.4s ease',
       }}
     >
+      {/* Inline score popup — shown above seat when this player has been scored */}
+      {inShowdown && (
+        <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />
+      )}
+
       {/* Action badge */}
-      {lastAction &&
-        !inShowdown &&
-        (() => {
-          const badge = BADGE_STYLES[lastAction.action]
-          return badge ? (
-            <div
-              key={lastAction.timestamp}
-              className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-              style={{ animation: 'badge-pop 2s ease-out forwards' }}
-            >
-              <span
-                className="text-[9px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap"
-                style={{
-                  background: badge.bg,
-                  color: badge.text,
-                  border: `1px solid ${badge.border}`,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-                }}
-              >
-                {formatAction(lastAction.action, lastAction.amount)}
-              </span>
-            </div>
-          ) : null
-        })()}
+      {lastAction && !inShowdown && <ActionBadge {...lastAction} />}
 
       {/* Avatar + cards row */}
       <div className="flex items-center gap-1.5">
-        {/* Cards on the left for seats 1,2 (left side) or showdown cards */}
-        {showShowdownCards && (
+        {/* Opponent scored cards flip face-up */}
+        {showScoredCards && (
           <div className="flex gap-0.5" style={{ animation: 'card-flip 0.4s ease-out both' }}>
-            {showdownResult.hand.map((card) => (
+            {scoreResult.hand.map((card) => (
               <FaceUpMiniCard key={card.teamId} card={card} />
             ))}
           </div>
         )}
-        {!showShowdownCards && showFaceUp && (
+        {!showScoredCards && showFaceUp && (
           <div className="flex gap-0.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
             {cards!.map((card) => (
               <FaceUpMiniCard key={card.teamId} card={card} />
             ))}
           </div>
         )}
-        {!showShowdownCards && !showFaceUp && showFaceDown && (
+        {!showScoredCards && !showFaceUp && showFaceDown && (
           <div className="flex gap-0.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
             <FaceDownCard />
             <FaceDownCard />
@@ -305,7 +313,6 @@ export function PlayerSeat({
           {player.username}
         </span>
         <div
-          key={player.chips}
           data-testid={`seat-balance-${player.seatIndex}`}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
           style={{
@@ -315,7 +322,6 @@ export function PlayerSeat({
             transition: 'border-color 0.3s ease',
           }}
         >
-          {/* Chip icon */}
           <PokerChip size={14} style={{ flexShrink: 0, filter: 'drop-shadow(0 0 4px rgba(212,168,67,0.4))' }} />
           <span
             className="font-outfit font-black text-xs leading-none"
@@ -335,7 +341,7 @@ export function PlayerSeat({
         </div>
       </div>
 
-      {/* Showdown score */}
+      {/* Score total — shown below chips once scored */}
       {inShowdown && (
         <div
           data-testid="showdown-score"
@@ -347,7 +353,7 @@ export function PlayerSeat({
             animation: 'score-pop 0.4s ease-out 0.2s both',
           }}
         >
-          {showdownResult.totalScore} PTS
+          {scoreResult.totalScore} PTS
         </div>
       )}
 

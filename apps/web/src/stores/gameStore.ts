@@ -1,5 +1,45 @@
 import { create } from 'zustand'
-import type { Table, Round, TeamCard, BettingRound, Fixture, ShowdownResult } from '@wpc/shared'
+import type { Table, Round, TeamCard, BettingRound, Fixture, ShowdownResult, CardScoreData } from '@wpc/shared'
+
+// ─── J12 Showdown Phase Types ────────────────────────────────────────────────
+
+export interface PlayerScoredData {
+  readonly userId: string
+  readonly seatIndex: number
+  readonly username: string
+  readonly isBot: boolean
+  readonly hand: readonly {
+    readonly teamId: string
+    readonly team: { readonly name: string; readonly code: string; readonly flagUrl: string }
+  }[]
+  readonly cardScores: readonly CardScoreData[]
+  readonly totalScore: number
+  readonly rank: number
+  readonly isWinner: boolean
+}
+
+export type ShowdownPhase = 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'
+
+export interface FixtureResultEvent {
+  readonly fixtureId: string
+  readonly homeTeamId: string
+  readonly homeTeam: { readonly id: string; readonly name: string; readonly code: string; readonly flagUrl: string }
+  readonly awayTeamId: string
+  readonly awayTeam: { readonly id: string; readonly name: string; readonly code: string; readonly flagUrl: string }
+  readonly homeGoals: number
+  readonly awayGoals: number
+  readonly hasPenalties: boolean
+  readonly homePenaltiesScored?: number
+  readonly awayPenaltiesScored?: number
+}
+
+export interface RoundWinnerData {
+  readonly winnerIds: readonly string[]
+  readonly potDistribution: Readonly<Record<string, number>>
+  readonly totalPot: number
+}
+
+export type { CardScoreData }
 
 interface ActiveTurn {
   readonly userId: string
@@ -20,6 +60,7 @@ interface BetPromptState {
   readonly chips: number
   readonly allowedActions: readonly string[]
   readonly timeoutMs: number
+  readonly promptedAt: number
 }
 
 interface GameState {
@@ -41,6 +82,18 @@ interface GameState {
   readonly error: string | null
   readonly sbSeatIndex: number | null
   readonly bbSeatIndex: number | null
+
+  // ─── J12: Showdown phase state machine ─────────────────────────────────────
+  readonly showdownPhase: ShowdownPhase
+  /** Fixture results arriving one at a time during the 30s wait (fixture:result events) */
+  readonly fixtureResults: readonly FixtureResultEvent[]
+  /** Player score reveals building up as player:scored events arrive (lowest score first) */
+  readonly playerScoreReveals: readonly PlayerScoredData[]
+  /** Index of the player currently being revealed (-1 = none) */
+  readonly currentRevealIndex: number
+  /** Set when round:winner fires */
+  readonly winnerData: RoundWinnerData | null
+
   readonly setTable: (table: Table) => void
   readonly setRound: (round: Round) => void
   readonly setMyHand: (hand: readonly TeamCard[]) => void
@@ -60,6 +113,14 @@ interface GameState {
   readonly setBlindPositions: (sb: number | null, bb: number | null) => void
   readonly setError: (error: string | null) => void
   readonly reset: () => void
+
+  // ─── J12: Showdown phase actions ───────────────────────────────────────────
+  readonly setShowdownPhase: (phase: ShowdownPhase) => void
+  readonly addFixtureResult: (result: FixtureResultEvent) => void
+  readonly addPlayerScoreReveal: (result: PlayerScoredData) => void
+  readonly setCurrentRevealIndex: (index: number) => void
+  readonly setWinnerData: (data: RoundWinnerData | null) => void
+  readonly resetShowdownPhase: () => void
 }
 
 const initialState = {
@@ -81,6 +142,12 @@ const initialState = {
   error: null,
   sbSeatIndex: null as number | null,
   bbSeatIndex: null as number | null,
+  // J12: showdown phase
+  showdownPhase: 'idle' as ShowdownPhase,
+  fixtureResults: [] as readonly FixtureResultEvent[],
+  playerScoreReveals: [] as readonly PlayerScoredData[],
+  currentRevealIndex: -1,
+  winnerData: null as RoundWinnerData | null,
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -105,4 +172,11 @@ export const useGameStore = create<GameState>((set) => ({
   setBlindPositions: (sb, bb) => set({ sbSeatIndex: sb, bbSeatIndex: bb }),
   setError: (error) => set({ error }),
   reset: () => set(initialState),
+  // J12: showdown phase actions
+  setShowdownPhase: (phase) => set({ showdownPhase: phase }),
+  addFixtureResult: (result) => set((s) => ({ fixtureResults: [...s.fixtureResults, result] })),
+  addPlayerScoreReveal: (result) => set((s) => ({ playerScoreReveals: [...s.playerScoreReveals, result], currentRevealIndex: s.playerScoreReveals.length })),
+  setCurrentRevealIndex: (index) => set({ currentRevealIndex: index }),
+  setWinnerData: (data) => set({ winnerData: data }),
+  resetShowdownPhase: () => set({ showdownPhase: 'idle', fixtureResults: [], playerScoreReveals: [], currentRevealIndex: -1, winnerData: null }),
 }))

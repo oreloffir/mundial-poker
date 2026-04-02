@@ -3,8 +3,9 @@ import { getSocket, disconnectSocket } from '@/lib/socket'
 import { useGameStore } from '@/stores/gameStore'
 import { useAuthStore } from '@/stores/authStore'
 import type { BetAction, TeamCard, TeamTier, Confederation } from '@wpc/shared'
-import type { RoundCardPayload } from '@wpc/shared'
+import type { RoundCardPayload, FixtureResultPayload, PlayerScoredPayload } from '@wpc/shared'
 
+// C1 fix: use confederation from payload; falls back to 'UEFA' until Soni adds the field (TODO S4)
 function toTeamCard(c: RoundCardPayload): TeamCard {
   return {
     teamId: c.teamId,
@@ -15,14 +16,18 @@ function toTeamCard(c: RoundCardPayload): TeamCard {
       code: c.teamCode,
       flagUrl: c.flagEmoji,
       tier: c.tier as TeamTier,
-      confederation: 'UEFA' as Confederation,
+      confederation: (c.confederation ?? 'UEFA') as Confederation,
       fifaRanking: c.fifaRanking,
     },
   }
 }
 
+const MIN_WINNER_BANNER_MS = 3000
+
 export function useGameSocket(tableId: string) {
   const socketRef = useRef<ReturnType<typeof getSocket> | null>(null)
+  const winnerShownAtRef = useRef(0)
+  const pendingRoundStartRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const store = useGameStore
 
   useEffect(() => {
@@ -36,6 +41,9 @@ export function useGameSocket(tableId: string) {
       }
     })
 
+    // C2: GameState type doesn't match the actual table:state payload shape — the server sends
+    // a richer `roundInfo` envelope not reflected in GameState. Tracked as Soni's debt (S-debt-01).
+    // Once GameState is updated server-side, remove this cast and wire types properly.
     socket.on('table:state', (rawState) => {
       const state = rawState as unknown as {
         table: typeof rawState.table
@@ -57,6 +65,11 @@ export function useGameSocket(tableId: string) {
             promptedAt?: number
           }
           waitingForResults: boolean
+          currentPhase?: string
+          resolvedFixtures?: FixtureResultPayload[]
+          revealedPlayerScores?: PlayerScoredPayload[]
+          activePlayerId?: string | null
+          currentBet?: number
         }
       }
       store.getState().setTable(state.table)
@@ -98,13 +111,39 @@ export function useGameSocket(tableId: string) {
           store.getState().setWaitingForResults(true)
         }
         store.getState().setRevealedFixtureCount(-1)
+
+        // SF-01b: Reconnect state recovery — replay accumulated phase data
+        if (ri.currentPhase) {
+          // C3 fix: cast to proper types instead of `never` (consequence of C2 GameState mismatch)
+          if (ri.resolvedFixtures?.length) {
+            for (const f of ri.resolvedFixtures) {
+              store.getState().addFixtureResult(f as FixtureResultPayload)
+            }
+          }
+          if (ri.revealedPlayerScores?.length) {
+            for (const s of ri.revealedPlayerScores) {
+              store.getState().addPlayerScoreReveal(s as PlayerScoredPayload)
+            }
+          }
+          const phaseToShowdown: Record<string, string> = {
+            waiting: 'waiting',
+            fixtures: 'fixtures',
+            scoring: 'calculating',
+            reveals: 'reveals',
+            winner: 'winner',
+          }
+          const sp = phaseToShowdown[ri.currentPhase]
+          if (sp) store.getState().setShowdownPhase(sp as never)
+        }
       }
     })
 
     socket.on('round:start', (payload) => {
-      // J1 + J2 + J5: single atomic update — clears all stale state and sets new round
-      // in one render tick, preventing intermediate renders with stale data
-      store.setState({
+      const applyRoundStart = () => {
+        pendingRoundStartRef.current = null
+        // J1 + J2 + J5: single atomic update — clears all stale state and sets new round
+        // in one render tick, preventing intermediate renders with stale data
+        store.setState({
         // Clear all card/showdown/betting state (J5)
         fixtures: [],
         revealedFixtureCount: 0,
@@ -120,6 +159,12 @@ export function useGameSocket(tableId: string) {
         // J4: wire real blind seat indices from Soni's S1 payload
         sbSeatIndex: payload.sbSeatIndex ?? null,
         bbSeatIndex: payload.bbSeatIndex ?? null,
+        // J12: reset showdown phase state machine
+        showdownPhase: 'idle',
+        fixtureResults: [],
+        playerScoreReveals: [],
+        currentRevealIndex: -1,
+        winnerData: null,
         // New round state set atomically with the reset (J2 — roundNumber updates first)
         currentRound: {
           id: payload.roundId,
@@ -133,19 +178,36 @@ export function useGameSocket(tableId: string) {
           dealerSeatIndex: payload.dealerSeatIndex,
           fixtures: [],
         },
-      })
+        })
+      }
+
+      // Guarantee winner banner shows for at least MIN_WINNER_BANNER_MS
+      if (store.getState().showdownPhase === 'winner') {
+        const elapsed = Date.now() - winnerShownAtRef.current
+        const remaining = MIN_WINNER_BANNER_MS - elapsed
+        if (remaining > 0) {
+          if (pendingRoundStartRef.current) clearTimeout(pendingRoundStartRef.current)
+          pendingRoundStartRef.current = setTimeout(applyRoundStart, remaining)
+          return
+        }
+      }
+      applyRoundStart()
     })
 
+    // C6 fix: use payload.type ('SB'|'BB') so the badge shows the blind position, not 'CALL'
     socket.on('blinds:posted', (payload) => {
       store.getState().setPlayerAction(payload.userId, {
-        action: 'CALL',
+        action: payload.type,
         amount: payload.amount,
         timestamp: Date.now(),
       })
     })
 
+    // C7: board:reveal sends RawFixture[] at runtime but ServerToClientEvents types it as
+    // TeamCard[] (stale) and setFixtures expects Fixture[] (shared type). Both mismatches are
+    // Soni's debt (S-debt-01). Cast through unknown rather than `never[]` to document intent.
     socket.on('board:reveal', (fixtureData) => {
-      const fixtureArray = fixtureData as never[]
+      const fixtureArray = fixtureData as unknown as readonly import('@wpc/shared').Fixture[]
       store.getState().setFixtures(fixtureArray)
       store.getState().setRevealedFixtureCount(0)
       fixtureArray.forEach((_, i) => {
@@ -214,23 +276,33 @@ export function useGameSocket(tableId: string) {
     socket.on('round:pause', () => {
       store.getState().setActiveTurn(null)
       store.getState().setWaitingForResults(true)
+      store.getState().setShowdownPhase('waiting')
     })
 
-    socket.on('round:results', (payload) => {
-      // Definitively end the betting phase — by the time results arrive,
+    // J12: S6 progressive showdown events
+    socket.on('fixture:result', (result) => {
+      store.getState().addFixtureResult(result)
+      store.getState().setShowdownPhase('fixtures')
+    })
+
+    socket.on('round:scoring', () => {
+      // Definitively end the betting phase — by the time scoring arrives,
       // all bets are settled and no new bet:prompt can be in flight
       store.getState().setMyTurn(false)
       store.getState().setBetPrompt(null)
       store.getState().setWaitingForResults(false)
-      const resultsPayload = payload as { fixtures?: unknown[] }
-      if (resultsPayload.fixtures) {
-        store.getState().setFixtures(resultsPayload.fixtures as never)
-        store.getState().setRevealedFixtureCount(-1)
-      }
+      store.getState().setShowdownPhase('calculating')
     })
 
-    socket.on('round:showdown', (results) => {
-      store.getState().setShowdownResults(results)
+    socket.on('player:scored', (result) => {
+      store.getState().addPlayerScoreReveal(result)
+      store.getState().setShowdownPhase('reveals')
+    })
+
+    socket.on('round:winner', (data) => {
+      store.getState().setWinnerData(data)
+      store.getState().setShowdownPhase('winner')
+      winnerShownAtRef.current = Date.now()
     })
 
     socket.on('players:update', (playerChips) => {
@@ -279,6 +351,7 @@ export function useGameSocket(tableId: string) {
     })
 
     return () => {
+      if (pendingRoundStartRef.current) clearTimeout(pendingRoundStartRef.current)
       socket.emit('table:leave', { tableId })
       socket.off('table:state')
       socket.off('round:start')
@@ -287,8 +360,10 @@ export function useGameSocket(tableId: string) {
       socket.off('bet:prompt')
       socket.off('bet:update')
       socket.off('round:pause')
-      socket.off('round:results')
-      socket.off('round:showdown')
+      socket.off('fixture:result')
+      socket.off('round:scoring')
+      socket.off('player:scored')
+      socket.off('round:winner')
       socket.off('players:update')
       socket.off('player:joined')
       socket.off('player:left')
@@ -296,7 +371,8 @@ export function useGameSocket(tableId: string) {
       socket.off('error')
       disconnectSocket()
     }
-  }, [tableId, store])
+  // C5: store is the Zustand store constructor — stable reference, never changes, not a reactive dep
+  }, [tableId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendBetAction = useCallback(
     (action: BetAction, amount: number) => {

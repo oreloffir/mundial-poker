@@ -325,4 +325,33 @@ _Update this section as you complete tasks._
 - Commit: bundled with J10 commit
 
 ### J12 — Showdown Frontend Experience
-**Status:** Not started (blocked on S6 + Doni)
+**Status:** Fully implemented ✅
+
+#### J12 Full Implementation ✅
+- **Phase 1 (waiting):** `FixtureBoard` reads `fixtureResults` from store. Shows all tiles in VS state when `showdownPhase === 'waiting'`. `WaitingBadge` updated to show "N of 5 matches complete" counter.
+- **Phase 2 (fixtures):** Each `fixture:result` event → `addFixtureResult` → tile animates to score with `tile-reveal` 0.4s. Uses team data from S6 payload (`homeTeam.code`, `homeTeam.flagUrl`). Score colors follow spec (win=green, draw=gold, loss=muted). Event icons (🔥🧤🥅) from `hasPenalties`.
+- **Phase 3 (calculating):** `CalculatingOverlay` — full-screen blur `rgba(5,10,24,0.78)`, ⚽ icon, "Calculating Scores" in Cinzel gold, animated progress bar fills over 1.6s. Fires on `round:scoring`.
+- **Phase 4 (reveals):** `RoundResultsOverlay` wraps all Phase 3+4 content. `PlayerScoreCard` — full card flip animation, avatar ring, rank badge, 🤖 for bots, YOU badge for current player, total count-up (0→final over 600ms). `TeamScoreSubCard` — match info + score rows staggered at 150ms each + count-up sub-total. `RevealedPlayerMini` — bottom strip for already-revealed players. `FoldedPlayerStrip` — dimmed folded players alongside revealed strip with "Folded" label. Progress dots in header.
+- **Phase 5 (winner):** `WinnerBanner` enhanced — reads from `winnerData.potDistribution[winnerId]` (correct per-winner share, not total pot). Split pot support: "P1 & P2 split — N chips each", "3-way split — N chips each". Gold shimmer top border, `gold-burst` animation, 🏆 trophy.
+- **Socket handlers:** Removed old `round:results` + `round:showdown`. Added `fixture:result`, `round:scoring`, `player:scored`, `round:winner`. `round:scoring` is now where `setMyTurn(false)` + `setBetPrompt(null)` fire (definitively safe). `round:start` atomic reset includes showdown phase cleanup.
+- **Server fix:** `DEMO_REVEAL_DELAY_MS` → `NEXT_ROUND_DELAY_MS` in `game.service.ts` (Soni's S6 left undefined reference).
+- `pnpm typecheck` passes with 0 errors.
+
+#### J12 Prep ✅
+- **Read design spec:** `docs/design/end-of-round-spec.md` + `docs/STYLE-GUIDE.md` — understood 5-phase flow, component breakdown, color tokens, animation system.
+- **Deleted:** `ShowdownOverlay.tsx`, `WaitingOverlay.tsx` (replaced by new component set per Doni's spec).
+- **Scaffolded 6 new components** (props interfaces + TODO stubs, no rendering logic):
+  - `FixtureRevealCard.tsx` — single fixture, pending→resolved animation, isMyFixture highlight
+  - `ScoringOverlay.tsx` — lightweight "Calculating..." transition (Phase 2)
+  - `TeamScoreSubCard.tsx` — single card breakdown: match result + score rows + sub-total (Phase 3)
+  - `PlayerScoreCard.tsx` — full-screen hero reveal per player (Phase 3)
+  - `WinnerAnnouncement.tsx` — back-on-table winner banner + split pot logic (Phase 4)
+  - `FoldedPlayerStrip.tsx` — dimmed bottom strip for folded players (Phase 3)
+- **Updated `gameStore.ts`** with showdown phase state machine:
+  - `showdownPhase: ShowdownPhase` (`'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'`)
+  - `fixtureResults: readonly FixtureResultEvent[]` — builds up as `fixture:result` events arrive
+  - `playerScoreReveals: readonly PlayerScoredData[]` — builds up as `player:scored` events arrive
+  - `currentRevealIndex: number` — tracks which player is currently being revealed
+  - `winnerData: RoundWinnerData | null` — set by `round:winner`
+  - Actions: `setShowdownPhase`, `addFixtureResult`, `addPlayerScoreReveal`, `setCurrentRevealIndex`, `setWinnerData`, `resetShowdownPhase`
+- `pnpm typecheck` passes with 0 errors after scaffold.

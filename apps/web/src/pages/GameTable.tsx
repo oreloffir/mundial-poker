@@ -23,19 +23,18 @@ export function GameTable() {
   const myHand = useGameStore((s) => s.myHand)
   const myTurn = useGameStore((s) => s.myTurn)
   const betPrompt = useGameStore((s) => s.betPrompt)
-  const showdownResults = useGameStore((s) => s.showdownResults)
   const waitingForResults = useGameStore((s) => s.waitingForResults)
   const fixtures = useGameStore((s) => s.fixtures)
   const activeTurn = useGameStore((s) => s.activeTurn)
   const error = useGameStore((s) => s.error)
   const setError = useGameStore((s) => s.setError)
   const reset = useGameStore((s) => s.reset)
+  const resetShowdownPhase = useGameStore((s) => s.resetShowdownPhase)
 
   useEffect(() => {
-    return () => {
-      reset()
-    }
-  }, [reset])
+    resetShowdownPhase()
+    return () => { reset() }
+  }, [reset, resetShowdownPhase])
 
   const [botLoading, setBotLoading] = useState(false)
   const [portraitHintDismissed, setPortraitHintDismissed] = useState(false)
@@ -53,10 +52,12 @@ export function GameTable() {
   const handleAddBot = async () => {
     setBotLoading(true)
     try {
-      await api.post(`/tables/${tableId}/add-bot`)
-      refreshState()
+      const { data } = await api.post(`/tables/${tableId}/add-bot`)
+      if (data?.data?.table) {
+        useGameStore.getState().setTable(data.data.table)
+      }
     } catch {
-      /* */
+      setError('Failed to add bot — try again')
     } finally {
       setBotLoading(false)
     }
@@ -67,7 +68,7 @@ export function GameTable() {
       await api.post(`/tables/${tableId}/start`)
       refreshState()
     } catch {
-      /* */
+      setError('Failed to start game — try again')
     }
   }
 
@@ -110,7 +111,7 @@ export function GameTable() {
         }}
       >
         <div className="flex items-center gap-4">
-          <button onClick={handleLeave} className="wpc-btn-ghost text-xs py-1 px-3">
+          <button onClick={handleLeave} className="wpc-btn-ghost text-xs py-1 px-3 min-h-[36px]">
             &#8592; Leave
           </button>
           <h1
@@ -152,7 +153,7 @@ export function GameTable() {
             <span style={{ color: 'var(--text-dim)' }}>
               Chips{' '}
               <span className="font-bold" style={{ color: 'var(--green-glow)' }}>
-                {formatChips(myPlayer.chips)}
+                {formatChips(myPlayer.chips ?? 0)}
               </span>
             </span>
           )}
@@ -182,9 +183,8 @@ export function GameTable() {
           players={table.players}
           currentUserId={user?.id ?? ''}
           activeTurn={activeTurn}
-          fixtures={fixtures as never}
+          fixtures={fixtures}
           pot={currentRound?.pot ?? 0}
-          showdownResults={showdownResults}
           myHand={myHand}
           waitingForResults={waitingForResults}
           isInRound={!!currentRound}

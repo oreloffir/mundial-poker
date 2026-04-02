@@ -1,4 +1,6 @@
-interface RawFixture {
+import { useGameStore } from '@/stores/gameStore'
+
+export interface RawFixture {
   readonly id: string
   readonly homeTeamId: string
   readonly awayTeamId: string
@@ -15,34 +17,68 @@ interface RawFixture {
 
 interface FixtureBoardProps {
   readonly fixtures: readonly RawFixture[]
+  /** Used for old board:reveal stagger flow (revealedCount >= 0) or show all (-1) */
   readonly revealedCount: number
 }
 
-function getEventIcons(f: RawFixture): string[] {
-  if (f.status !== 'FINISHED' || f.homeGoals == null || f.awayGoals == null) return []
+function getEventIcons(homeGoals: number, awayGoals: number, hasPenalties: boolean): string[] {
   const icons: string[] = []
-  if (f.homeGoals >= 3 || f.awayGoals >= 3) icons.push('🔥')
-  if (f.homeGoals === 0 || f.awayGoals === 0) icons.push('🧤')
-  if ((f.homePenaltiesScored ?? 0) > 0 || (f.awayPenaltiesScored ?? 0) > 0) icons.push('🥅')
+  if (homeGoals >= 3 || awayGoals >= 3) icons.push('🔥')
+  if (homeGoals === 0 || awayGoals === 0) icons.push('🧤')
+  if (hasPenalties) icons.push('🥅')
   return icons
 }
 
 export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
+  const fixtureResults = useGameStore((s) => s.fixtureResults)
+  const showdownPhase = useGameStore((s) => s.showdownPhase)
+  const myHand = useGameStore((s) => s.myHand)
+  const myFixtureIds = new Set(myHand?.map((c) => c.fixtureId) ?? [])
+
   if (fixtures.length === 0) return null
 
   const showAll = revealedCount === -1
 
+  // Build a lookup map from fixtureId → result for the showdown phase
+  const resultMap = new Map(fixtureResults.map((r) => [r.fixtureId, r]))
+
+  // In waiting/fixtures phase, show all tiles (VS state or with score if result arrived)
+  const inShowdownPhase =
+    showdownPhase === 'waiting' ||
+    showdownPhase === 'fixtures' ||
+    showdownPhase === 'calculating' ||
+    showdownPhase === 'reveals' ||
+    showdownPhase === 'winner'
+
   return (
     <div className="flex items-center justify-center gap-2">
       {fixtures.map((f, index) => {
-        const visible = showAll || index < revealedCount
+        // During showdown phases, show all tiles
+        const visible = inShowdownPhase || showAll || index < revealedCount
         if (!visible) return null
 
-        const finished = f.status === 'FINISHED' && f.homeGoals != null && f.awayGoals != null
-        const homeWin = finished && f.homeGoals! > f.awayGoals!
-        const awayWin = finished && f.awayGoals! > f.homeGoals!
-        const isDraw = finished && f.homeGoals === f.awayGoals
-        const events = getEventIcons(f)
+        // Use fixtureResult data if available (S6 progressive flow)
+        const result = resultMap.get(f.id)
+        const isNewResult = result !== undefined && fixtureResults[fixtureResults.length - 1]?.fixtureId === f.id
+        const isMyFixture = myFixtureIds.has(f.id)
+
+        const homeGoals = result?.homeGoals ?? (f.homeGoals ?? null)
+        const awayGoals = result?.awayGoals ?? (f.awayGoals ?? null)
+        const finished = homeGoals !== null && awayGoals !== null && (result !== undefined || f.status === 'FINISHED')
+
+        const homeTeamFlag = result?.homeTeam?.flagUrl ?? f.homeFlag
+        const awayTeamFlag = result?.awayTeam?.flagUrl ?? f.awayFlag
+        const homeCode = result?.homeTeam?.code ?? f.homeTeamId
+        const awayCode = result?.awayTeam?.code ?? f.awayTeamId
+
+        const homeWin = finished && homeGoals! > awayGoals!
+        const awayWin = finished && awayGoals! > homeGoals!
+        const isDraw = finished && homeGoals === awayGoals
+
+        const hasPenalties = result?.hasPenalties ?? false
+        const events = finished
+          ? getEventIcons(homeGoals!, awayGoals!, hasPenalties)
+          : []
 
         return (
           <div
@@ -53,22 +89,39 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
               background: finished ? 'rgba(13, 20, 36, 0.55)' : 'rgba(13, 20, 36, 0.4)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              border: finished
-                ? '1px solid rgba(212, 168, 67, 0.45)'
-                : '1px solid rgba(255, 255, 255, 0.07)',
+              border: isMyFixture
+                ? '1px solid rgba(212,168,67,0.7)'
+                : finished
+                  ? '1px solid rgba(212, 168, 67, 0.45)'
+                  : '1px solid rgba(255, 255, 255, 0.07)',
               width: 'var(--fixture-tile-w)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-              animation: !showAll ? 'tile-reveal 0.3s ease-out both' : undefined,
+              boxShadow: isMyFixture
+                ? '0 0 14px rgba(212,168,67,0.35), 0 8px 24px rgba(0,0,0,0.5)'
+                : '0 8px 24px rgba(0,0,0,0.5)',
+              // Animate tile when a new result just arrived OR during old board:reveal flow
+              animation: isNewResult
+                ? 'tile-reveal 0.4s ease-out both'
+                : !inShowdownPhase && !showAll
+                  ? 'tile-reveal 0.3s ease-out both'
+                  : undefined,
             }}
           >
             {/* Home team */}
             <div className="flex flex-col items-center pt-2 pb-1 w-full">
-              <span className="text-lg leading-none">{f.homeFlag || '🏳️'}</span>
+              <span className="text-lg leading-none">{homeTeamFlag || '🏳️'}</span>
               <span
                 className="text-[8px] font-bold mt-0.5"
-                style={{ color: homeWin ? 'var(--green-glow)' : 'var(--text)' }}
+                style={{
+                  color: homeWin
+                    ? 'var(--green-glow)'
+                    : isDraw
+                      ? 'var(--gold)'
+                      : finished
+                        ? 'var(--text-muted)'
+                        : 'var(--text)',
+                }}
               >
-                {f.homeTeamId}
+                {homeCode}
               </span>
             </div>
 
@@ -89,7 +142,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                           : 'var(--text-muted)',
                     }}
                   >
-                    {f.homeGoals}
+                    {homeGoals}
                   </span>
                   <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>
                     -
@@ -104,7 +157,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                           : 'var(--text-muted)',
                     }}
                   >
-                    {f.awayGoals}
+                    {awayGoals}
                   </span>
                 </div>
               ) : (
@@ -119,12 +172,20 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
 
             {/* Away team */}
             <div className="flex flex-col items-center pt-1 pb-2 w-full">
-              <span className="text-lg leading-none">{f.awayFlag || '🏳️'}</span>
+              <span className="text-lg leading-none">{awayTeamFlag || '🏳️'}</span>
               <span
                 className="text-[8px] font-bold mt-0.5"
-                style={{ color: awayWin ? 'var(--green-glow)' : 'var(--text)' }}
+                style={{
+                  color: awayWin
+                    ? 'var(--green-glow)'
+                    : isDraw
+                      ? 'var(--gold)'
+                      : finished
+                        ? 'var(--text-muted)'
+                        : 'var(--text)',
+                }}
               >
-                {f.awayTeamId}
+                {awayCode}
               </span>
             </div>
 

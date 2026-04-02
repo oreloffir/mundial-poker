@@ -98,9 +98,11 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
       style={{
         background: 'rgba(5,10,24,0.85)',
         border: '1px solid rgba(212,168,67,0.25)',
+        pointerEvents: 'none',
       }}
     >
-      <PokerChip size={12} style={{ flexShrink: 0 }} />
+      {/* SVG elements don't inherit pointer-events from parent divs — must be explicit */}
+      <PokerChip size={12} style={{ flexShrink: 0, pointerEvents: 'none' }} />
       <span className="font-outfit font-black text-xs" style={{ color: 'var(--gold-bright)' }}>
         {myChips}
       </span>
@@ -108,7 +110,7 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
   )
 
   const timerBar = (
-    <div data-testid="bet-timer" className="flex items-center gap-2 flex-1 min-w-0">
+    <div data-testid="bet-timer" className="flex items-center gap-2 flex-1 min-w-0" style={{ pointerEvents: 'none' }}>
       <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
         <div
           className="h-full rounded-full transition-all duration-100"
@@ -202,7 +204,7 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
 
   // ─── Unified layout (replaces separate desktop/mobile) ───────────────────
   return (
-    <div className="space-y-1.5">
+    <div data-testid="betting-controls" className="space-y-1.5">
 
       {/* ── Raise drawer — slides up from above the action bar ── */}
       {isAllowed('RAISE') && (
@@ -261,7 +263,7 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
       )}
 
       {/* ── Info row: your hand · chip count · timer ── */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
         {handPreview}
         {chipBadge}
         <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
