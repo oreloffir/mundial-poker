@@ -204,6 +204,29 @@ Screenshots: `assets/screenshots/` — 26 files (desktop A–K, mobile A–K), P
 
 ---
 
+### CSS Mobile Fixes (Apr 2 — Mark's 8-fix audit)
+**Status:** ✅ COMPLETE (Apr 2)
+
+All 8 fixes committed on `feat/inline-score-reveals`:
+
+| # | Severity | Fix | File |
+|---|----------|-----|------|
+| 1 | HIGH | CreateTableModal: `create-table-modal-content` + 5 landscape CSS overrides — buttons now in viewport on 375px landscape | `CreateTableModal.tsx`, `index.css` |
+| 2 | HIGH | Chip btn `--chip-btn-size` 28px → 32px | `index.css` |
+| 3 | MEDIUM | Fixture tile `--fixture-tile-w` 56px → 60px | `index.css` |
+| 4 | MEDIUM | Leave button `min-h-[36px]` (iOS touch target) | `GameTable.tsx` |
+| 5 | MEDIUM | SeatScorePopup breakdown font 9px → 10px | `SeatScorePopup.tsx` |
+| 6 | LOW | Preset padding `2px 8px` → `4px 8px` | `index.css` |
+| 7 | LOW | Fixture board `top: 22%` → `18%` | `PokerTable.tsx` |
+| 8 | LOW | Preset font `0.5625rem` → `0.625rem` (matches desktop) | `index.css` |
+
+**BUG-S3-05 (HIGH): RoundResultsOverlay not wired — filed as separate task**
+- Root cause: `RoundResultsOverlay.tsx` was built during showdown redesign but never imported or rendered anywhere. Score reveals currently shown only via inline `SeatScorePopup`. The full-screen overlay (SD4–SD8 tests) is unreachable.
+- Required: Import `RoundResultsOverlay` in `PokerTable.tsx`, render it when `showdownPhase === 'reveals'`.
+- Blocking: SD4, SD5, SD6, SD7, SD8 E2E tests will fail until this is wired.
+
+---
+
 ### M6 — Mobile Tests + Selector Audit
 **Status:** ⏳ Not started (starts day 3)
 
