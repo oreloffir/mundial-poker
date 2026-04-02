@@ -63,6 +63,9 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
             'Failed to create table')
           : 'Failed to create table'
       setError(message)
+    } finally {
+      // Always reset — if navigation works the component unmounts anyway;
+      // if it fails (e.g., route guard redirect), the button must be clickable again
       setIsSubmitting(false)
     }
   }
@@ -76,7 +79,12 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
       />
       <div
         className="relative w-full max-w-md shadow-2xl rounded-2xl p-7"
-        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          maxHeight: 'calc(100dvh - 2rem)',
+          overflowY: 'auto',
+        }}
       >
         <div className="wpc-label mb-2">New Table</div>
         <h2 className="font-outfit text-2xl font-bold text-white mb-6">Create Table</h2>

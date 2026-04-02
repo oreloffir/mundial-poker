@@ -1,9 +1,11 @@
-import { useEffect, useState, useRef } from 'react'
-import type { TablePlayer, ShowdownResult, TeamCard } from '@wpc/shared'
+import { useEffect } from 'react'
+import type { TablePlayer, TeamCard } from '@wpc/shared'
 import { useGameStore } from '@/stores/gameStore'
+import type { RoundWinnerData } from '@/stores/gameStore'
 import { PlayerSeat } from './PlayerSeat'
 import { FixtureBoard } from './FixtureBoard'
 import { PokerChip } from '@/components/shared/PokerChip'
+import type { RawFixture } from './FixtureBoard'
 
 interface ActiveTurn {
   readonly userId: string
@@ -17,7 +19,6 @@ interface PokerTableProps {
   readonly activeTurn: ActiveTurn | null
   readonly fixtures: readonly unknown[]
   readonly pot: number
-  readonly showdownResults: readonly ShowdownResult[] | null
   readonly myHand: readonly TeamCard[] | null
   readonly waitingForResults: boolean
   readonly isInRound: boolean
@@ -31,14 +32,6 @@ const seatStyles: readonly React.CSSProperties[] = [
   { top: '38%', right: '5%', transform: 'translate(50%, -50%)' },
 ]
 
-// Direction the rail glow should radiate from (toward the table center)
-const seatGlowOrigin: readonly string[] = [
-  'top',          // seat 0: bottom-center — glow from top (table side)
-  'right',        // seat 1: left side — glow from right
-  'bottom right', // seat 2: top-left — glow from bottom-right
-  'bottom left',  // seat 3: top-right — glow from bottom-left
-  'left',         // seat 4: right side — glow from left
-]
 
 function PotDisplay({
   pot,
@@ -84,42 +77,87 @@ function PotDisplay({
   )
 }
 
-function WinnerBanner({ name, pot }: { readonly name: string; readonly pot: number }) {
+function WinnerBanner({
+  winnerData,
+  players,
+}: {
+  readonly winnerData: RoundWinnerData
+  readonly players: readonly TablePlayer[]
+}) {
+  const { winnerIds, potDistribution } = winnerData
+  const isSplit = winnerIds.length > 1
+
+  const winnerNames = winnerIds
+    .map((id: string) => players.find((p) => p.userId === id)?.username ?? id)
+
+  const shareAmount = winnerIds.length > 0
+    ? (potDistribution[winnerIds[0]!] ?? 0)
+    : 0
+
+  let subtitleText: string
+  if (winnerIds.length === 2) {
+    subtitleText = `${winnerNames[0]} & ${winnerNames[1]} split the pot — ${shareAmount} chips each`
+  } else if (winnerIds.length > 2) {
+    subtitleText = `${winnerIds.length}-way split — ${shareAmount} chips each`
+  } else {
+    subtitleText = `+${shareAmount} chips`
+  }
+
   return (
     <div
       data-testid="winner-banner"
-      className="flex flex-col items-center gap-1 px-6 py-3 rounded-xl"
+      className="flex flex-col items-center gap-2 px-6 py-4 rounded-xl"
       style={{
-        background: 'rgba(5,10,24,0.85)',
+        background: 'rgba(5,10,24,0.9)',
         border: '1px solid var(--gold)',
-        boxShadow: '0 0 40px rgba(212,168,67,0.3), 0 0 80px rgba(212,168,67,0.1)',
-        animation: 'fade-in-up 0.6s ease-out both',
+        borderTop: '3px solid var(--gold)',
+        boxShadow: '0 0 40px rgba(212,168,67,0.35), 0 0 80px rgba(212,168,67,0.1)',
+        animation: 'fade-in-up 0.6s ease-out both, gold-burst 1.2s ease-out 0.2s both',
+        maxWidth: 320,
       }}
     >
-      <span className="text-lg">&#127942;</span>
-      <span className="font-outfit font-black text-base text-white">{name} wins!</span>
-      {pot > 0 && (
-        <span className="font-outfit font-bold text-sm" style={{ color: 'var(--gold-bright)' }}>
-          +{pot} chips
+      <span style={{ fontSize: 24 }}>🏆</span>
+      {isSplit ? (
+        <span
+          className="font-outfit font-bold text-sm text-center"
+          style={{ color: 'var(--gold-bright)' }}
+        >
+          {subtitleText}
         </span>
+      ) : (
+        <>
+          <span className="font-outfit font-black text-base text-white">
+            {winnerNames[0]} wins!
+          </span>
+          <span className="font-outfit font-bold text-sm" style={{ color: 'var(--gold-bright)' }}>
+            {subtitleText}
+          </span>
+        </>
       )}
     </div>
   )
 }
 
-function WaitingBadge() {
+function WaitingBadge({ fixtureCount, resolvedCount }: { readonly fixtureCount: number; readonly resolvedCount: number }) {
+  const allResolved = resolvedCount >= fixtureCount && fixtureCount > 0
   return (
     <div
-      data-testid="waiting-badge"
+      data-testid={allResolved ? 'showdown-calculating' : 'waiting-badge'}
       className="flex items-center gap-2 px-4 py-2 rounded-full"
       style={{ background: 'rgba(5,10,24,0.8)', border: '1px solid var(--border)' }}
     >
-      <div
-        className="w-2 h-2 rounded-full"
-        style={{ background: 'var(--gold)', animation: 'blink 1.5s ease-in-out infinite' }}
-      />
+      {!allResolved && (
+        <div
+          className="w-2 h-2 rounded-full flex-shrink-0"
+          style={{ background: 'var(--gold)', animation: 'blink 1.5s ease-in-out infinite' }}
+        />
+      )}
       <span className="text-xs font-semibold" style={{ color: 'var(--gold)' }}>
-        Matches in Progress...
+        {allResolved
+          ? 'Calculating Scores...'
+          : fixtureCount > 0
+            ? `${resolvedCount} of ${fixtureCount} matches complete`
+            : 'Matches in Progress...'}
       </span>
     </div>
   )
@@ -131,7 +169,6 @@ export function PokerTable({
   activeTurn,
   fixtures,
   pot,
-  showdownResults,
   myHand,
   waitingForResults,
   isInRound,
@@ -141,6 +178,12 @@ export function PokerTable({
   const revealedFixtureCount = useGameStore((s) => s.revealedFixtureCount)
   const sbSeatIndex = useGameStore((s) => s.sbSeatIndex)
   const bbSeatIndex = useGameStore((s) => s.bbSeatIndex)
+  const showdownPhase = useGameStore((s) => s.showdownPhase)
+  const fixtureResults = useGameStore((s) => s.fixtureResults)
+  const winnerData = useGameStore((s) => s.winnerData)
+  const playerScoreReveals = useGameStore((s) => s.playerScoreReveals)
+  const currentRevealIndex = useGameStore((s) => s.currentRevealIndex)
+  const currentRound = useGameStore((s) => s.currentRound)
 
   // Preload card back images to prevent flash on first render
   useEffect(() => {
@@ -151,90 +194,7 @@ export function PokerTable({
     })
   }, [])
 
-  const [revealedUserIds, setRevealedUserIds] = useState<readonly string[]>([])
-  const [winnerId, setWinnerId] = useState<string | null>(null)
-  const [winnerName, setWinnerName] = useState<string | null>(null)
-  const [potAnimatingOut, setPotAnimatingOut] = useState(false)
-  const [showWinnerBanner, setShowWinnerBanner] = useState(false)
-  const mountedRef = useRef(true)
-
-  useEffect(() => {
-    mountedRef.current = true
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!showdownResults || showdownResults.length === 0) {
-      setRevealedUserIds([])
-      setWinnerId(null)
-      setWinnerName(null)
-      setPotAnimatingOut(false)
-      setShowWinnerBanner(false)
-      return
-    }
-
-    const sorted = [...showdownResults].sort((a, b) => b.totalScore - a.totalScore)
-    const timers: ReturnType<typeof setTimeout>[] = []
-    const REVEAL_INTERVAL = 1500
-    const WINNER_DELAY = 2000
-    const POT_DELAY = 3500
-
-    sorted.forEach((result, i) => {
-      timers.push(
-        setTimeout(() => {
-          if (!mountedRef.current) return
-          setRevealedUserIds((prev) => [...prev, result.userId])
-        }, i * REVEAL_INTERVAL),
-      )
-    })
-
-    const allRevealedAt = sorted.length * REVEAL_INTERVAL
-    const winnerUserId = sorted[0]?.userId ?? null
-    const winner = winnerUserId ? players.find((p) => p.userId === winnerUserId) : null
-
-    timers.push(
-      setTimeout(() => {
-        if (!mountedRef.current) return
-        setWinnerId(winnerUserId)
-        setWinnerName(winner?.username ?? null)
-        setShowWinnerBanner(true)
-      }, allRevealedAt + WINNER_DELAY),
-    )
-
-    timers.push(
-      setTimeout(() => {
-        if (!mountedRef.current) return
-        setPotAnimatingOut(true)
-      }, allRevealedAt + POT_DELAY),
-    )
-
-    return () => timers.forEach(clearTimeout)
-  }, [showdownResults, players])
-
-  // J1: auto-dismiss safety — banner clears itself after max display time
-  // so it can never bleed into the next round if round:start resets are slow
-  useEffect(() => {
-    if (!showWinnerBanner) return
-    const maxDisplayMs = 5000 + players.length * 1500
-    const timer = setTimeout(() => {
-      if (!mountedRef.current) return
-      setShowWinnerBanner(false)
-      setWinnerId(null)
-      setWinnerName(null)
-    }, maxDisplayMs)
-    return () => clearTimeout(timer)
-  }, [showWinnerBanner, players.length])
-
-  const revealedResultMap = new Map<string, ShowdownResult>()
-  if (showdownResults) {
-    for (const r of showdownResults) {
-      if (revealedUserIds.includes(r.userId)) {
-        revealedResultMap.set(r.userId, r)
-      }
-    }
-  }
+  const isWinnerPhase = showdownPhase === 'winner'
 
   return (
     <div className="absolute inset-0 flex items-center justify-center">
@@ -265,7 +225,6 @@ export function PokerTable({
             className="absolute pointer-events-none"
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           >
-            {/* Subtle green glow echoing the center circle */}
             <div
               className="absolute"
               style={{
@@ -280,22 +239,29 @@ export function PokerTable({
               }}
             />
             <div className="pointer-events-auto relative flex flex-col items-center">
-              {showWinnerBanner && winnerName ? (
-                <WinnerBanner name={winnerName} pot={pot} />
+              {isWinnerPhase && winnerData ? (
+                <WinnerBanner winnerData={winnerData} players={players} />
               ) : (
-                <PotDisplay pot={pot} isAnimatingOut={potAnimatingOut} />
+                <PotDisplay pot={pot} isAnimatingOut={false} />
               )}
             </div>
           </div>
 
-          {/* Fixtures — upper half of pitch, above center circle */}
+          {/* Fixtures — upper half of pitch */}
           <div
             className="absolute pointer-events-none flex flex-col items-center gap-2"
             style={{ top: '22%', left: '50%', transform: 'translateX(-50%)' }}
           >
             <div className="pointer-events-auto">
-              <FixtureBoard fixtures={fixtures as never} revealedCount={revealedFixtureCount} />
-              {waitingForResults && <WaitingBadge />}
+              <FixtureBoard fixtures={fixtures as unknown as readonly RawFixture[]} revealedCount={revealedFixtureCount} />
+              {waitingForResults && (
+                <div className="flex justify-center mt-2">
+                  <WaitingBadge
+                    fixtureCount={fixtures.length}
+                    resolvedCount={fixtureResults.length}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -305,8 +271,7 @@ export function PokerTable({
             const isActive = !!player && !!activeTurn && activeTurn.userId === player.userId
             const lastAction = player ? (playerActions[player.userId] ?? null) : null
             const isFolded = !!player && foldedPlayerIds.includes(player.userId)
-            const showdownResult = player ? (revealedResultMap.get(player.userId) ?? null) : null
-            const isWinner = !!player && player.userId === winnerId
+            const isWinner = isWinnerPhase && !!player && (winnerData?.winnerIds ?? []).includes(player.userId)
             const isMe = player?.userId === currentUserId
             const playerCards = isMe ? myHand : null
             const hasCards = isInRound && !!player && !player.isEliminated
@@ -325,17 +290,6 @@ export function PokerTable({
                     : {}),
                 }}
               >
-                {/* Rail glow connector — directional ambient halo for occupied seats */}
-                {player && (
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: `radial-gradient(ellipse at ${seatGlowOrigin[index]}, rgba(212,168,67,0.12) 0%, transparent 70%)`,
-                      borderRadius: '50%',
-                      transform: 'scale(1.6)',
-                    }}
-                  />
-                )}
                 <PlayerSeat
                   player={player ?? null}
                   isCurrentUser={isMe}
@@ -344,7 +298,8 @@ export function PokerTable({
                   turnTimeoutMs={isActive ? activeTurn!.timeoutMs : null}
                   lastAction={lastAction}
                   isFolded={isFolded}
-                  showdownResult={showdownResult}
+                  scoreResult={player ? (playerScoreReveals.find((r) => r.userId === player.userId) ?? null) : null}
+                  isCurrent={!!player && playerScoreReveals[currentRevealIndex]?.userId === player.userId}
                   isWinner={isWinner}
                   cards={playerCards}
                   hasCards={hasCards}
@@ -355,6 +310,7 @@ export function PokerTable({
           })}
         </div>
       </div>
+
     </div>
   )
 }

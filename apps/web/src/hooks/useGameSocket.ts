@@ -21,8 +21,12 @@ function toTeamCard(c: RoundCardPayload): TeamCard {
   }
 }
 
+const MIN_WINNER_BANNER_MS = 3000
+
 export function useGameSocket(tableId: string) {
   const socketRef = useRef<ReturnType<typeof getSocket> | null>(null)
+  const winnerShownAtRef = useRef(0)
+  const pendingRoundStartRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const store = useGameStore
 
   useEffect(() => {
@@ -57,6 +61,11 @@ export function useGameSocket(tableId: string) {
             promptedAt?: number
           }
           waitingForResults: boolean
+          currentPhase?: string
+          resolvedFixtures?: unknown[]
+          revealedPlayerScores?: unknown[]
+          activePlayerId?: string | null
+          currentBet?: number
         }
       }
       store.getState().setTable(state.table)
@@ -98,13 +107,38 @@ export function useGameSocket(tableId: string) {
           store.getState().setWaitingForResults(true)
         }
         store.getState().setRevealedFixtureCount(-1)
+
+        // SF-01b: Reconnect state recovery — replay accumulated phase data
+        if (ri.currentPhase) {
+          if (ri.resolvedFixtures?.length) {
+            for (const f of ri.resolvedFixtures) {
+              store.getState().addFixtureResult(f as never)
+            }
+          }
+          if (ri.revealedPlayerScores?.length) {
+            for (const s of ri.revealedPlayerScores) {
+              store.getState().addPlayerScoreReveal(s as never)
+            }
+          }
+          const phaseToShowdown: Record<string, string> = {
+            waiting: 'waiting',
+            fixtures: 'fixtures',
+            scoring: 'calculating',
+            reveals: 'reveals',
+            winner: 'winner',
+          }
+          const sp = phaseToShowdown[ri.currentPhase]
+          if (sp) store.getState().setShowdownPhase(sp as never)
+        }
       }
     })
 
     socket.on('round:start', (payload) => {
-      // J1 + J2 + J5: single atomic update — clears all stale state and sets new round
-      // in one render tick, preventing intermediate renders with stale data
-      store.setState({
+      const applyRoundStart = () => {
+        pendingRoundStartRef.current = null
+        // J1 + J2 + J5: single atomic update — clears all stale state and sets new round
+        // in one render tick, preventing intermediate renders with stale data
+        store.setState({
         // Clear all card/showdown/betting state (J5)
         fixtures: [],
         revealedFixtureCount: 0,
@@ -120,6 +154,12 @@ export function useGameSocket(tableId: string) {
         // J4: wire real blind seat indices from Soni's S1 payload
         sbSeatIndex: payload.sbSeatIndex ?? null,
         bbSeatIndex: payload.bbSeatIndex ?? null,
+        // J12: reset showdown phase state machine
+        showdownPhase: 'idle',
+        fixtureResults: [],
+        playerScoreReveals: [],
+        currentRevealIndex: -1,
+        winnerData: null,
         // New round state set atomically with the reset (J2 — roundNumber updates first)
         currentRound: {
           id: payload.roundId,
@@ -133,7 +173,20 @@ export function useGameSocket(tableId: string) {
           dealerSeatIndex: payload.dealerSeatIndex,
           fixtures: [],
         },
-      })
+        })
+      }
+
+      // Guarantee winner banner shows for at least MIN_WINNER_BANNER_MS
+      if (store.getState().showdownPhase === 'winner') {
+        const elapsed = Date.now() - winnerShownAtRef.current
+        const remaining = MIN_WINNER_BANNER_MS - elapsed
+        if (remaining > 0) {
+          if (pendingRoundStartRef.current) clearTimeout(pendingRoundStartRef.current)
+          pendingRoundStartRef.current = setTimeout(applyRoundStart, remaining)
+          return
+        }
+      }
+      applyRoundStart()
     })
 
     socket.on('blinds:posted', (payload) => {
@@ -214,23 +267,33 @@ export function useGameSocket(tableId: string) {
     socket.on('round:pause', () => {
       store.getState().setActiveTurn(null)
       store.getState().setWaitingForResults(true)
+      store.getState().setShowdownPhase('waiting')
     })
 
-    socket.on('round:results', (payload) => {
-      // Definitively end the betting phase — by the time results arrive,
+    // J12: S6 progressive showdown events
+    socket.on('fixture:result', (result) => {
+      store.getState().addFixtureResult(result)
+      store.getState().setShowdownPhase('fixtures')
+    })
+
+    socket.on('round:scoring', () => {
+      // Definitively end the betting phase — by the time scoring arrives,
       // all bets are settled and no new bet:prompt can be in flight
       store.getState().setMyTurn(false)
       store.getState().setBetPrompt(null)
       store.getState().setWaitingForResults(false)
-      const resultsPayload = payload as { fixtures?: unknown[] }
-      if (resultsPayload.fixtures) {
-        store.getState().setFixtures(resultsPayload.fixtures as never)
-        store.getState().setRevealedFixtureCount(-1)
-      }
+      store.getState().setShowdownPhase('calculating')
     })
 
-    socket.on('round:showdown', (results) => {
-      store.getState().setShowdownResults(results)
+    socket.on('player:scored', (result) => {
+      store.getState().addPlayerScoreReveal(result)
+      store.getState().setShowdownPhase('reveals')
+    })
+
+    socket.on('round:winner', (data) => {
+      store.getState().setWinnerData(data)
+      store.getState().setShowdownPhase('winner')
+      winnerShownAtRef.current = Date.now()
     })
 
     socket.on('players:update', (playerChips) => {
@@ -279,6 +342,7 @@ export function useGameSocket(tableId: string) {
     })
 
     return () => {
+      if (pendingRoundStartRef.current) clearTimeout(pendingRoundStartRef.current)
       socket.emit('table:leave', { tableId })
       socket.off('table:state')
       socket.off('round:start')
@@ -287,8 +351,10 @@ export function useGameSocket(tableId: string) {
       socket.off('bet:prompt')
       socket.off('bet:update')
       socket.off('round:pause')
-      socket.off('round:results')
-      socket.off('round:showdown')
+      socket.off('fixture:result')
+      socket.off('round:scoring')
+      socket.off('player:scored')
+      socket.off('round:winner')
       socket.off('players:update')
       socket.off('player:joined')
       socket.off('player:left')

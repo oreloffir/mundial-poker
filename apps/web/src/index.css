@@ -332,6 +332,17 @@ input {
   }
 }
 
+@keyframes fade-in-up-sm {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes hero-breathe {
   0%,
   100% {
@@ -417,6 +428,33 @@ input {
   .poker-table-pitch {
     width: min(85vw, calc((100vh - 36px) * 1.6)) !important;
     max-height: calc(100vh - 36px) !important;
+  }
+
+  .showdown-overlay-root {
+    top: auto;
+    height: 60%;
+    border-radius: 16px 16px 0 0;
+    border-top: 1px solid rgba(212, 168, 67, 0.2);
+    animation: slide-up-panel 0.25s ease-out both;
+  }
+}
+
+/* Showdown overlay — base layout via class so mobile media query can override inset */
+.showdown-overlay-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@keyframes slide-up-panel {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 
