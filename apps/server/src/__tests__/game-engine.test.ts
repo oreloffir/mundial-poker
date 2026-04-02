@@ -38,14 +38,14 @@ vi.mock('../../db/index.js', () => ({ db: mockDb }))
 
 // ─── Mock emits ─────────────────────────────────────────────────────────────
 const emittedEvents: { event: string; data: unknown }[] = []
-const mockIo = {
+const _mockIo = {
   to: () => ({
     emit: (event: string, data: unknown) => { emittedEvents.push({ event, data }) },
   }),
 }
 
 // ─── Import real betting service (pure logic, no DB for init/getAllowedActions) ──
-import { initBettingRound, clearBettingState, getAllowedActions, getBettingState, isBettingRoundComplete } from '../modules/game/betting.service.js'
+import { initBettingRound, clearBettingState, getAllowedActions, isBettingRoundComplete } from '../modules/game/betting.service.js'
 import { calculateBlindPositions } from '../modules/game/blinds.service.js'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ describe('Group 1: Round lifecycle', () => {
     expect(s1.pot).toBe(0)
 
     // Simulate all 3 players checking — each sets hasActed
-    let state = s1
+    const state = s1
     for (let i = 0; i < 3; i++) {
       const current = state.playerStates[state.currentPlayerIndex]!
       const actions = getAllowedActions(state, current)

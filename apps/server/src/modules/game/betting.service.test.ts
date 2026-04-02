@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { initBettingRound, clearBettingState, getAllowedActions, getBettingState } from './betting.service.js'
+import { initBettingRound, clearBettingState, getAllowedActions } from './betting.service.js'
 
 function makePlayers(count: number) {
   return Array.from({ length: count }, (_, i) => ({
