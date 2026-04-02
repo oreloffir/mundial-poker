@@ -152,13 +152,6 @@ export async function seedGame(req: SeedRequest, io: Server): Promise<SeedRespon
     .innerJoin(users, eq(tablePlayers.userId, users.id))
     .where(eq(tablePlayers.tableId, table.id))
 
-  console.log('TestService - seedGame', {
-    tableId: table.id,
-    phase: req.phase,
-    playerCount: finalPlayers.length,
-    roundId,
-  })
-
   return {
     tableId: table.id,
     userId: user.id,
@@ -184,6 +177,5 @@ export async function cleanupTestTables(): Promise<number> {
   // tablePlayers has ON DELETE CASCADE, so deleting tables removes players too
   await db.delete(tables).where(inArray(tables.id, ids))
 
-  console.log('TestService - cleanupTestTables', { count: testTables.length, ids })
   return testTables.length
 }

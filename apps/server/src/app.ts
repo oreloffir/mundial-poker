@@ -59,14 +59,12 @@ app.use('/api/tables', createTableRouter(io))
 
 if (config.nodeEnv !== 'production') {
   app.use('/api/test', createTestRouter(io))
-  console.log('App - testRoutes - registered', { env: config.nodeEnv })
 }
 
 async function start(): Promise<void> {
   await connectRedis()
 
   server.listen(config.port, () => {
-    console.log('App - started', { port: config.port, env: config.nodeEnv })
     ensureBotsExist().catch((err) => console.error('App - ensureBotsExist - failed', { error: err }))
     cleanupStaleTables().catch((err) =>
       console.error('App - cleanupStaleTables - failed', { error: err }),

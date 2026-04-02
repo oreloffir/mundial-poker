@@ -118,12 +118,6 @@ export async function addBotsToTable(tableId: string, requestingUserId: string) 
     await tableRepo.addPlayer(tableId, botsToAdd[i]!, availableSeats[i]!, table.startingChips)
   }
 
-  console.log('TableService - addBotsToTable', {
-    tableId,
-    added: slotsToFill,
-    existingBots: existingBotIds.length,
-  })
-
   return tableRepo.findById(tableId)
 }
 
@@ -143,11 +137,6 @@ export async function addSingleBotToTable(tableId: string, requestingUserId: str
   const bot = await createSingleBot()
   await tableRepo.addPlayer(tableId, bot.id, nextSeat, table.startingChips)
 
-  console.log('TableService - addSingleBotToTable', {
-    tableId,
-    botId: bot.id,
-    username: bot.username,
-  })
   return tableRepo.findById(tableId)
 }
 
@@ -180,10 +169,4 @@ export async function cleanupStaleTables(): Promise<void> {
     .where(ne(tables.status, 'COMPLETED'))
     .returning({ id: tables.id })
 
-  if (result.length > 0) {
-    console.log('TableService - cleanupStaleTables', {
-      cleaned: result.length,
-      ids: result.map((r) => r.id),
-    })
-  }
 }

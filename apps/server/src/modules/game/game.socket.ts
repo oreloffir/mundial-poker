@@ -185,7 +185,6 @@ export function setupGameSocket(io: Server): void {
   typedIo.on('connection', (socket) => {
     const userId = socket.data.userId
     socket.join(`user:${userId}`)
-    console.log('GameSocket - connected', { socketId: socket.id, userId })
 
     socket.on('table:join', async (payload, callback) => {
       try {
@@ -230,7 +229,6 @@ export function setupGameSocket(io: Server): void {
         }
 
         callback({ success: true })
-        console.log('GameSocket - table:join', { socketId: socket.id, userId, tableId })
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to join table'
         console.error('GameSocket - table:join - failed', { userId, error })
@@ -243,7 +241,6 @@ export function setupGameSocket(io: Server): void {
         const { tableId } = payload
         socket.leave(`table:${tableId}`)
         socket.to(`table:${tableId}`).emit('player:left', { userId })
-        console.log('GameSocket - table:leave', { socketId: socket.id, userId, tableId })
       } catch (error) {
         console.error('GameSocket - table:leave - failed', { userId, error })
       }
@@ -276,9 +273,7 @@ export function setupGameSocket(io: Server): void {
       }
     })
 
-    socket.on('round:ready', (_payload) => {
-      console.log('GameSocket - round:ready', { userId, roundId: _payload.roundId })
-    })
+    socket.on('round:ready', (_payload) => {})
 
     socket.on('disconnect', async () => {
       try {
@@ -295,13 +290,9 @@ export function setupGameSocket(io: Server): void {
 
           socket.to(`table:${seat.tableId}`).emit('player:disconnected', { userId })
         }
-
-        console.log('GameSocket - disconnected', { socketId: socket.id, userId })
       } catch (error) {
         console.error('GameSocket - disconnect - failed', { userId, error })
       }
     })
   })
-
-  console.log('GameSocket - initialized', {})
 }

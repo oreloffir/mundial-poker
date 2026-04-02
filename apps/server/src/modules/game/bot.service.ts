@@ -79,7 +79,6 @@ export async function createSingleBot(): Promise<{
 
   await db.insert(users).values({ id, email, username, passwordHash })
   dynamicBotIds.add(id)
-  console.log('BotService - createSingleBot', { botId: id, username })
   return { id, username }
 }
 
@@ -95,10 +94,6 @@ export async function ensureBotsExist(): Promise<void> {
       await db
         .insert(users)
         .values({ id: bot.id, email: bot.email, username: bot.username, passwordHash })
-      console.log('BotService - ensureBotsExist - created', {
-        botId: bot.id,
-        username: bot.username,
-      })
     }
   }
 }
