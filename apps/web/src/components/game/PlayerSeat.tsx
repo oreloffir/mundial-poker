@@ -37,6 +37,9 @@ const BADGE_STYLES: Record<string, { bg: string; text: string; border: string }>
   RAISE: { bg: 'rgba(212,168,67,0.15)', text: 'var(--gold)', border: 'rgba(212,168,67,0.3)' },
   FOLD: { bg: 'rgba(231,76,60,0.15)', text: 'var(--red)', border: 'rgba(231,76,60,0.3)' },
   ALL_IN: { bg: 'rgba(212,168,67,0.2)', text: 'var(--gold-bright)', border: 'var(--gold-dim)' },
+  // C6: blind posts use payload.type ('SB'|'BB') as the action key
+  SB: { bg: 'rgba(52,152,219,0.15)', text: '#5dade2', border: 'rgba(52,152,219,0.3)' },
+  BB: { bg: 'rgba(212,168,67,0.15)', text: 'var(--gold-bright)', border: 'rgba(212,168,67,0.4)' },
 }
 
 function formatAction(action: string, amount: number): string {
@@ -44,6 +47,31 @@ function formatAction(action: string, amount: number): string {
   if (action === 'CALL') return `Call ${amount}`
   if (action === 'ALL_IN') return 'All In!'
   return action.charAt(0) + action.slice(1).toLowerCase()
+}
+
+// C9: extracted from inline IIFE in render to a named component
+function ActionBadge({ action, amount, timestamp }: PlayerAction) {
+  const badge = BADGE_STYLES[action]
+  if (!badge) return null
+  return (
+    <div
+      key={timestamp}
+      className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+      style={{ animation: 'badge-pop 2s ease-out forwards' }}
+    >
+      <span
+        className="text-[9px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap"
+        style={{
+          background: badge.bg,
+          color: badge.text,
+          border: `1px solid ${badge.border}`,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+        }}
+      >
+        {formatAction(action, amount)}
+      </span>
+    </div>
+  )
 }
 
 function FaceDownCard() {
@@ -174,30 +202,7 @@ export function PlayerSeat({
       )}
 
       {/* Action badge */}
-      {lastAction &&
-        !inShowdown &&
-        (() => {
-          const badge = BADGE_STYLES[lastAction.action]
-          return badge ? (
-            <div
-              key={lastAction.timestamp}
-              className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-              style={{ animation: 'badge-pop 2s ease-out forwards' }}
-            >
-              <span
-                className="text-[9px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap"
-                style={{
-                  background: badge.bg,
-                  color: badge.text,
-                  border: `1px solid ${badge.border}`,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-                }}
-              >
-                {formatAction(lastAction.action, lastAction.amount)}
-              </span>
-            </div>
-          ) : null
-        })()}
+      {lastAction && !inShowdown && <ActionBadge {...lastAction} />}
 
       {/* Avatar + cards row */}
       <div className="flex items-center gap-1.5">
@@ -308,7 +313,6 @@ export function PlayerSeat({
           {player.username}
         </span>
         <div
-          key={player.chips}
           data-testid={`seat-balance-${player.seatIndex}`}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
           style={{

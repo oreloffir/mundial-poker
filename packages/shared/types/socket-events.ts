@@ -1,6 +1,7 @@
 import type {
   BetAction,
   CardScore,
+  Confederation,
   GameState,
   ShowdownResult,
   TablePlayer,
@@ -53,6 +54,8 @@ export interface RoundCardPayload {
   readonly tier: string
   readonly fifaRanking: number
   readonly fixtureId: string
+  // TODO(Soni S4): server must emit confederation — currently omitted, client falls back to 'UEFA'
+  readonly confederation?: Confederation
 }
 
 export interface RoundStartPayload {
