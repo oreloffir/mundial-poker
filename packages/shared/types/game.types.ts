@@ -170,7 +170,40 @@ export interface ShowdownResult {
   readonly cardScores: readonly CardScore[]
 }
 
+export interface GameStateTable {
+  readonly id: string
+  readonly name: string
+  readonly status: TableStatus
+  readonly players: readonly TablePlayer[]
+  readonly maxPlayers: number
+  readonly blinds: Blinds
+  readonly currentRoundId: string | null
+  readonly createdAt: string
+}
+
+export interface GameStateRoundInfo {
+  readonly roundId: string
+  readonly roundNumber: number
+  readonly status: string
+  readonly pot: number
+  readonly dealerSeatIndex: number
+  readonly cards: readonly unknown[]
+  readonly betPrompt: unknown | null
+  readonly waitingForResults: boolean
+  readonly currentPhase?: string
+  readonly resolvedFixtures?: readonly unknown[]
+  readonly revealedPlayerScores?: readonly unknown[]
+  readonly activePlayerId?: string | null
+  readonly currentBet?: number
+}
+
 export interface GameState {
+  readonly table: GameStateTable
+  readonly roundInfo: GameStateRoundInfo | null
+}
+
+/** @deprecated Use GameState instead — kept for backward compat with ShowdownResult references */
+export interface LegacyGameState {
   readonly table: Table
   readonly currentRound: Round | null
   readonly showdownResults: readonly ShowdownResult[] | null

@@ -3,7 +3,7 @@ import { verifyToken } from './auth.service.js'
 import { UnauthorizedError } from '../../shared/errors.js'
 
 export interface AuthRequest extends Request {
-  readonly user?: { readonly userId: string; readonly email: string }
+  user?: { readonly userId: string; readonly email: string }
 }
 
 function extractBearerToken(authHeader: string | undefined): string | null {
@@ -19,7 +19,7 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
     }
 
     const payload = verifyToken(token)
-    ;(req as unknown as Record<string, unknown>).user = payload
+    req.user = payload
     next()
   } catch (error) {
     next(error)

@@ -194,13 +194,10 @@ export function useGameSocket(tableId: string) {
       applyRoundStart()
     })
 
-    // C6 fix: use payload.type ('SB'|'BB') so the badge shows the blind position, not 'CALL'
     socket.on('blinds:posted', (payload) => {
-      store.getState().setPlayerAction(payload.userId, {
-        action: payload.type,
-        amount: payload.amount,
-        timestamp: Date.now(),
-      })
+      const now = Date.now()
+      store.getState().setPlayerAction(payload.sbUserId, { action: 'SB', amount: payload.sbAmount, timestamp: now })
+      store.getState().setPlayerAction(payload.bbUserId, { action: 'BB', amount: payload.bbAmount, timestamp: now })
     })
 
     // C7: board:reveal sends RawFixture[] at runtime but ServerToClientEvents types it as

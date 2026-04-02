@@ -9,6 +9,8 @@ export type {
   Fixture,
   FixtureStatus,
   GameState,
+  GameStateRoundInfo,
+  GameStateTable,
   MatchResult,
   MatchStage,
   PlayerHand,

@@ -171,9 +171,11 @@ export interface ServerToClientEvents {
     readonly finalStandings: readonly TablePlayer[]
   }) => void
   'blinds:posted': (payload: {
-    readonly userId: string
-    readonly amount: number
-    readonly type: 'SB' | 'BB'
+    readonly sbUserId: string
+    readonly sbAmount: number
+    readonly bbUserId: string
+    readonly bbAmount: number
+    readonly pot: number
   }) => void
   'players:update': (
     players: readonly { readonly userId: string; readonly chips: number }[],
