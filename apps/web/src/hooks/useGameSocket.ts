@@ -148,7 +148,6 @@ export function useGameSocket(tableId: string) {
           fixtures: [],
           revealedFixtureCount: 0,
           myHand: payload.cards.map(toTeamCard),
-          showdownResults: null,
           playerActions: {},
           foldedPlayerIds: [],
           activeTurn: null,
