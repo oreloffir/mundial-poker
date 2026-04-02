@@ -61,6 +61,20 @@ if (config.nodeEnv !== 'production') {
   app.use('/api/test', createTestRouter(io))
 }
 
+app.delete('/api/admin/cleanup', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const secret = req.headers['x-admin-secret']
+    if (secret !== config.adminSecret) {
+      res.status(403).json({ success: false, error: 'Forbidden' })
+      return
+    }
+    await cleanupStaleTables()
+    res.json({ success: true, data: { message: 'Stale tables cleaned up' } })
+  } catch (error) {
+    next(error)
+  }
+})
+
 async function start(): Promise<void> {
   await connectRedis()
 
