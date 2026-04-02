@@ -6,6 +6,11 @@ import { requireAuth, type AuthRequest } from '../auth/auth.middleware.js'
 import * as tableService from './table.service.js'
 import { startRound } from '../game/game.service.js'
 
+async function broadcastLobbyTables(io: Server): Promise<void> {
+  const updatedTables = await tableService.listTables()
+  io.emit('lobby:tables', { tables: updatedTables })
+}
+
 export function createTableRouter(io: Server): Router {
   const router = Router()
 
@@ -38,6 +43,9 @@ export function createTableRouter(io: Server): Router {
         bigBlind: data.bigBlind,
       })
       res.status(201).json({ success: true, data: { table } })
+      broadcastLobbyTables(io).catch((err) =>
+        console.error('TableController - POST / - broadcastLobbyTables failed', { error: err }),
+      )
     } catch (error) {
       next(error)
     }
@@ -57,6 +65,9 @@ export function createTableRouter(io: Server): Router {
       const authReq = req as AuthRequest
       const table = await tableService.joinTable(req.params.id, authReq.user!.userId)
       res.json({ success: true, data: { table } })
+      broadcastLobbyTables(io).catch((err) =>
+        console.error('TableController - POST /:id/join - broadcastLobbyTables failed', { error: err }),
+      )
     } catch (error) {
       next(error)
     }
@@ -67,6 +78,9 @@ export function createTableRouter(io: Server): Router {
       const authReq = req as AuthRequest
       const table = await tableService.leaveTable(req.params.id, authReq.user!.userId)
       res.json({ success: true, data: { table } })
+      broadcastLobbyTables(io).catch((err) =>
+        console.error('TableController - POST /:id/leave - broadcastLobbyTables failed', { error: err }),
+      )
     } catch (error) {
       next(error)
     }
@@ -98,6 +112,9 @@ export function createTableRouter(io: Server): Router {
       const tableId = req.params.id
       const table = await tableService.startGame(tableId, authReq.user!.userId)
       res.json({ success: true, data: { table } })
+      broadcastLobbyTables(io).catch((err) =>
+        console.error('TableController - POST /:id/start - broadcastLobbyTables failed', { error: err }),
+      )
       startRound(tableId, io).catch((err) =>
         console.error('TableController - startRound - failed', { tableId, error: err }),
       )

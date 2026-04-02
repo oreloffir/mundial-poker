@@ -7,6 +7,7 @@ import { ZodError } from 'zod'
 import { authRouter } from './modules/auth/auth.controller.js'
 import { createTableRouter } from './modules/tables/table.controller.js'
 import { matchDataRouter } from './modules/match-data/match-data.controller.js'
+import { createTestRouter } from './modules/test/test.controller.js'
 import { setupGameSocket } from './modules/game/game.socket.js'
 import { ensureBotsExist } from './modules/game/bot.service.js'
 import { cleanupStaleTables } from './modules/tables/table.service.js'
@@ -55,6 +56,11 @@ const io = new Server(server, {
 
 setupGameSocket(io)
 app.use('/api/tables', createTableRouter(io))
+
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/test', createTestRouter(io))
+  console.log('App - testRoutes - registered', { env: process.env.NODE_ENV ?? 'development' })
+}
 
 server.listen(PORT, () => {
   console.log('App - started', { port: PORT, env: process.env.NODE_ENV ?? 'development' })

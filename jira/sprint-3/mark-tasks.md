@@ -226,7 +226,6 @@ All 8 fixes committed on `feat/inline-score-reveals`:
 - Blocking: SD4, SD5, SD6, SD7, SD8 E2E tests will fail until this is wired.
 
 ---
-
 ### M6 — Mobile Tests + Selector Audit
 **Status:** ⏳ Not started (starts day 3)
 

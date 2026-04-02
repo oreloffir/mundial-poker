@@ -61,6 +61,11 @@ async function getTableState(tableId: string, userId: string) {
     cards: readonly unknown[]
     betPrompt: unknown | null
     waitingForResults: boolean
+    currentPhase?: string
+    resolvedFixtures?: readonly unknown[]
+    revealedPlayerScores?: readonly unknown[]
+    activePlayerId?: string | null
+    currentBet?: number
   } = null
 
   if (activeRound) {
@@ -134,6 +139,18 @@ async function getTableState(tableId: string, userId: string) {
       cards,
       betPrompt,
       waitingForResults: activeRound.status === 'WAITING_FOR_RESULTS',
+    }
+  }
+
+  const phaseState = gameService.getRoundPhaseState(tableId)
+  if (roundInfo && phaseState) {
+    roundInfo = {
+      ...roundInfo,
+      currentPhase: phaseState.currentPhase,
+      resolvedFixtures: phaseState.resolvedFixtures,
+      revealedPlayerScores: phaseState.revealedPlayerScores,
+      activePlayerId: phaseState.activePlayerId,
+      currentBet: phaseState.currentBet,
     }
   }
 
