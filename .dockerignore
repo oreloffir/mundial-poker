@@ -1,0 +1,10 @@
+node_modules
+.git
+*.md
+assets/screenshots
+jira/
+docs/
+recordings/
+apps/server/dist
+apps/web/dist
+packages/shared/dist

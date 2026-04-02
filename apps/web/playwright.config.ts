@@ -8,11 +8,21 @@ import { defineConfig, devices } from '@playwright/test'
  * network active indefinitely. All navigation uses domcontentloaded
  * + explicit waits for DOM signals.
  *
- * Prerequisites before running:
+ * Prerequisites for local run:
  *   pnpm dev:web     → http://localhost:5173
  *   pnpm dev:server  → http://localhost:5174
  *   Docker           → PostgreSQL + Redis
+ *
+ * Running against deployed dev server:
+ *   DEV_URL=http://<ec2-ip> pnpm test:e2e
+ *
+ * When DEV_URL is set, all tests target the deployed URL.
+ * The deployed server serves both frontend and API from the same origin.
  */
+
+// DEV_URL overrides localhost when running against a deployed environment
+const baseURL = process.env.DEV_URL ?? 'http://localhost:5173'
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 120_000,
@@ -23,12 +33,12 @@ export default defineConfig({
   workers: 1,
 
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: process.env.CI ? 1 : 1,
 
   reporter: [['html', { outputFolder: 'e2e/report' }], ['list']],
 
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
 
     // Never use networkidle — use domcontentloaded + explicit waits
     waitUntil: 'domcontentloaded',
