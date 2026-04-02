@@ -264,4 +264,16 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 - Devsi handoff doc created: `jira/sprint-4/shared/devsi-dockerize-handoff.md`
 
 ### S14 — DB Migrations
-**Status:** Not started
+**Status:** COMPLETE (Apr 2)
+
+**Files created:**
+- `apps/server/src/db/migrations/0000_third_living_mummy.sql` — initial migration (10 tables)
+- `apps/server/src/db/migrations/meta/` — drizzle migration metadata
+- `apps/server/src/db/reset.ts` — drops schema, runs migrations + seed (dev/test only)
+
+**Files modified:**
+- `apps/server/package.json` — `db:migrate` switched to `drizzle-kit migrate`, added `db:generate`, `db:push`, `db:reset`
+- `apps/server/drizzle.config.ts` — default DATABASE_URL fallback
+- `apps/server/src/db/seed/teams.seed.ts` — idempotent (check-before-insert, no more DELETE)
+
+**CD pipeline:** `pnpm db:migrate && pnpm db:seed` — both idempotent, safe on every deploy
