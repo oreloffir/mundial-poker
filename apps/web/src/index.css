@@ -410,10 +410,30 @@ input {
     --btn-padding: 6px 12px;
     --btn-font-size: 0.75rem;
     --slider-w: 72px;
-    --chip-btn-size: 28px;
+    --chip-btn-size: 32px;
     --chip-btn-font-size: 0.575rem;
-    --preset-padding: 2px 8px;
-    --preset-font-size: 0.5625rem;
+    --preset-padding: 4px 8px;
+    --preset-font-size: 0.625rem;
+    --fixture-tile-w: 60px;
+  }
+
+  /* Fix 1: CreateTableModal — compress spacing so Cancel/Create stay in viewport */
+  .create-table-modal-content {
+    padding: 1rem;
+  }
+  .create-table-modal-content h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .create-table-modal-content form > * + * {
+    margin-top: 0.5rem !important;
+  }
+  .create-table-modal-content input {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+  .create-table-modal-content .wpc-label {
+    display: none;
   }
 
   .mobile-landscape-hide {

@@ -65,7 +65,7 @@ export function SeatScorePopup({ result, isCurrent }: SeatScorePopupProps) {
           {result.cardScores.map((card, i) => {
             const res = getResult(card)
             return (
-              <span key={card.teamId} className="flex items-center" style={{ fontSize: 9 }}>
+              <span key={card.teamId} className="flex items-center" style={{ fontSize: 10 }}>
                 {i > 0 && (
                   <span style={{ color: 'rgba(255,255,255,0.15)', marginRight: 4 }}>|</span>
                 )}

@@ -250,7 +250,7 @@ export function PokerTable({
           {/* Fixtures — upper half of pitch */}
           <div
             className="absolute pointer-events-none flex flex-col items-center gap-2"
-            style={{ top: '22%', left: '50%', transform: 'translateX(-50%)' }}
+            style={{ top: '18%', left: '50%', transform: 'translateX(-50%)' }}
           >
             <div className="pointer-events-auto">
               <FixtureBoard fixtures={fixtures as unknown as readonly RawFixture[]} revealedCount={revealedFixtureCount} />

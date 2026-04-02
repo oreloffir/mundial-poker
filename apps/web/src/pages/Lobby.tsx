@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { api } from '@/lib/api'
+import { getSocket } from '@/lib/socket'
 import { CreateTableModal } from '@/components/lobby/CreateTableModal'
 import { TableCard, type TableListItem } from '@/components/lobby/TableCard'
 
@@ -12,23 +13,31 @@ export function Lobby() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchTables = useCallback(async () => {
-    try {
-      const response = await api.get('/tables')
-      const tablesPayload = response.data?.data?.tables
-      setTables(Array.isArray(tablesPayload) ? tablesPayload : [])
-    } catch {
-      // silently retry on next poll
-    } finally {
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const response = await api.get('/tables')
+        const tablesPayload = response.data?.data?.tables
+        setTables(Array.isArray(tablesPayload) ? tablesPayload : [])
+      } catch {
+        // initial fetch failed — socket updates will still arrive
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTables()
+
+    const socket = getSocket()
+    socket.on('lobby:tables', (payload) => {
+      setTables(payload.tables as unknown as readonly TableListItem[])
       setIsLoading(false)
+    })
+
+    return () => {
+      socket.off('lobby:tables')
     }
   }, [])
-
-  useEffect(() => {
-    fetchTables()
-    const interval = setInterval(fetchTables, 5000)
-    return () => clearInterval(interval)
-  }, [fetchTables])
 
   const handleJoin = (tableId: string) => {
     navigate(`/table/${tableId}`)

@@ -78,7 +78,7 @@ export function CreateTableModal({ onClose, onCreated }: CreateTableModalProps) 
         onClick={onClose}
       />
       <div
-        className="relative w-full max-w-md shadow-2xl rounded-2xl p-7"
+        className="relative w-full max-w-md shadow-2xl rounded-2xl p-7 create-table-modal-content"
         style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',

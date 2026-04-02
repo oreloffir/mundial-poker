@@ -111,7 +111,7 @@ export function GameTable() {
         }}
       >
         <div className="flex items-center gap-4">
-          <button onClick={handleLeave} className="wpc-btn-ghost text-xs py-1 px-3">
+          <button onClick={handleLeave} className="wpc-btn-ghost text-xs py-1 px-3 min-h-[36px]">
             &#8592; Leave
           </button>
           <h1
