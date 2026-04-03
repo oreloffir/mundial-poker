@@ -157,7 +157,10 @@ export function useGameSocket(tableId: string) {
         })
       }
 
-      // Guarantee winner banner shows for at least MIN_WINNER_BANNER_MS
+      // The server can send round:start immediately after round:winner.
+      // pendingRoundStartRef defers applyRoundStart until the winner banner
+      // has been visible for at least MIN_WINNER_BANNER_MS, preventing it
+      // from being replaced before the player can read it.
       if (store.getState().showdownPhase === 'winner') {
         const elapsed = Date.now() - winnerShownAtRef.current
         const remaining = MIN_WINNER_BANNER_MS - elapsed
