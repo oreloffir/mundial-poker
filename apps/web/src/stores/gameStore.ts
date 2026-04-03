@@ -1,13 +1,5 @@
 import { create } from 'zustand'
-import type {
-  Table,
-  Round,
-  TeamCard,
-  BettingRound,
-  Fixture,
-  ShowdownResult,
-  CardScoreData,
-} from '@wpc/shared'
+import type { Table, Round, TeamCard, Fixture, CardScoreData } from '@wpc/shared'
 
 // ─── J12 Showdown Phase Types ────────────────────────────────────────────────
 
@@ -86,11 +78,8 @@ interface GameState {
   readonly currentRound: Round | null
   readonly myHand: readonly TeamCard[] | null
   readonly myTurn: boolean
-  readonly bettingRound: BettingRound | null
   readonly fixtures: readonly Fixture[]
-  readonly showdownResults: readonly ShowdownResult[] | null
   readonly waitingForResults: boolean
-  readonly demoCountdown: number | null
   readonly betPrompt: BetPromptState | null
   readonly activeTurn: ActiveTurn | null
   readonly playerActions: Readonly<Record<string, PlayerAction>>
@@ -101,7 +90,7 @@ interface GameState {
   readonly sbSeatIndex: number | null
   readonly bbSeatIndex: number | null
 
-  // ─── J12: Showdown phase state machine ─────────────────────────────────────
+  // ─── Showdown phase state machine ──────────────────────────────────────────
   readonly showdownPhase: ShowdownPhase
   /** Fixture results arriving one at a time during the 30s wait (fixture:result events) */
   readonly fixtureResults: readonly FixtureResultEvent[]
@@ -115,12 +104,9 @@ interface GameState {
   readonly setTable: (table: Table) => void
   readonly setRound: (round: Round) => void
   readonly setMyHand: (hand: readonly TeamCard[]) => void
-  readonly setBettingRound: (br: BettingRound | null) => void
   readonly setMyTurn: (turn: boolean) => void
   readonly setFixtures: (fixtures: readonly Fixture[]) => void
-  readonly setShowdownResults: (results: readonly ShowdownResult[] | null) => void
   readonly setWaitingForResults: (waiting: boolean) => void
-  readonly setDemoCountdown: (countdown: number | null) => void
   readonly setBetPrompt: (prompt: BetPromptState | null) => void
   readonly setActiveTurn: (turn: ActiveTurn | null) => void
   readonly setPlayerAction: (userId: string, action: PlayerAction) => void
@@ -132,11 +118,10 @@ interface GameState {
   readonly setError: (error: string | null) => void
   readonly reset: () => void
 
-  // ─── J12: Showdown phase actions ───────────────────────────────────────────
+  // ─── Showdown phase actions ─────────────────────────────────────────────────
   readonly setShowdownPhase: (phase: ShowdownPhase) => void
   readonly addFixtureResult: (result: FixtureResultEvent) => void
   readonly addPlayerScoreReveal: (result: PlayerScoredData) => void
-  readonly setCurrentRevealIndex: (index: number) => void
   readonly setWinnerData: (data: RoundWinnerData | null) => void
   readonly resetShowdownPhase: () => void
 }
@@ -146,11 +131,8 @@ const initialState = {
   currentRound: null,
   myHand: null,
   myTurn: false,
-  bettingRound: null,
   fixtures: [],
-  showdownResults: null,
   waitingForResults: false,
-  demoCountdown: null,
   betPrompt: null,
   activeTurn: null,
   playerActions: {} as Readonly<Record<string, PlayerAction>>,
@@ -160,7 +142,6 @@ const initialState = {
   error: null,
   sbSeatIndex: null as number | null,
   bbSeatIndex: null as number | null,
-  // J12: showdown phase
   showdownPhase: 'idle' as ShowdownPhase,
   fixtureResults: [] as readonly FixtureResultEvent[],
   playerScoreReveals: [] as readonly PlayerScoredData[],
@@ -173,12 +154,9 @@ export const useGameStore = create<GameState>((set) => ({
   setTable: (table) => set({ table }),
   setRound: (round) => set({ currentRound: round }),
   setMyHand: (hand) => set({ myHand: hand }),
-  setBettingRound: (br) => set({ bettingRound: br }),
   setMyTurn: (turn) => set({ myTurn: turn }),
   setFixtures: (fixtures) => set({ fixtures }),
-  setShowdownResults: (results) => set({ showdownResults: results }),
   setWaitingForResults: (waiting) => set({ waitingForResults: waiting }),
-  setDemoCountdown: (countdown) => set({ demoCountdown: countdown }),
   setBetPrompt: (prompt) => set({ betPrompt: prompt }),
   setActiveTurn: (turn) => set({ activeTurn: turn }),
   setPlayerAction: (userId, action) =>
@@ -200,7 +178,6 @@ export const useGameStore = create<GameState>((set) => ({
   setBlindPositions: (sb, bb) => set({ sbSeatIndex: sb, bbSeatIndex: bb }),
   setError: (error) => set({ error }),
   reset: () => set(initialState),
-  // J12: showdown phase actions
   setShowdownPhase: (phase) => set({ showdownPhase: phase }),
   addFixtureResult: (result) => set((s) => ({ fixtureResults: [...s.fixtureResults, result] })),
   addPlayerScoreReveal: (result) =>
@@ -208,7 +185,6 @@ export const useGameStore = create<GameState>((set) => ({
       playerScoreReveals: [...s.playerScoreReveals, result],
       currentRevealIndex: s.playerScoreReveals.length,
     })),
-  setCurrentRevealIndex: (index) => set({ currentRevealIndex: index }),
   setWinnerData: (data) => set({ winnerData: data }),
   resetShowdownPhase: () =>
     set({

@@ -13,6 +13,7 @@ import {
 } from '../../db/schema.js'
 import { NotFoundError, GameError } from '../../shared/errors.js'
 import { stateGet, stateSet, stateDel } from '../../lib/game-state-store.js'
+import { getRoundPhaseState, updateRoundPhase, clearRoundPhase } from './phase-tracker.js'
 import { dealCards } from './dealing.service.js'
 import {
   initBettingRound,
@@ -51,48 +52,6 @@ const NEXT_ROUND_DELAY_MS = 7_000
 
 const activeTimers = new Map<string, { readonly cancel: () => void }>()
 
-// ─── Round phase tracking (for reconnect state recovery) ─────────────────────
-
-type RoundPhase = 'dealing' | 'betting' | 'waiting' | 'fixtures' | 'scoring' | 'reveals' | 'winner'
-
-interface RoundPhaseState {
-  readonly roundId: string
-  readonly currentPhase: RoundPhase
-  readonly resolvedFixtures: readonly FixtureResultPayload[]
-  readonly revealedPlayerScores: readonly PlayerScoredPayload[]
-  readonly bettingRound: number
-  readonly currentBet: number
-  readonly pot: number
-  readonly activePlayerId: string | null
-}
-
-export async function getRoundPhaseState(tableId: string): Promise<RoundPhaseState | undefined> {
-  return stateGet<RoundPhaseState>('phase', tableId)
-}
-
-async function updateRoundPhase(
-  tableId: string,
-  update: Partial<RoundPhaseState> & { roundId: string },
-): Promise<void> {
-  const existing = await stateGet<RoundPhaseState>('phase', tableId)
-  await stateSet<RoundPhaseState>('phase', tableId, {
-    roundId: update.roundId,
-    currentPhase: update.currentPhase ?? existing?.currentPhase ?? 'dealing',
-    resolvedFixtures: update.resolvedFixtures ?? existing?.resolvedFixtures ?? [],
-    revealedPlayerScores: update.revealedPlayerScores ?? existing?.revealedPlayerScores ?? [],
-    bettingRound: update.bettingRound ?? existing?.bettingRound ?? 0,
-    currentBet: update.currentBet ?? existing?.currentBet ?? 0,
-    pot: update.pot ?? existing?.pot ?? 0,
-    activePlayerId:
-      update.activePlayerId !== undefined
-        ? update.activePlayerId
-        : (existing?.activePlayerId ?? null),
-  })
-}
-
-async function clearRoundPhase(tableId: string): Promise<void> {
-  await stateDel('phase', tableId)
-}
 
 interface RoundBlindInfo {
   readonly dealerSeatIndex: number
@@ -215,17 +174,14 @@ async function startDemoFixtureTimer(roundId: string, tableId: string, io: Serve
         }),
       ).catch((err) => console.error('GameService - fixturePhaseUpdate - failed', { roundId, error: err }))
       emitToRoom(io, tableId, 'fixture:result', fixturePayload)
-      console.log('PHASE: fixture:result', 'fixtureId:', fixtureId, Date.now())
     },
     () => {
-      console.log('PHASE: all-fixtures-resolved → resolveRound', 'roundId:', roundId, Date.now())
       resolveRound(roundId, io).catch((err) =>
         console.error('GameService - demoResolveCallback - failed', { roundId, error: err }),
       )
     },
   )
   activeTimers.set(roundId, timer)
-  console.log('PHASE: fixture-timer-started', 'roundId:', roundId, Date.now())
 }
 
 async function startBettingRound(
@@ -293,12 +249,6 @@ async function startBettingRound(
       fixtureIds: rfRows.map((rf) => rf.fixtureId),
       resumeAt: new Date(Date.now() + NEXT_ROUND_DELAY_MS).toISOString(),
     })
-    console.log(
-      'PHASE: waiting (early-exit, ≤1 active player)',
-      'bettingRound:',
-      bettingRoundNumber,
-      Date.now(),
-    )
     await startDemoFixtureTimer(roundId, tableId, io)
     return
   }
@@ -313,14 +263,6 @@ async function startBettingRound(
     activePlayerId: prompt.userId,
   })
   emitToRoom(io, tableId, 'bet:prompt', prompt)
-  console.log(
-    'PHASE: betting',
-    'bettingRound:',
-    bettingRoundNumber,
-    'promptedPlayer:',
-    prompt.userId,
-    Date.now(),
-  )
 
   if (isBotUser(prompt.userId)) {
     scheduleBotAction(roundId, prompt.userId, io)
@@ -339,8 +281,6 @@ async function startBettingRound(
     .set({ status: statusMap[bettingRoundNumber] ?? 'BETTING_ROUND_1' })
     .where(eq(rounds.id, roundId))
     .catch(() => {})
-
-  console.log('GameService - startBettingRound', { roundId, bettingRound: bettingRoundNumber })
 }
 
 export async function startRound(tableId: string, io: Server): Promise<void> {
@@ -373,7 +313,6 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
     listTables()
       .then((updatedTables) => io.emit('lobby:tables', { tables: updatedTables }))
       .catch(() => {})
-    console.log('GameService - startRound - gameOver', { tableId, winnerId: winner?.userId })
     return
   }
 
@@ -441,14 +380,6 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
     currentPhase: 'dealing',
     resolvedFixtures: [],
     revealedPlayerScores: [],
-  })
-
-  console.log('GameService - blindsPosted', {
-    roundId: dealResult.roundId,
-    sbSeat: blindPositions.sbSeatIndex,
-    bbSeat: blindPositions.bbSeatIndex,
-    sbAmount,
-    bbAmount,
   })
 
   for (const playerDeal of dealResult.playerDeals) {
@@ -520,13 +451,6 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
     fixtureIds,
     fixtureRows: fixtureRowRecord,
     fixtureTeams: fixtureTeamRecord,
-  })
-  console.log('PHASE: betting-round-1-started', 'roundId:', dealResult.roundId, Date.now())
-
-  console.log('GameService - startRound', {
-    tableId,
-    roundId: dealResult.roundId,
-    roundNumber: dealResult.roundNumber,
   })
 }
 
@@ -604,10 +528,6 @@ export async function handleBetAction(
         })),
       )
       await scheduleNextRound(tableId, io)
-      console.log('GameService - handleBetAction - lastPlayerStanding', {
-        roundId,
-        winnerId: winner.userId,
-      })
     }
     return
   }
@@ -615,14 +535,6 @@ export async function handleBetAction(
   if (isBettingRoundComplete(newState)) {
     await clearBettingState(roundId)
     await stateDel('blinds', roundId)
-    console.log(
-      'PHASE: betting-round-complete',
-      'bettingRound:',
-      newState.bettingRound,
-      'roundId:',
-      roundId,
-      Date.now(),
-    )
 
     if (newState.bettingRound < 3) {
       await startBettingRound(roundId, tableId, newState.bettingRound + 1, io)
@@ -636,14 +548,6 @@ export async function handleBetAction(
         fixtureIds: rfRows.map((rf) => rf.fixtureId),
         resumeAt: new Date(Date.now() + NEXT_ROUND_DELAY_MS).toISOString(),
       })
-      console.log(
-        'PHASE: waiting → round:pause emitted',
-        'bettingRound:',
-        newState.bettingRound,
-        'roundId:',
-        roundId,
-        Date.now(),
-      )
 
       // Fixture timer starts HERE — only after all betting is done
       await startDemoFixtureTimer(roundId, tableId, io)
@@ -727,34 +631,12 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
       'BETTING_ROUND_3',
     ]
     if (activeBettingStatuses.includes(round.status)) {
-      console.log(
-        'PHASE: resolveRound-blocked (still betting)',
-        'status:',
-        round.status,
-        Date.now(),
-      )
       return
     }
 
-    console.log(
-      'PHASE: resolve-round-start',
-      'roundId:',
-      roundId,
-      'status:',
-      round.status,
-      Date.now(),
-    )
     await db.update(rounds).set({ status: 'SCORING' }).where(eq(rounds.id, roundId))
 
     const scoringResult = await scoreRound(roundId)
-    console.log(
-      'PHASE: scoring-complete',
-      'roundId:',
-      roundId,
-      'winners:',
-      scoringResult.winnerIds,
-      Date.now(),
-    )
 
     await clearBettingState(roundId)
     await stateDel('blinds', roundId)
@@ -871,14 +753,6 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
       const bonus = i === 0 ? scoringResult.potAmount - share * scoringResult.winnerIds.length : 0
       potDist[id] = share + bonus
     })
-    console.log(
-      'PHASE: winner',
-      'roundId:',
-      roundId,
-      'winnerIds:',
-      scoringResult.winnerIds,
-      Date.now(),
-    )
     await updateRoundPhase(tableId, { roundId, currentPhase: 'winner' })
     emitToRoom(io, tableId, 'round:winner', {
       winnerIds: scoringResult.winnerIds,
@@ -899,11 +773,6 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
     )
 
     await scheduleNextRound(tableId, io)
-    console.log('GameService - resolveRound', {
-      roundId,
-      winnerIds: scoringResult.winnerIds,
-      pot: scoringResult.potAmount,
-    })
   } catch (error) {
     console.error('GameService - resolveRound - failed', { roundId, error })
     throw error
@@ -943,7 +812,6 @@ async function scheduleNextRound(tableId: string, io: Server): Promise<void> {
     listTables()
       .then((updatedTables) => io.emit('lobby:tables', { tables: updatedTables }))
       .catch(() => {})
-    console.log('GameService - scheduleNextRound - gameOver', { tableId, winnerId: winner?.userId })
     return
   }
 

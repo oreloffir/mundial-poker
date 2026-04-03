@@ -169,12 +169,5 @@ export async function scoreRound(roundId: string): Promise<ScoringResult> {
     }
   }
 
-  console.log('ScoringService - scoreRound', {
-    roundId,
-    winnerIds,
-    potAmount,
-    resultCount: results.length,
-  })
-
   return { results, winnerIds, potAmount }
 }

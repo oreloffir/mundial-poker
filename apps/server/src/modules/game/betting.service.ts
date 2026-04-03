@@ -171,11 +171,6 @@ export async function initBettingRound(
   }
 
   await stateSet(STORE_PREFIX, roundId, state)
-  console.log('BettingService - initBettingRound', {
-    roundId,
-    bettingRound: bettingRoundNumber,
-    playerCount: players.length,
-  })
   return state
 }
 
@@ -399,13 +394,6 @@ export async function applyAction(
   }
 
   await stateSet(STORE_PREFIX, state.roundId, newState)
-  console.log('BettingService - applyAction', {
-    roundId: state.roundId,
-    userId,
-    action,
-    betAmount,
-    pot: newState.pot,
-  })
   return newState
 }
 

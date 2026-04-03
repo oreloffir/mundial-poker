@@ -251,10 +251,28 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 ## Delivery Log
 
 ### D2 — EC2 Setup
-**Status:** Not started
+**Status:** Complete — April 2, 2026
+**Instance:** `i-0b95a73440e9e9111` | Region: `eu-west-1` | AMI: `ami-0762bad84218d1ffa`
+**Elastic IP:** `52.49.249.190`
+**Security group:** `sg-0c6ee7ef0e6ee3f37`
+**Key pair:** `mundial-poker-deploy` (`~/.ssh/mundial-poker-deploy.pem`)
+**Deploy key:** `~/.ssh/github_actions_deploy` (private key in GitHub Secrets as `EC2_SSH_KEY`)
+**SSH:** `ssh -i ~/.ssh/mundial-poker-deploy.pem ec2-user@52.49.249.190`
 
 ### D3 — Docker Compose + Nginx
-**Status:** Not started
+**Status:** Complete — April 2, 2026
+**Services:** postgres (healthy), redis (healthy), server, web, nginx (port 80)
+**Verified:** `curl http://52.49.249.190/api/health` → 200 | Redis: PONG | Teams: 32
 
 ### D4 — CD Pipeline
-**Status:** Not started
+**Status:** Complete — April 2, 2026
+**Secrets set:** EC2_HOST, EC2_USER, EC2_SSH_KEY, DB_PASSWORD, JWT_SECRET
+**Game URL:** http://52.49.249.190
+
+### D5 — DevOps Docs + File Organization
+**Status:** Complete — April 2, 2026
+**Changes:**
+- `docs/deployment/ec2-setup.md` → `docs/devops/ec2-setup.md` (updated with real instance values)
+- `docs/infrastructure-plan.md` → `docs/devops/infrastructure-plan.md`
+- `docs/devops/README.md` — new: full infrastructure overview (10-minute read)
+- `nginx/` directory removed (unused — root `nginx.conf` is the one mounted by compose)

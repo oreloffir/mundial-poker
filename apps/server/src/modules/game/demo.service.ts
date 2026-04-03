@@ -124,7 +124,6 @@ export async function createDemoFixtures(count: number): Promise<readonly string
     .returning()
 
   const fixtureIds = insertedRows.map((r) => r.id)
-  console.log('DemoService - createDemoFixtures', { count: fixtureIds.length, fixtureIds })
 
   return fixtureIds
 }
@@ -157,11 +156,6 @@ export function resolveDemoFixturesProgressive(
             .where(eq(fixtures.id, fixtureId))
 
           onEachResolved(fixtureId, result)
-          console.log('DemoService - fixtureResolved', {
-            fixtureId,
-            index: i,
-            result: `${result.homeScore}-${result.awayScore}`,
-          })
 
           if (i === fixtureIds.length - 1) {
             onAllResolved()
@@ -201,7 +195,6 @@ export function resolveDemoFixtures(
           })
           .where(eq(fixtures.id, fixtureId))
       }
-      console.log('DemoService - resolveDemoFixtures', { resolvedCount: fixtureIds.length })
       onResolved?.()
     } catch (error) {
       console.error('DemoService - resolveDemoFixtures - error', { error, fixtureIds })
