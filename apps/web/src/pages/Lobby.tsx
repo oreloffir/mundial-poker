@@ -30,7 +30,7 @@ export function Lobby() {
 
     const socket = getSocket()
     socket.on('lobby:tables', (payload) => {
-      setTables(payload.tables as unknown as readonly TableListItem[])
+      setTables(payload.tables)
       setIsLoading(false)
     })
 

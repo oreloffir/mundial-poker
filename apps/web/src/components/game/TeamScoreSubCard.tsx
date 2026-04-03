@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import type { CardScoreData } from '@wpc/shared'
+import { useCountUp } from '@/hooks/useCountUp'
 
 export type { CardScoreData }
 
@@ -9,31 +9,6 @@ interface TeamScoreSubCardProps {
   readonly staggerBase: number
   /** Whether to start the count-up animation */
   readonly animate: boolean
-}
-
-function useCountUpLocal(target: number, duration: number, animate: boolean): number {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!animate || target === 0) {
-      setCount(target)
-      return
-    }
-    setCount(0)
-    const steps = Math.min(target, 24)
-    const stepMs = duration / steps
-    let step = 0
-    const id = setInterval(() => {
-      step++
-      if (step >= steps) {
-        setCount(target)
-        clearInterval(id)
-      } else {
-        setCount(Math.round((target / steps) * step))
-      }
-    }, stepMs)
-    return () => clearInterval(id)
-  }, [target, duration, animate])
-  return count
 }
 
 function ScoreRow({
@@ -83,7 +58,7 @@ export function TeamScoreSubCard({ card, staggerBase, animate }: TeamScoreSubCar
   const scoreColor = (goals: number, isWinSide: boolean) =>
     isWinSide ? 'var(--green-glow)' : resultType === 'draw' ? 'var(--gold)' : 'var(--text-muted)'
 
-  const subtotal = useCountUpLocal(card.totalScore, 500, animate)
+  const subtotal = useCountUp(card.totalScore, 500, animate)
 
   const baseLabel = resultType === 'win' ? 'Win' : resultType === 'draw' ? 'Draw' : 'Loss'
   const baseDelay = staggerBase

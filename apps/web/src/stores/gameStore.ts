@@ -1,3 +1,6 @@
+// gameStore — single source of truth for all in-game state.
+// Written exclusively by useGameSocket (server events) and BettingControls (local UI).
+// Reset on round:start (via store.setState — atomic, one render) and on table leave (via reset()).
 import { create } from 'zustand'
 import type { Table, Round, TeamCard, Fixture, CardScoreData } from '@wpc/shared'
 

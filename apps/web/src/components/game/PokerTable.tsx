@@ -60,6 +60,8 @@ function PotDisplay({
           />
         ))}
       </div>
+      {/* key={potFlashKey} forces React to remount this element each time the pot changes,
+          resetting the CSS animation from frame 0 without an animation library. */}
       <span
         key={potFlashKey}
         data-testid="pot-total"

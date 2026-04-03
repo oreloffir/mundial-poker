@@ -2,8 +2,16 @@ import { useEffect, useCallback, useRef } from 'react'
 import { getSocket, disconnectSocket } from '@/lib/socket'
 import { useGameStore } from '@/stores/gameStore'
 import { useAuthStore } from '@/stores/authStore'
-import type { BetAction, TeamCard, TeamTier, Confederation, Fixture } from '@wpc/shared'
+import type {
+  BetAction,
+  TeamCard,
+  TeamTier,
+  Confederation,
+  Fixture,
+  RoundStatus,
+} from '@wpc/shared'
 import type { RoundCardPayload, FixtureResultPayload, PlayerScoredPayload } from '@wpc/shared'
+import type { ShowdownPhase } from '@/stores/gameStore'
 
 // C1 fix: use confederation from payload; falls back to 'UEFA' until Soni adds the field (TODO S4)
 function toTeamCard(c: RoundCardPayload): TeamCard {
@@ -41,45 +49,29 @@ export function useGameSocket(tableId: string) {
       }
     })
 
-    // C2: GameState type doesn't match the actual table:state payload shape — the server sends
-    // a richer `roundInfo` envelope not reflected in GameState. Tracked as Soni's debt (S-debt-01).
-    // Once GameState is updated server-side, remove this cast and wire types properly.
+    // S15: GameState now properly typed (GameStateTable + GameStateRoundInfo).
+    // Inner fields (cards, betPrompt, resolvedFixtures, revealedPlayerScores) remain `unknown`
+    // in GameStateRoundInfo — cast at point of use rather than wrapping the whole payload.
     socket.on('table:state', (rawState) => {
-      const state = rawState as unknown as {
-        table: typeof rawState.table
-        roundInfo: null | {
-          roundId: string
-          roundNumber: number
-          status: string
+      store.getState().setTable(rawState.table)
+      if (rawState.roundInfo) {
+        const ri = rawState.roundInfo
+        const cards = ri.cards as readonly RoundCardPayload[]
+        const betPrompt = ri.betPrompt as {
+          userId: string
+          minimumBet: number
+          currentBet: number
           pot: number
-          dealerSeatIndex: number
-          cards: RoundCardPayload[]
-          betPrompt: null | {
-            userId: string
-            minimumBet: number
-            currentBet: number
-            pot: number
-            chips: number
-            allowedActions: string[]
-            timeoutMs: number
-            promptedAt?: number
-          }
-          waitingForResults: boolean
-          currentPhase?: string
-          resolvedFixtures?: FixtureResultPayload[]
-          revealedPlayerScores?: PlayerScoredPayload[]
-          activePlayerId?: string | null
-          currentBet?: number
-        }
-      }
-      store.getState().setTable(state.table)
-      if (state.roundInfo) {
-        const ri = state.roundInfo
+          chips: number
+          allowedActions: string[]
+          timeoutMs: number
+          promptedAt?: number
+        } | null
         store.getState().setRound({
           id: ri.roundId,
           tableId: tableId,
           roundNumber: ri.roundNumber,
-          status: ri.status as never,
+          status: ri.status as RoundStatus,
           board: [],
           hands: [],
           bettingRounds: [],
@@ -87,24 +79,24 @@ export function useGameSocket(tableId: string) {
           dealerSeatIndex: ri.dealerSeatIndex,
           fixtures: [],
         })
-        if (ri.cards.length > 0) {
-          store.getState().setMyHand(ri.cards.map(toTeamCard))
+        if (cards.length > 0) {
+          store.getState().setMyHand(cards.map(toTeamCard))
         }
-        if (ri.betPrompt) {
+        if (betPrompt) {
           store.getState().setActiveTurn({
-            userId: ri.betPrompt.userId,
+            userId: betPrompt.userId,
             startedAt: Date.now(),
-            timeoutMs: ri.betPrompt.timeoutMs,
+            timeoutMs: betPrompt.timeoutMs,
           })
           store.getState().setMyTurn(true)
           store.getState().setBetPrompt({
-            minimumBet: ri.betPrompt.minimumBet,
-            currentBet: ri.betPrompt.currentBet,
-            pot: ri.betPrompt.pot,
-            chips: ri.betPrompt.chips,
-            allowedActions: ri.betPrompt.allowedActions,
-            timeoutMs: ri.betPrompt.timeoutMs,
-            promptedAt: ri.betPrompt.promptedAt ?? Date.now(),
+            minimumBet: betPrompt.minimumBet,
+            currentBet: betPrompt.currentBet,
+            pot: betPrompt.pot,
+            chips: betPrompt.chips,
+            allowedActions: betPrompt.allowedActions,
+            timeoutMs: betPrompt.timeoutMs,
+            promptedAt: betPrompt.promptedAt ?? Date.now(),
           })
         }
         if (ri.waitingForResults) {
@@ -114,18 +106,19 @@ export function useGameSocket(tableId: string) {
 
         // SF-01b: Reconnect state recovery — replay accumulated phase data
         if (ri.currentPhase) {
-          // C3 fix: cast to proper types instead of `never` (consequence of C2 GameState mismatch)
-          if (ri.resolvedFixtures?.length) {
-            for (const f of ri.resolvedFixtures) {
-              store.getState().addFixtureResult(f as FixtureResultPayload)
-            }
+          const resolvedFixtures = ri.resolvedFixtures as
+            | readonly FixtureResultPayload[]
+            | undefined
+          const revealedScores = ri.revealedPlayerScores as
+            | readonly PlayerScoredPayload[]
+            | undefined
+          if (resolvedFixtures?.length) {
+            for (const f of resolvedFixtures) store.getState().addFixtureResult(f)
           }
-          if (ri.revealedPlayerScores?.length) {
-            for (const s of ri.revealedPlayerScores) {
-              store.getState().addPlayerScoreReveal(s as PlayerScoredPayload)
-            }
+          if (revealedScores?.length) {
+            for (const s of revealedScores) store.getState().addPlayerScoreReveal(s)
           }
-          const phaseToShowdown: Record<string, string> = {
+          const phaseToShowdown: Record<string, ShowdownPhase> = {
             waiting: 'waiting',
             fixtures: 'fixtures',
             scoring: 'calculating',
@@ -133,7 +126,7 @@ export function useGameSocket(tableId: string) {
             winner: 'winner',
           }
           const sp = phaseToShowdown[ri.currentPhase]
-          if (sp) store.getState().setShowdownPhase(sp as never)
+          if (sp) store.getState().setShowdownPhase(sp)
         }
       }
     })
@@ -169,7 +162,7 @@ export function useGameSocket(tableId: string) {
             id: payload.roundId,
             tableId,
             roundNumber: payload.roundNumber,
-            status: 'BOARD_REVEALED' as never,
+            status: 'BOARD_REVEALED' as RoundStatus,
             board: [],
             hands: [],
             bettingRounds: [],
@@ -180,7 +173,10 @@ export function useGameSocket(tableId: string) {
         })
       }
 
-      // Guarantee winner banner shows for at least MIN_WINNER_BANNER_MS
+      // The server can send round:start immediately after round:winner.
+      // pendingRoundStartRef defers applyRoundStart until the winner banner
+      // has been visible for at least MIN_WINNER_BANNER_MS, preventing it
+      // from being replaced before the player can read it.
       if (store.getState().showdownPhase === 'winner') {
         const elapsed = Date.now() - winnerShownAtRef.current
         const remaining = MIN_WINNER_BANNER_MS - elapsed
@@ -207,9 +203,8 @@ export function useGameSocket(tableId: string) {
       })
     })
 
-    // C7: board:reveal sends RawFixture[] at runtime but ServerToClientEvents types it as
-    // TeamCard[] (stale) and setFixtures expects Fixture[] (shared type). Both mismatches are
-    // Soni's debt (S-debt-01). Cast through unknown rather than `never[]` to document intent.
+    // board:reveal socket type is TeamCard[] (stale shared type) but runtime sends Fixture[].
+    // Cast is still needed until ServerToClientEvents is updated to use Fixture[].
     socket.on('board:reveal', (fixtureData) => {
       const fixtureArray = fixtureData as unknown as readonly Fixture[]
       store.getState().setFixtures(fixtureArray)
