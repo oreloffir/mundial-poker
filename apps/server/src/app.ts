@@ -18,7 +18,12 @@ import type { Request, Response, NextFunction } from 'express'
 
 const app = express()
 
-app.use(cors({ origin: config.corsOrigins, credentials: true }))
+app.use(
+  cors({
+    origin: config.corsOrigins === true ? true : config.corsOrigins,
+    credentials: true,
+  }),
+)
 app.use(express.json())
 
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -48,7 +53,7 @@ const server = http.createServer(app)
 
 const io = new Server(server, {
   cors: {
-    origin: config.corsOrigins,
+    origin: config.corsOrigins === true ? true : config.corsOrigins,
     methods: ['GET', 'POST'],
     credentials: true,
   },

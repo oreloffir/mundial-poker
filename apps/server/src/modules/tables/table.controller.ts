@@ -93,8 +93,26 @@ export function createTableRouter(io: Server): Router {
   router.post('/:id/add-bots', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authReq = req as AuthRequest
-      const table = await tableService.addBotsToTable(req.params.id, authReq.user!.userId)
+      const tableId = req.params.id
+      const before = await tableService.getTable(tableId)
+      const table = await tableService.addBotsToTable(tableId, authReq.user!.userId)
       res.json({ success: true, data: { table } })
+      if (table) {
+        const beforeIds = new Set(before.players.map((p) => p.userId))
+        for (const p of table.players) {
+          if (!beforeIds.has(p.userId)) {
+            io.to(`table:${tableId}`).emit('player:joined', {
+              userId: p.userId,
+              username: p.username ?? '',
+              avatarUrl: p.avatarUrl ?? '',
+              chips: p.chipStack,
+              seatIndex: p.seatIndex,
+              isConnected: false,
+              isEliminated: false,
+            })
+          }
+        }
+      }
     } catch (error) {
       next(error)
     }
@@ -103,8 +121,26 @@ export function createTableRouter(io: Server): Router {
   router.post('/:id/add-bot', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authReq = req as AuthRequest
-      const table = await tableService.addSingleBotToTable(req.params.id, authReq.user!.userId)
+      const tableId = req.params.id
+      const before = await tableService.getTable(tableId)
+      const table = await tableService.addSingleBotToTable(tableId, authReq.user!.userId)
       res.json({ success: true, data: { table } })
+      if (table) {
+        const beforeIds = new Set(before.players.map((p) => p.userId))
+        for (const p of table.players) {
+          if (!beforeIds.has(p.userId)) {
+            io.to(`table:${tableId}`).emit('player:joined', {
+              userId: p.userId,
+              username: p.username ?? '',
+              avatarUrl: p.avatarUrl ?? '',
+              chips: p.chipStack,
+              seatIndex: p.seatIndex,
+              isConnected: false,
+              isEliminated: false,
+            })
+          }
+        }
+      }
     } catch (error) {
       next(error)
     }
