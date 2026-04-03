@@ -3,7 +3,7 @@ import { db } from '../../db/index.js'
 import { tables } from '../../db/schema.js'
 import * as tableRepo from './table.repository.js'
 import { NotFoundError, GameError, ForbiddenError } from '../../shared/errors.js'
-import { BOT_IDS, isBotUser, createSingleBot } from '../game/bot.service.js'
+import { BOT_IDS, createSingleBot } from '../game/bot.service.js'
 
 const MAX_PLAYERS = 5
 const DEFAULT_STARTING_CHIPS = 500
