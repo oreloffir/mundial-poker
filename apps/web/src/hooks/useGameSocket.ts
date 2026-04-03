@@ -195,20 +195,16 @@ export function useGameSocket(tableId: string) {
 
     socket.on('blinds:posted', (payload) => {
       const now = Date.now()
-      store
-        .getState()
-        .setPlayerAction(payload.sbUserId, {
-          action: 'SB',
-          amount: payload.sbAmount,
-          timestamp: now,
-        })
-      store
-        .getState()
-        .setPlayerAction(payload.bbUserId, {
-          action: 'BB',
-          amount: payload.bbAmount,
-          timestamp: now,
-        })
+      store.getState().setPlayerAction(payload.sbUserId, {
+        action: 'SB',
+        amount: payload.sbAmount,
+        timestamp: now,
+      })
+      store.getState().setPlayerAction(payload.bbUserId, {
+        action: 'BB',
+        amount: payload.bbAmount,
+        timestamp: now,
+      })
     })
 
     // C7: board:reveal sends RawFixture[] at runtime but ServerToClientEvents types it as
