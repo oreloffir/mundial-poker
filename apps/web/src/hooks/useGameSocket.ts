@@ -2,7 +2,14 @@ import { useEffect, useCallback, useRef } from 'react'
 import { getSocket, disconnectSocket } from '@/lib/socket'
 import { useGameStore } from '@/stores/gameStore'
 import { useAuthStore } from '@/stores/authStore'
-import type { BetAction, TeamCard, TeamTier, Confederation, Fixture, RoundStatus } from '@wpc/shared'
+import type {
+  BetAction,
+  TeamCard,
+  TeamTier,
+  Confederation,
+  Fixture,
+  RoundStatus,
+} from '@wpc/shared'
 import type { RoundCardPayload, FixtureResultPayload, PlayerScoredPayload } from '@wpc/shared'
 import type { ShowdownPhase } from '@/stores/gameStore'
 
@@ -51,9 +58,14 @@ export function useGameSocket(tableId: string) {
         const ri = rawState.roundInfo
         const cards = ri.cards as readonly RoundCardPayload[]
         const betPrompt = ri.betPrompt as {
-          userId: string; minimumBet: number; currentBet: number
-          pot: number; chips: number; allowedActions: string[]
-          timeoutMs: number; promptedAt?: number
+          userId: string
+          minimumBet: number
+          currentBet: number
+          pot: number
+          chips: number
+          allowedActions: string[]
+          timeoutMs: number
+          promptedAt?: number
         } | null
         store.getState().setRound({
           id: ri.roundId,
@@ -94,8 +106,12 @@ export function useGameSocket(tableId: string) {
 
         // SF-01b: Reconnect state recovery — replay accumulated phase data
         if (ri.currentPhase) {
-          const resolvedFixtures = ri.resolvedFixtures as readonly FixtureResultPayload[] | undefined
-          const revealedScores = ri.revealedPlayerScores as readonly PlayerScoredPayload[] | undefined
+          const resolvedFixtures = ri.resolvedFixtures as
+            | readonly FixtureResultPayload[]
+            | undefined
+          const revealedScores = ri.revealedPlayerScores as
+            | readonly PlayerScoredPayload[]
+            | undefined
           if (resolvedFixtures?.length) {
             for (const f of resolvedFixtures) store.getState().addFixtureResult(f)
           }

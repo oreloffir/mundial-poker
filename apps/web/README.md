@@ -34,20 +34,23 @@ Shared: `PokerChip` SVG with 6 denomination color variants (5/10/25/50/100/200).
 Two Zustand stores — both write-only via actions, never mutate directly.
 
 ### `authStore`
+
 Persisted to localStorage. Holds `{ user, token }`. Written by `useAuth`.
 
 ### `gameStore`
+
 Ephemeral. Reset on `round:start` (via `resetRoundState`) and on table leave (via `reset`).
 
-| Group | Fields | Written by |
-|-------|--------|-----------|
-| Table | `table` | `table:state`, `player:joined/left`, `players:update` |
-| Round | `currentRound`, `myHand`, `fixtures` | `round:start`, `board:reveal` |
-| Betting | `betPrompt`, `activeTurn`, `playerActions`, `foldedPlayerIds`, `sbSeatIndex`, `bbSeatIndex` | `bet:prompt`, `bet:update`, `blinds:posted` |
-| Showdown | `showdownPhase`, `fixtureResults`, `playerScoreReveals`, `currentRevealIndex`, `winnerData` | `fixture:result`, `player:scored`, `round:winner` |
-| UI | `potFlashKey`, `revealedFixtureCount`, `waitingForResults`, `error` | various |
+| Group    | Fields                                                                                      | Written by                                            |
+| -------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Table    | `table`                                                                                     | `table:state`, `player:joined/left`, `players:update` |
+| Round    | `currentRound`, `myHand`, `fixtures`                                                        | `round:start`, `board:reveal`                         |
+| Betting  | `betPrompt`, `activeTurn`, `playerActions`, `foldedPlayerIds`, `sbSeatIndex`, `bbSeatIndex` | `bet:prompt`, `bet:update`, `blinds:posted`           |
+| Showdown | `showdownPhase`, `fixtureResults`, `playerScoreReveals`, `currentRevealIndex`, `winnerData` | `fixture:result`, `player:scored`, `round:winner`     |
+| UI       | `potFlashKey`, `revealedFixtureCount`, `waitingForResults`, `error`                         | various                                               |
 
 **Showdown phase machine** — transitions driven by socket events:
+
 ```
 idle → waiting → fixtures → calculating → reveals → winner → idle
 ```
@@ -60,31 +63,31 @@ All socket logic lives in `hooks/useGameSocket.ts`. Initialized once in `GameTab
 
 ### Consumed (server → client)
 
-| Event | Action |
-|-------|--------|
-| `table:state` | Hydrates full table + round on connect/reconnect |
-| `players:update` | Bulk chip sync after round ends |
-| `player:joined` / `player:left` | Update player list |
-| `round:start` | Atomic state reset + new round (single `store.setState` call) |
-| `blinds:posted` | SB/BB action badges |
-| `bet:prompt` | Show betting controls for active player |
-| `bet:update` | Update pot, last action badge, player chips |
-| `round:pause` | Betting over — start waiting for fixture results |
-| `board:reveal` | Set fixtures, start staggered tile reveal |
-| `fixture:result` | Append to `fixtureResults`, advance reveal count |
-| `round:scoring` | Transition phase: calculating → reveals |
-| `player:scored` | Append score popup, auto-advance `currentRevealIndex` |
-| `round:winner` | Set winner data, transition to winner phase |
-| `game:over` | Mark table COMPLETED, show GameOverOverlay |
-| `error` | Set error string |
+| Event                           | Action                                                        |
+| ------------------------------- | ------------------------------------------------------------- |
+| `table:state`                   | Hydrates full table + round on connect/reconnect              |
+| `players:update`                | Bulk chip sync after round ends                               |
+| `player:joined` / `player:left` | Update player list                                            |
+| `round:start`                   | Atomic state reset + new round (single `store.setState` call) |
+| `blinds:posted`                 | SB/BB action badges                                           |
+| `bet:prompt`                    | Show betting controls for active player                       |
+| `bet:update`                    | Update pot, last action badge, player chips                   |
+| `round:pause`                   | Betting over — start waiting for fixture results              |
+| `board:reveal`                  | Set fixtures, start staggered tile reveal                     |
+| `fixture:result`                | Append to `fixtureResults`, advance reveal count              |
+| `round:scoring`                 | Transition phase: calculating → reveals                       |
+| `player:scored`                 | Append score popup, auto-advance `currentRevealIndex`         |
+| `round:winner`                  | Set winner data, transition to winner phase                   |
+| `game:over`                     | Mark table COMPLETED, show GameOverOverlay                    |
+| `error`                         | Set error string                                              |
 
 ### Emitted (client → server)
 
-| Event | When |
-|-------|------|
-| `table:join` | On hook mount |
+| Event         | When                       |
+| ------------- | -------------------------- |
+| `table:join`  | On hook mount              |
 | `table:leave` | On unmount or Leave button |
-| `bet:action` | On any betting action |
+| `bet:action`  | On any betting action      |
 
 ---
 
