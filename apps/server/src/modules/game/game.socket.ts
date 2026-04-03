@@ -22,7 +22,6 @@ interface SocketData {
   readonly email: string
 }
 
-
 async function getTableState(tableId: string, userId: string): Promise<GameState | null> {
   const [table] = await db.select().from(tables).where(eq(tables.id, tableId)).limit(1)
   if (!table) return null
@@ -159,7 +158,12 @@ async function getTableState(tableId: string, userId: string): Promise<GameState
 }
 
 export function setupGameSocket(io: Server): void {
-  const typedIo = io as unknown as Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>
+  const typedIo = io as unknown as Server<
+    ClientToServerEvents,
+    ServerToClientEvents,
+    Record<string, never>,
+    SocketData
+  >
 
   typedIo.use((socket, next) => {
     try {

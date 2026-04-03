@@ -36,55 +36,55 @@ If all players fold except one, the round ends immediately with pot awarded to t
 
 ### Server → Client
 
-| Event | Payload | When |
-|-------|---------|------|
-| `lobby:tables` | `{ tables: LobbyTableItem[] }` | Table created/updated/deleted |
-| `table:state` | `GameState` | Player joins table (full state sync) |
-| `round:start` | `RoundStartPayload` | New round begins (per-player, includes cards) |
-| `board:reveal` | `TeamCard[]` | Fixture board shown |
-| `blinds:posted` | `{ sbUserId, sbAmount, bbUserId, bbAmount, pot }` | Blinds deducted |
-| `bet:prompt` | `BetPromptPayload` | Player's turn to bet |
-| `bet:update` | `BetUpdatePayload` | Bet action resolved |
-| `round:pause` | `RoundPausePayload` | Betting complete, waiting for fixtures |
-| `fixture:result` | `FixtureResultPayload` | Single fixture score revealed |
-| `round:scoring` | `{ roundId }` | Scoring phase started |
-| `player:scored` | `PlayerScoredPayload` | Single player's score revealed |
-| `round:winner` | `RoundWinnerPayload` | Winner announced with pot distribution |
-| `players:update` | `{ userId, chips }[]` | Chip balances synced |
-| `player:joined` | `TablePlayer` | Player connected to table |
-| `player:left` | `{ userId }` | Player left table |
-| `player:disconnected` | `{ userId }` | Player disconnected |
-| `player:eliminated` | `{ userId, finalChips }` | Player out of chips |
-| `game:over` | `{ winnerId, finalStandings }` | Game complete |
+| Event                 | Payload                                           | When                                          |
+| --------------------- | ------------------------------------------------- | --------------------------------------------- |
+| `lobby:tables`        | `{ tables: LobbyTableItem[] }`                    | Table created/updated/deleted                 |
+| `table:state`         | `GameState`                                       | Player joins table (full state sync)          |
+| `round:start`         | `RoundStartPayload`                               | New round begins (per-player, includes cards) |
+| `board:reveal`        | `TeamCard[]`                                      | Fixture board shown                           |
+| `blinds:posted`       | `{ sbUserId, sbAmount, bbUserId, bbAmount, pot }` | Blinds deducted                               |
+| `bet:prompt`          | `BetPromptPayload`                                | Player's turn to bet                          |
+| `bet:update`          | `BetUpdatePayload`                                | Bet action resolved                           |
+| `round:pause`         | `RoundPausePayload`                               | Betting complete, waiting for fixtures        |
+| `fixture:result`      | `FixtureResultPayload`                            | Single fixture score revealed                 |
+| `round:scoring`       | `{ roundId }`                                     | Scoring phase started                         |
+| `player:scored`       | `PlayerScoredPayload`                             | Single player's score revealed                |
+| `round:winner`        | `RoundWinnerPayload`                              | Winner announced with pot distribution        |
+| `players:update`      | `{ userId, chips }[]`                             | Chip balances synced                          |
+| `player:joined`       | `TablePlayer`                                     | Player connected to table                     |
+| `player:left`         | `{ userId }`                                      | Player left table                             |
+| `player:disconnected` | `{ userId }`                                      | Player disconnected                           |
+| `player:eliminated`   | `{ userId, finalChips }`                          | Player out of chips                           |
+| `game:over`           | `{ winnerId, finalStandings }`                    | Game complete                                 |
 
 ### Client → Server
 
-| Event | Payload | Response |
-|-------|---------|----------|
-| `table:join` | `{ tableId }` | `{ success, error? }` |
-| `table:leave` | `{ tableId }` | — |
-| `bet:action` | `{ action, amount }` | `{ success, error? }` |
-| `round:ready` | `{ roundId }` | — |
+| Event         | Payload              | Response              |
+| ------------- | -------------------- | --------------------- |
+| `table:join`  | `{ tableId }`        | `{ success, error? }` |
+| `table:leave` | `{ tableId }`        | —                     |
+| `bet:action`  | `{ action, amount }` | `{ success, error? }` |
+| `round:ready` | `{ roundId }`        | —                     |
 
 ## State Management
 
 ### Redis Keys (2h TTL)
 
-| Key Pattern | Value | Used By |
-|-------------|-------|---------|
-| `betting:{roundId}` | `BettingState` JSON | `betting.service.ts` |
-| `blinds:{roundId}` | `RoundBlindInfo` JSON | `game.service.ts` |
-| `phase:{tableId}` | `RoundPhaseState` JSON | `phase-tracker.ts` |
-| `fixture-data:{roundId}` | `SerializableFixtureData` JSON | `game.service.ts` |
+| Key Pattern              | Value                          | Used By              |
+| ------------------------ | ------------------------------ | -------------------- |
+| `betting:{roundId}`      | `BettingState` JSON            | `betting.service.ts` |
+| `blinds:{roundId}`       | `RoundBlindInfo` JSON          | `game.service.ts`    |
+| `phase:{tableId}`        | `RoundPhaseState` JSON         | `phase-tracker.ts`   |
+| `fixture-data:{roundId}` | `SerializableFixtureData` JSON | `game.service.ts`    |
 
 All keys auto-expire after 2 hours. If Redis is unavailable, the server falls back to in-memory Maps with a warning.
 
 ### In-Memory Only (not persisted)
 
-| Map | Purpose |
-|-----|---------|
+| Map            | Purpose                                     |
+| -------------- | ------------------------------------------- |
 | `activeTimers` | Demo fixture reveal timer abort controllers |
-| `betTimers` | 30-second bet timeout IDs |
+| `betTimers`    | 30-second bet timeout IDs                   |
 
 These are timer references that can't be serialized. On server restart, active timers are lost — games in the fixture reveal or betting timeout phase will need to be restarted.
 
@@ -135,34 +135,34 @@ bets
 
 ## Key Files
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `game.service.ts` | ~820 | Round lifecycle, betting flow, fixture timing, scoring |
-| `betting.service.ts` | ~340 | Betting state machine (init, validate, apply, complete) |
-| `phase-tracker.ts` | ~45 | Redis-backed reconnect state (phase, fixtures, scores) |
-| `game.socket.ts` | ~300 | Socket.io event handlers, table state assembly |
-| `scoring.service.ts` | ~150 | Card scoring after fixture results |
-| `dealing.service.ts` | ~220 | Card dealing, fixture assignment |
-| `demo.service.ts` | ~180 | Demo fixture generation with random scores |
-| `blinds.service.ts` | ~50 | Blind position calculation |
+| File                 | Lines | Purpose                                                 |
+| -------------------- | ----- | ------------------------------------------------------- |
+| `game.service.ts`    | ~820  | Round lifecycle, betting flow, fixture timing, scoring  |
+| `betting.service.ts` | ~340  | Betting state machine (init, validate, apply, complete) |
+| `phase-tracker.ts`   | ~45   | Redis-backed reconnect state (phase, fixtures, scores)  |
+| `game.socket.ts`     | ~300  | Socket.io event handlers, table state assembly          |
+| `scoring.service.ts` | ~150  | Card scoring after fixture results                      |
+| `dealing.service.ts` | ~220  | Card dealing, fixture assignment                        |
+| `demo.service.ts`    | ~180  | Demo fixture generation with random scores              |
+| `blinds.service.ts`  | ~50   | Blind position calculation                              |
 
 ## REST API
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/health` | No | Health check |
-| POST | `/api/auth/register` | No | Create account |
-| POST | `/api/auth/login` | No | Get JWT token |
-| GET | `/api/tables` | Yes | List tables |
-| POST | `/api/tables` | Yes | Create table |
-| GET | `/api/tables/:id` | Yes | Get table details |
-| POST | `/api/tables/:id/join` | Yes | Join table |
-| POST | `/api/tables/:id/leave` | Yes | Leave table |
-| POST | `/api/tables/:id/add-bot` | Yes | Add one bot |
-| POST | `/api/tables/:id/add-bots` | Yes | Fill with bots |
-| POST | `/api/tables/:id/start` | Yes | Start game |
-| DELETE | `/api/admin/cleanup` | Admin | Clean up stale tables |
-| POST | `/api/test/seed-game` | Dev only | Seed a game to a specific phase |
+| Method | Path                       | Auth     | Description                     |
+| ------ | -------------------------- | -------- | ------------------------------- |
+| GET    | `/api/health`              | No       | Health check                    |
+| POST   | `/api/auth/register`       | No       | Create account                  |
+| POST   | `/api/auth/login`          | No       | Get JWT token                   |
+| GET    | `/api/tables`              | Yes      | List tables                     |
+| POST   | `/api/tables`              | Yes      | Create table                    |
+| GET    | `/api/tables/:id`          | Yes      | Get table details               |
+| POST   | `/api/tables/:id/join`     | Yes      | Join table                      |
+| POST   | `/api/tables/:id/leave`    | Yes      | Leave table                     |
+| POST   | `/api/tables/:id/add-bot`  | Yes      | Add one bot                     |
+| POST   | `/api/tables/:id/add-bots` | Yes      | Fill with bots                  |
+| POST   | `/api/tables/:id/start`    | Yes      | Start game                      |
+| DELETE | `/api/admin/cleanup`       | Admin    | Clean up stale tables           |
+| POST   | `/api/test/seed-game`      | Dev only | Seed a game to a specific phase |
 
 ## Testing
 

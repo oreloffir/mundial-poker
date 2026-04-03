@@ -10,11 +10,11 @@ and the deployed EC2 dev server.
 
 ## Environments
 
-| Environment | URL | When to use |
-|-------------|-----|-------------|
-| Local | `http://localhost:5173` | Daily development, pre-commit checks |
-| Dev server | `http://<ec2-ip>` (from Devsi) | Post-deploy verification, integration QA |
-| Production | TBD | Release verification only |
+| Environment | URL                            | When to use                              |
+| ----------- | ------------------------------ | ---------------------------------------- |
+| Local       | `http://localhost:5173`        | Daily development, pre-commit checks     |
+| Dev server  | `http://<ec2-ip>` (from Devsi) | Post-deploy verification, integration QA |
+| Production  | TBD                            | Release verification only                |
 
 ---
 
@@ -87,22 +87,22 @@ pnpm test:e2e --retries 1
 Run this immediately after Devsi confirms a new deploy is live.
 Each check must pass before moving to the next.
 
-| # | Check | Command / Steps | Pass condition |
-|---|-------|-----------------|----------------|
-| 1 | Site loads | `curl http://<ec2-ip>` | Returns HTML (200) |
-| 2 | Health endpoint | `curl http://<ec2-ip>/api/health` | `{"success":true}` |
-| 3 | Guest login | Open site → navigate to /lobby | Guest session created, lobby renders |
-| 4 | WebSocket connects | Create table → check browser Network tab | WS connection established, no 101 error |
-| 5 | Database has teams | Create table → add bot | Bot joins (means DB has team data) |
-| 6 | Redis connected | Start game → make a bet | Betting state persists between actions |
-| 7 | Full round works | Play complete round: bet → showdown → winner | Winner banner appears, chips updated |
-| 8 | No CORS errors | Browser DevTools Console after full round | Zero red errors |
+| #   | Check              | Command / Steps                              | Pass condition                          |
+| --- | ------------------ | -------------------------------------------- | --------------------------------------- |
+| 1   | Site loads         | `curl http://<ec2-ip>`                       | Returns HTML (200)                      |
+| 2   | Health endpoint    | `curl http://<ec2-ip>/api/health`            | `{"success":true}`                      |
+| 3   | Guest login        | Open site → navigate to /lobby               | Guest session created, lobby renders    |
+| 4   | WebSocket connects | Create table → check browser Network tab     | WS connection established, no 101 error |
+| 5   | Database has teams | Create table → add bot                       | Bot joins (means DB has team data)      |
+| 6   | Redis connected    | Start game → make a bet                      | Betting state persists between actions  |
+| 7   | Full round works   | Play complete round: bet → showdown → winner | Winner banner appears, chips updated    |
+| 8   | No CORS errors     | Browser DevTools Console after full round    | Zero red errors                         |
 
 **Bonus (if time allows):**
 
-| # | Check | Steps | Pass condition |
-|---|-------|-------|----------------|
-| 9 | State survives restart | Mid-round, ask Devsi to restart container | Reconnect → game resumes where it left off |
+| #   | Check                  | Steps                                     | Pass condition                             |
+| --- | ---------------------- | ----------------------------------------- | ------------------------------------------ |
+| 9   | State survives restart | Mid-round, ask Devsi to restart container | Reconnect → game resumes where it left off |
 
 Run the smoke test manually first, then run the automated flow audit:
 
@@ -150,21 +150,21 @@ If stale tables appear, the cleanup did not complete. Run `pnpm db:reset` again.
 
 Tests are in `apps/web/e2e/`. Key files:
 
-| File | Coverage |
-|------|---------|
-| `flow-audit.spec.ts` | Full UX walkthrough A–K, desktop + mobile |
-| `showdown.spec.ts` | SD1–SD14 showdown phase (phases 1–5) |
-| `betting.spec.ts` | All betting controls, chip denominations, timer |
-| `game-round.spec.ts` | Round lifecycle, blind rotation, chip counts |
-| `table-setup.spec.ts` | Table creation, bot joining, start game |
+| File                  | Coverage                                        |
+| --------------------- | ----------------------------------------------- |
+| `flow-audit.spec.ts`  | Full UX walkthrough A–K, desktop + mobile       |
+| `showdown.spec.ts`    | SD1–SD14 showdown phase (phases 1–5)            |
+| `betting.spec.ts`     | All betting controls, chip denominations, timer |
+| `game-round.spec.ts`  | Round lifecycle, blind rotation, chip counts    |
+| `table-setup.spec.ts` | Table creation, bot joining, start game         |
 
 Helpers in `e2e/helpers/`:
 
-| Helper | Purpose |
-|--------|---------|
-| `auth.helper.ts` | `guestLogin(page)` |
-| `table.helper.ts` | `setupGame(page, { botCount })` |
-| `game.helper.ts` | `playAllBettingPhases`, `waitForWinnerBanner`, `getAllSeatBalances`, `getRoundNumber` |
+| Helper            | Purpose                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| `auth.helper.ts`  | `guestLogin(page)`                                                                    |
+| `table.helper.ts` | `setupGame(page, { botCount })`                                                       |
+| `game.helper.ts`  | `playAllBettingPhases`, `waitForWinnerBanner`, `getAllSeatBalances`, `getRoundNumber` |
 
 ---
 
@@ -182,21 +182,21 @@ Helpers in `e2e/helpers/`:
 
 Flow audit screenshots: `assets/screenshots/`
 
-| Prefix | When |
-|--------|------|
-| `v2-desktop-*` | Latest localhost desktop pass |
-| `v2-mobile-*` | Latest localhost mobile pass |
-| `dev-desktop-*` | Post-deploy desktop pass |
-| `dev-mobile-*` | Post-deploy mobile pass |
-| `sprint4-*` | Visual regression (M9) |
+| Prefix          | When                          |
+| --------------- | ----------------------------- |
+| `v2-desktop-*`  | Latest localhost desktop pass |
+| `v2-mobile-*`   | Latest localhost mobile pass  |
+| `dev-desktop-*` | Post-deploy desktop pass      |
+| `dev-mobile-*`  | Post-deploy mobile pass       |
+| `sprint4-*`     | Visual regression (M9)        |
 
 ---
 
 ## Contacts
 
-| Role | Name | Slack |
-|------|------|-------|
-| Backend / Server | Soni | #dev |
-| Frontend | Joni | #dev |
-| DevOps / EC2 | Devsi | #infra |
-| PM | Clodi | #product |
+| Role             | Name  | Slack    |
+| ---------------- | ----- | -------- |
+| Backend / Server | Soni  | #dev     |
+| Frontend         | Joni  | #dev     |
+| DevOps / EC2     | Devsi | #infra   |
+| PM               | Clodi | #product |

@@ -17,6 +17,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 ### Requirements
 
 1. **Create `apps/server/Dockerfile`:**
+
    ```dockerfile
    FROM node:22-alpine AS builder
    WORKDIR /app
@@ -38,9 +39,11 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
    EXPOSE 5174
    CMD ["node", "dist/app.js"]
    ```
+
    Adjust paths based on your actual build output. The key: multi-stage build, small final image, no dev dependencies.
 
 2. **Create `apps/web/Dockerfile`:**
+
    ```dockerfile
    FROM node:22-alpine AS builder
    WORKDIR /app
@@ -61,6 +64,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
    ```
 
 3. **Create `apps/web/nginx.conf`** for the web container:
+
    ```nginx
    server {
      listen 80;
@@ -72,9 +76,11 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
      }
    }
    ```
+
    This handles SPA routing (React Router).
 
 4. **Add `.dockerignore`** at repo root:
+
    ```
    node_modules
    .git
@@ -113,16 +119,19 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 ### Requirements
 
 1. **Environment config** — Create a config module that reads from env vars with defaults:
+
    ```typescript
    // apps/server/src/config.ts
    export const config = {
      port: parseInt(process.env.PORT ?? '5174'),
-     databaseUrl: process.env.DATABASE_URL ?? 'postgres://wpc:wpc_dev_pass@localhost:5432/world_poker_cup',
+     databaseUrl:
+       process.env.DATABASE_URL ?? 'postgres://wpc:wpc_dev_pass@localhost:5432/world_poker_cup',
      redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
      jwtSecret: process.env.JWT_SECRET ?? 'dev-secret-change-in-production',
      nodeEnv: process.env.NODE_ENV ?? 'development',
    }
    ```
+
    Replace all hardcoded connection strings with `config.*`.
 
 2. **Redis migration** — Move the 3 in-memory Maps to Redis:
@@ -143,6 +152,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
    - Same pattern
 
 3. **Create `apps/server/src/lib/redis.ts`:**
+
    ```typescript
    import { createClient } from 'redis'
    import { config } from '../config'
@@ -154,6 +164,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
      console.log('Redis connected')
    }
    ```
+
    Call `connectRedis()` in `app.ts` startup.
 
 4. **Graceful degradation** — If Redis is unavailable, fall back to in-memory Maps (for local dev without Redis). Log a warning.
@@ -212,9 +223,11 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 ## Delivery Log
 
 ### S12 — Dockerize
+
 **Status:** COMPLETE (Apr 2)
 
 **Files created:**
+
 - `apps/server/Dockerfile` — multi-stage build: node:22-alpine builder → tsc → prod image with node_modules (prod only) + dist
 - `apps/web/Dockerfile` — multi-stage build: node:22-alpine builder → vite build → nginx:alpine with static files
 - `apps/web/nginx.conf` — SPA routing (try_files → /index.html)
@@ -226,6 +239,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 **Key fix:** Updated `packages/shared/package.json` exports to use conditional exports (`types` → `.ts` for dev, `import` → `dist/*.js` for production). This lets `tsc` build output resolve `@wpc/shared` at runtime via pnpm workspace symlink → shared's compiled `dist/`.
 
 **Verified:**
+
 - `docker build` succeeds for both images
 - `docker compose -f docker-compose.production.yml up` — all 5 containers healthy
 - `curl localhost/api/health` → `{"success":true}`
@@ -234,14 +248,17 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 - All 43 tests still pass
 
 ### S13 — Redis Migration
+
 **Status:** COMPLETE (Apr 2)
 
 **Files created:**
+
 - `apps/server/src/config.ts` — centralized env config (port, databaseUrl, redisUrl, jwtSecret, nodeEnv, corsOrigins) with local defaults
 - `apps/server/src/lib/redis.ts` — Redis client with connect/disconnect, error handling, graceful degradation
 - `apps/server/src/lib/game-state-store.ts` — abstraction over Redis: `stateGet<T>`, `stateSet<T>`, `stateDel` with 2h TTL, in-memory Map fallback
 
 **Files modified:**
+
 - `apps/server/src/app.ts` — uses `config` for port/cors/env, calls `connectRedis()` on startup, async `start()` function
 - `apps/server/src/db/index.ts` — uses `config.databaseUrl` instead of raw `process.env`
 - `apps/server/src/modules/game/betting.service.ts` — `activeBettingStates` Map → Redis (`betting:{roundId}`). `getBettingState`, `initBettingRound`, `clearBettingState` now async
@@ -252,26 +269,31 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 - Both test files — async `initBettingRound`, `clearBettingState`
 
 **What stayed in-memory:**
+
 - `activeTimers` — timer abort controllers (can't serialize)
 - `betTimers` — setTimeout IDs (can't serialize)
 
 **Graceful degradation:** If Redis is unavailable, `game-state-store.ts` automatically falls back to in-memory Maps with a warning log. Tests run without Redis and all 43 pass.
 
 **Verified:**
+
 - Server starts with Redis connected: `Redis - connected { url: 'redis://localhost:6379' }`
 - All 43 tests pass (in-memory fallback)
 - Server typecheck clean
 - Devsi handoff doc created: `jira/sprint-4/shared/devsi-dockerize-handoff.md`
 
 ### S14 — DB Migrations
+
 **Status:** COMPLETE (Apr 2)
 
 **Files created:**
+
 - `apps/server/src/db/migrations/0000_third_living_mummy.sql` — initial migration (10 tables)
 - `apps/server/src/db/migrations/meta/` — drizzle migration metadata
 - `apps/server/src/db/reset.ts` — drops schema, runs migrations + seed (dev/test only)
 
 **Files modified:**
+
 - `apps/server/package.json` — `db:migrate` switched to `drizzle-kit migrate`, added `db:generate`, `db:push`, `db:reset`
 - `apps/server/drizzle.config.ts` — default DATABASE_URL fallback
 - `apps/server/src/db/seed/teams.seed.ts` — idempotent (check-before-insert, no more DELETE)

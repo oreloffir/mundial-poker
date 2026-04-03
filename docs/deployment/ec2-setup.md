@@ -11,14 +11,14 @@ Treat this as the runbook — if we ever need to rebuild from scratch, follow th
 
 ## Instance Spec
 
-| Setting | Value |
-|---------|-------|
-| Instance type | t2.micro (free tier eligible) |
-| AMI | Amazon Linux 2023 (latest) |
-| Region | **Ask Orel — TBD** |
-| Storage | 20GB gp3 |
-| Elastic IP | Yes — assigned after launch |
-| Key pair | `mundial-poker-ec2` (create new) |
+| Setting       | Value                            |
+| ------------- | -------------------------------- |
+| Instance type | t2.micro (free tier eligible)    |
+| AMI           | Amazon Linux 2023 (latest)       |
+| Region        | **Ask Orel — TBD**               |
+| Storage       | 20GB gp3                         |
+| Elastic IP    | Yes — assigned after launch      |
+| Key pair      | `mundial-poker-ec2` (create new) |
 
 ---
 
@@ -45,11 +45,11 @@ In the AWS Console:
 
 Security group name: `mundial-poker-sg`
 
-| Type | Port | Protocol | Source | Purpose |
-|------|------|----------|--------|---------|
-| SSH | 22 | TCP | `<OREL_IP>/32` | Admin access only |
-| HTTP | 80 | TCP | `0.0.0.0/0` | Web traffic |
-| HTTPS | 443 | TCP | `0.0.0.0/0` | Web traffic (SSL — Sprint 5) |
+| Type  | Port | Protocol | Source         | Purpose                      |
+| ----- | ---- | -------- | -------------- | ---------------------------- |
+| SSH   | 22   | TCP      | `<OREL_IP>/32` | Admin access only            |
+| HTTP  | 80   | TCP      | `0.0.0.0/0`    | Web traffic                  |
+| HTTPS | 443  | TCP      | `0.0.0.0/0`    | Web traffic (SSL — Sprint 5) |
 
 **All other inbound traffic: DENY**
 
@@ -161,13 +161,13 @@ cat ~/.ssh/deploy_key
 
 **In GitHub (repo Settings → Secrets → Actions):**
 
-| Secret | Value |
-|--------|-------|
-| `EC2_HOST` | `<ELASTIC_IP>` |
-| `EC2_USER` | `ec2-user` |
+| Secret        | Value                                         |
+| ------------- | --------------------------------------------- |
+| `EC2_HOST`    | `<ELASTIC_IP>`                                |
+| `EC2_USER`    | `ec2-user`                                    |
 | `EC2_SSH_KEY` | contents of `~/.ssh/deploy_key` (private key) |
-| `DB_PASSWORD` | strong random password |
-| `JWT_SECRET` | strong random string (32+ chars) |
+| `DB_PASSWORD` | strong random password                        |
+| `JWT_SECRET`  | strong random string (32+ chars)              |
 
 ---
 
@@ -184,6 +184,7 @@ nano .env.production
 ```
 
 Fill in:
+
 - `DB_PASSWORD` — same as GitHub Secret
 - `JWT_SECRET` — same as GitHub Secret
 - `REDIS_PASSWORD` — set if you add Redis auth (optional for now)
@@ -209,12 +210,12 @@ docker compose -f docker-compose.production.yml ps
 
 ## Instance Details (fill in after provisioning)
 
-| Field | Value |
-|-------|-------|
-| Instance ID | `i-XXXXXXXXXXXXXXXXX` |
-| Elastic IP | `X.X.X.X` |
-| Region | TBD |
-| AMI | `ami-XXXXXXXXXXXXXXXXX` |
+| Field         | Value                                                  |
+| ------------- | ------------------------------------------------------ |
+| Instance ID   | `i-XXXXXXXXXXXXXXXXX`                                  |
+| Elastic IP    | `X.X.X.X`                                              |
+| Region        | TBD                                                    |
+| AMI           | `ami-XXXXXXXXXXXXXXXXX`                                |
 | Key pair file | `mundial-poker-ec2.pem` (stored securely, not in repo) |
 
 ---

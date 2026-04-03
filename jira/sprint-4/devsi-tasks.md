@@ -28,6 +28,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
    - Port 5432, 6379 — closed (internal Docker network only)
 
 3. **Install Docker + Docker Compose:**
+
    ```bash
    sudo yum install docker -y  # or apt install docker.io
    sudo systemctl start docker
@@ -79,14 +80,14 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
        volumes:
          - pgdata:/var/lib/postgresql/data
        healthcheck:
-         test: ["CMD-SHELL", "pg_isready -U wpc"]
+         test: ['CMD-SHELL', 'pg_isready -U wpc']
          interval: 5s
        restart: always
 
      redis:
        image: redis:7-alpine
        healthcheck:
-         test: ["CMD", "redis-cli", "ping"]
+         test: ['CMD', 'redis-cli', 'ping']
          interval: 5s
        restart: always
 
@@ -116,8 +117,8 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
      nginx:
        image: nginx:alpine
        ports:
-         - "80:80"
-         - "443:443"
+         - '80:80'
+         - '443:443'
        volumes:
          - ./nginx.conf:/etc/nginx/conf.d/default.conf
        depends_on:
@@ -130,6 +131,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
    ```
 
 2. **Create `nginx.conf`** — reverse proxy + WebSocket upgrade:
+
    ```nginx
    upstream server {
      server server:5174;
@@ -225,6 +227,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
    - `JWT_SECRET` — production JWT secret
 
 3. **Clone repo on EC2:**
+
    ```bash
    sudo mkdir -p /opt/mundial-poker
    sudo chown ec2-user:ec2-user /opt/mundial-poker
@@ -251,6 +254,7 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 ## Delivery Log
 
 ### D2 — EC2 Setup
+
 **Status:** Complete — April 2, 2026
 **Instance:** `i-0b95a73440e9e9111` | Region: `eu-west-1` | AMI: `ami-0762bad84218d1ffa`
 **Elastic IP:** `52.49.249.190`
@@ -260,18 +264,22 @@ Read the [Sprint Brief](./SPRINT-BRIEF.md) first.
 **SSH:** `ssh -i ~/.ssh/mundial-poker-deploy.pem ec2-user@52.49.249.190`
 
 ### D3 — Docker Compose + Nginx
+
 **Status:** Complete — April 2, 2026
 **Services:** postgres (healthy), redis (healthy), server, web, nginx (port 80)
 **Verified:** `curl http://52.49.249.190/api/health` → 200 | Redis: PONG | Teams: 32
 
 ### D4 — CD Pipeline
+
 **Status:** Complete — April 2, 2026
 **Secrets set:** EC2_HOST, EC2_USER, EC2_SSH_KEY, DB_PASSWORD, JWT_SECRET
 **Game URL:** http://52.49.249.190
 
 ### D5 — DevOps Docs + File Organization
+
 **Status:** Complete — April 2, 2026
 **Changes:**
+
 - `docs/deployment/ec2-setup.md` → `docs/devops/ec2-setup.md` (updated with real instance values)
 - `docs/infrastructure-plan.md` → `docs/devops/infrastructure-plan.md`
 - `docs/devops/README.md` — new: full infrastructure overview (10-minute read)

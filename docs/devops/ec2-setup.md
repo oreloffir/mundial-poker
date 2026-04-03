@@ -11,14 +11,14 @@ Treat this as the runbook — if we ever need to rebuild from scratch, follow th
 
 ## Instance Spec
 
-| Setting | Value |
-|---------|-------|
-| Instance type | t2.micro (free tier eligible) |
-| AMI | Amazon Linux 2023 (`ami-0762bad84218d1ffa`) |
-| Region | eu-west-1 (Ireland) |
-| Storage | 20GB gp3 |
-| Elastic IP | `52.49.249.190` |
-| Key pair | `mundial-poker-deploy` (`~/.ssh/mundial-poker-deploy.pem`) |
+| Setting       | Value                                                      |
+| ------------- | ---------------------------------------------------------- |
+| Instance type | t2.micro (free tier eligible)                              |
+| AMI           | Amazon Linux 2023 (`ami-0762bad84218d1ffa`)                |
+| Region        | eu-west-1 (Ireland)                                        |
+| Storage       | 20GB gp3                                                   |
+| Elastic IP    | `52.49.249.190`                                            |
+| Key pair      | `mundial-poker-deploy` (`~/.ssh/mundial-poker-deploy.pem`) |
 
 ---
 
@@ -45,11 +45,11 @@ In the AWS Console:
 
 Security group name: `mundial-poker-sg`
 
-| Type | Port | Protocol | Source | Purpose |
-|------|------|----------|--------|---------|
-| SSH | 22 | TCP | `<OREL_IP>/32` | Admin access only |
-| HTTP | 80 | TCP | `0.0.0.0/0` | Web traffic |
-| HTTPS | 443 | TCP | `0.0.0.0/0` | Web traffic (SSL — Sprint 5) |
+| Type  | Port | Protocol | Source         | Purpose                      |
+| ----- | ---- | -------- | -------------- | ---------------------------- |
+| SSH   | 22   | TCP      | `<OREL_IP>/32` | Admin access only            |
+| HTTP  | 80   | TCP      | `0.0.0.0/0`    | Web traffic                  |
+| HTTPS | 443  | TCP      | `0.0.0.0/0`    | Web traffic (SSL — Sprint 5) |
 
 **All other inbound traffic: DENY**
 
@@ -173,13 +173,13 @@ cat ~/.ssh/deploy_key
 
 **In GitHub (repo Settings → Secrets → Actions):**
 
-| Secret | Value |
-|--------|-------|
-| `EC2_HOST` | `<ELASTIC_IP>` |
-| `EC2_USER` | `ec2-user` |
+| Secret        | Value                                         |
+| ------------- | --------------------------------------------- |
+| `EC2_HOST`    | `<ELASTIC_IP>`                                |
+| `EC2_USER`    | `ec2-user`                                    |
 | `EC2_SSH_KEY` | contents of `~/.ssh/deploy_key` (private key) |
-| `DB_PASSWORD` | strong random password |
-| `JWT_SECRET` | strong random string (32+ chars) |
+| `DB_PASSWORD` | strong random password                        |
+| `JWT_SECRET`  | strong random string (32+ chars)              |
 
 ---
 
@@ -196,6 +196,7 @@ nano .env.production
 ```
 
 Fill in:
+
 - `DB_PASSWORD` — same as GitHub Secret
 - `JWT_SECRET` — same as GitHub Secret
 - `REDIS_PASSWORD` — set if you add Redis auth (optional for now)
@@ -221,19 +222,19 @@ docker compose -f docker-compose.production.yml ps
 
 ## Instance Details
 
-| Field | Value |
-|-------|-------|
-| Instance ID | `i-0b95a73440e9e9111` |
-| Elastic IP | `52.49.249.190` |
-| Region | `eu-west-1` (Ireland) |
-| AMI | `ami-0762bad84218d1ffa` (Amazon Linux 2023) |
-| Security group | `sg-0c6ee7ef0e6ee3f37` (`mundial-poker-sg`) |
-| Key pair file | `mundial-poker-deploy` (`~/.ssh/mundial-poker-deploy.pem`, not in repo) |
-| Deploy key | `~/.ssh/github_actions_deploy` (private key in GitHub Secrets as `EC2_SSH_KEY`) |
-| App path | `/opt/mundial-poker` |
-| Docker version | 25.0.14 |
-| Docker Compose | v5.1.1 |
-| Docker buildx | v0.33.0 |
+| Field          | Value                                                                           |
+| -------------- | ------------------------------------------------------------------------------- |
+| Instance ID    | `i-0b95a73440e9e9111`                                                           |
+| Elastic IP     | `52.49.249.190`                                                                 |
+| Region         | `eu-west-1` (Ireland)                                                           |
+| AMI            | `ami-0762bad84218d1ffa` (Amazon Linux 2023)                                     |
+| Security group | `sg-0c6ee7ef0e6ee3f37` (`mundial-poker-sg`)                                     |
+| Key pair file  | `mundial-poker-deploy` (`~/.ssh/mundial-poker-deploy.pem`, not in repo)         |
+| Deploy key     | `~/.ssh/github_actions_deploy` (private key in GitHub Secrets as `EC2_SSH_KEY`) |
+| App path       | `/opt/mundial-poker`                                                            |
+| Docker version | 25.0.14                                                                         |
+| Docker Compose | v5.1.1                                                                          |
+| Docker buildx  | v0.33.0                                                                         |
 
 ---
 

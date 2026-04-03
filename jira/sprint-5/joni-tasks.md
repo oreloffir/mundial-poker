@@ -21,6 +21,7 @@ Rule: if typecheck passes after deletion → it was dead.
 ## J21 — Extract Duplicated Utilities (day 2)
 
 Consolidate:
+
 - useCountUp (exists in 2 files → one hook in hooks/)
 - getAvatarColor (duplicated → one util in utils/)
 - formatChips (extract if used in multiple files)
@@ -36,6 +37,7 @@ One copy, one import path, no duplicates.
 
 WAIT for Soni's S15 to merge first.
 Then:
+
 - Remove all `as never` / `as unknown` from frontend
 - Delete dead refs: animateRef in TeamScoreSubCard, mountedRef in PokerTable
 - Replace rowIdx++ mutation in render with named delay constants
@@ -48,6 +50,7 @@ Then:
 ## J23 — Frontend Architecture Documentation (day 4)
 
 Create apps/web/README.md with:
+
 - Component tree diagram
 - State management overview
 - Socket events consumed
@@ -55,6 +58,7 @@ Create apps/web/README.md with:
 - Key patterns
 
 Add inline comments to 3 most complex files:
+
 - useGameSocket.ts
 - gameStore.ts
 - PokerTable.tsx
@@ -67,9 +71,9 @@ Don't over-comment simple files.
 
 ## Delivery Log
 
-| Task | Branch | PR | Status |
-|------|--------|----|--------|
-| J20  | feat/dead-code-cleanup | — | ⬜ TODO |
-| J21  | feat/extract-utils | — | ⬜ TODO |
-| J22  | fix/type-casts | — | ⬜ TODO (blocked) |
-| J23  | docs/frontend-arch | — | ⬜ TODO |
+| Task | Branch                 | PR  | Status            |
+| ---- | ---------------------- | --- | ----------------- |
+| J20  | feat/dead-code-cleanup | —   | ⬜ TODO           |
+| J21  | feat/extract-utils     | —   | ⬜ TODO           |
+| J22  | fix/type-casts         | —   | ⬜ TODO (blocked) |
+| J23  | docs/frontend-arch     | —   | ⬜ TODO           |

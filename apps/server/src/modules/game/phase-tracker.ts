@@ -1,7 +1,14 @@
 import { stateGet, stateSet, stateDel } from '../../lib/game-state-store.js'
 import type { FixtureResultPayload, PlayerScoredPayload } from '@wpc/shared'
 
-export type RoundPhase = 'dealing' | 'betting' | 'waiting' | 'fixtures' | 'scoring' | 'reveals' | 'winner'
+export type RoundPhase =
+  | 'dealing'
+  | 'betting'
+  | 'waiting'
+  | 'fixtures'
+  | 'scoring'
+  | 'reveals'
+  | 'winner'
 
 export interface RoundPhaseState {
   readonly roundId: string

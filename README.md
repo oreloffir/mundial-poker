@@ -66,24 +66,24 @@ mundial-poker/
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start postgres, redis, server, and web |
-| `pnpm build` | Build shared, server, and web |
-| `pnpm test` | Run all tests (43 server tests) |
-| `pnpm typecheck` | Type-check all 3 workspaces |
-| `pnpm lint` | ESLint across all workspaces |
-| `pnpm format` | Prettier format all files |
-| `pnpm db:migrate` | Run database migrations |
-| `pnpm db:seed` | Seed teams (idempotent) |
+| Command           | Description                            |
+| ----------------- | -------------------------------------- |
+| `pnpm dev`        | Start postgres, redis, server, and web |
+| `pnpm build`      | Build shared, server, and web          |
+| `pnpm test`       | Run all tests (43 server tests)        |
+| `pnpm typecheck`  | Type-check all 3 workspaces            |
+| `pnpm lint`       | ESLint across all workspaces           |
+| `pnpm format`     | Prettier format all files              |
+| `pnpm db:migrate` | Run database migrations                |
+| `pnpm db:seed`    | Seed teams (idempotent)                |
 
 Server-specific (from `apps/server/`):
 
-| Command | Description |
-|---------|-------------|
-| `pnpm db:reset` | Drop + migrate + seed (dev only) |
-| `pnpm db:generate` | Generate new migration SQL |
-| `pnpm test:coverage` | Run tests with coverage |
+| Command              | Description                      |
+| -------------------- | -------------------------------- |
+| `pnpm db:reset`      | Drop + migrate + seed (dev only) |
+| `pnpm db:generate`   | Generate new migration SQL       |
+| `pnpm test:coverage` | Run tests with coverage          |
 
 ## Tech Stack
 

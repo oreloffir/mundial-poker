@@ -6,16 +6,16 @@
 
 ## What's on the branch
 
-| File | Purpose |
-|------|---------|
-| `apps/server/Dockerfile` | Multi-stage: node:22-alpine builder → tsc → prod image (node:22-alpine + prod deps + dist) |
-| `apps/web/Dockerfile` | Multi-stage: node:22-alpine builder → vite build → nginx:alpine (static files only) |
-| `apps/web/nginx.conf` | SPA routing inside web container (try_files → /index.html) |
-| `nginx.conf` (root) | Reverse proxy for your D3 nginx container: `/` → web:80, `/api/` → server:5174, `/socket.io/` → server:5174 (WebSocket upgrade) |
-| `docker-compose.production.yml` | Full 5-service stack: postgres, redis, server, web, nginx |
-| `.dockerignore` | Excludes node_modules, .git, docs, jira, screenshots, dist dirs |
-| `.env.production.template` | DB_PASSWORD, JWT_SECRET, NODE_ENV |
-| `packages/shared/package.json` | Updated exports — conditional: `types` → .ts for dev, `import` → dist/*.js for production |
+| File                            | Purpose                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/server/Dockerfile`        | Multi-stage: node:22-alpine builder → tsc → prod image (node:22-alpine + prod deps + dist)                                      |
+| `apps/web/Dockerfile`           | Multi-stage: node:22-alpine builder → vite build → nginx:alpine (static files only)                                             |
+| `apps/web/nginx.conf`           | SPA routing inside web container (try_files → /index.html)                                                                      |
+| `nginx.conf` (root)             | Reverse proxy for your D3 nginx container: `/` → web:80, `/api/` → server:5174, `/socket.io/` → server:5174 (WebSocket upgrade) |
+| `docker-compose.production.yml` | Full 5-service stack: postgres, redis, server, web, nginx                                                                       |
+| `.dockerignore`                 | Excludes node_modules, .git, docs, jira, screenshots, dist dirs                                                                 |
+| `.env.production.template`      | DB_PASSWORD, JWT_SECRET, NODE_ENV                                                                                               |
+| `packages/shared/package.json`  | Updated exports — conditional: `types` → .ts for dev, `import` → dist/\*.js for production                                      |
 
 ## How to test locally
 
@@ -29,13 +29,13 @@ curl http://localhost               # → React SPA (200)
 
 ## Env vars the server needs
 
-| Variable | Default | Notes |
-|----------|---------|-------|
-| `PORT` | `5174` | Server listen port (internal to Docker network) |
+| Variable       | Default                                                      | Notes                                                                                  |
+| -------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `PORT`         | `5174`                                                       | Server listen port (internal to Docker network)                                        |
 | `DATABASE_URL` | `postgres://wpc:wpc_dev_pass@localhost:5432/world_poker_cup` | Override with `postgres://wpc:${DB_PASSWORD}@postgres:5432/world_poker_cup` in compose |
-| `REDIS_URL` | `redis://localhost:6379` | Override with `redis://redis:6379` in compose |
-| `JWT_SECRET` | `dev-secret-change-in-production` | **Must change in production** |
-| `NODE_ENV` | `development` | Set to `production` in compose |
+| `REDIS_URL`    | `redis://localhost:6379`                                     | Override with `redis://redis:6379` in compose                                          |
+| `JWT_SECRET`   | `dev-secret-change-in-production`                            | **Must change in production**                                                          |
+| `NODE_ENV`     | `development`                                                | Set to `production` in compose                                                         |
 
 ## Architecture
 

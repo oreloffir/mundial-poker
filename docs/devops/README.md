@@ -29,14 +29,15 @@ Everything you need to understand, operate, and debug the production infrastruct
 
 ## AWS Account
 
-| Field | Value |
-|-------|-------|
-| Account ID | `686348672927` |
-| IAM user | `mundial-poker-devsi` |
-| Region | `eu-west-1` (Ireland) |
+| Field        | Value                                                |
+| ------------ | ---------------------------------------------------- |
+| Account ID   | `686348672927`                                       |
+| IAM user     | `mundial-poker-devsi`                                |
+| Region       | `eu-west-1` (Ireland)                                |
 | Monthly cost | ~$0 (free tier — t2.micro + 20GB gp3 + 1 Elastic IP) |
 
 Free tier limits that matter:
+
 - t2.micro: 750 hours/month (we use ~720 — **do not run a second instance**)
 - gp3 storage: 30GB free (we use 20GB)
 - Elastic IP: free while associated to a running instance — **costs ~$4/month if instance is stopped**
@@ -45,24 +46,24 @@ Free tier limits that matter:
 
 ## EC2 Instance
 
-| Field | Value |
-|-------|-------|
-| Name | `mundial-poker-production` |
-| Instance ID | `i-0b95a73440e9e9111` |
-| Type | `t2.micro` (1 vCPU, 1GB RAM) |
-| AMI | Amazon Linux 2023 (`ami-0762bad84218d1ffa`) |
-| Storage | 20GB gp3 |
-| Elastic IP | `52.49.249.190` (static — survives stop/start) |
-| Security group | `mundial-poker-sg` (`sg-0c6ee7ef0e6ee3f37`) |
-| App directory | `/opt/mundial-poker` |
+| Field          | Value                                          |
+| -------------- | ---------------------------------------------- |
+| Name           | `mundial-poker-production`                     |
+| Instance ID    | `i-0b95a73440e9e9111`                          |
+| Type           | `t2.micro` (1 vCPU, 1GB RAM)                   |
+| AMI            | Amazon Linux 2023 (`ami-0762bad84218d1ffa`)    |
+| Storage        | 20GB gp3                                       |
+| Elastic IP     | `52.49.249.190` (static — survives stop/start) |
+| Security group | `mundial-poker-sg` (`sg-0c6ee7ef0e6ee3f37`)    |
+| App directory  | `/opt/mundial-poker`                           |
 
 ### Security Group Rules
 
-| Port | Protocol | Source | Purpose |
-|------|----------|--------|---------|
-| 22 | TCP | `0.0.0.0/0` | SSH — **restrict to team IPs before launch** |
-| 80 | TCP | `0.0.0.0/0` | HTTP — game is accessible here |
-| 443 | TCP | `0.0.0.0/0` | HTTPS — ready for SSL cert (Sprint 5) |
+| Port | Protocol | Source      | Purpose                                      |
+| ---- | -------- | ----------- | -------------------------------------------- |
+| 22   | TCP      | `0.0.0.0/0` | SSH — **restrict to team IPs before launch** |
+| 80   | TCP      | `0.0.0.0/0` | HTTP — game is accessible here               |
+| 443  | TCP      | `0.0.0.0/0` | HTTPS — ready for SSL cert (Sprint 5)        |
 
 All other ports (5174, 5432, 6379) are closed externally. They're only accessible inside the Docker bridge network.
 
@@ -72,13 +73,13 @@ All other ports (5174, 5432, 6379) are closed externally. They're only accessibl
 
 All 5 services are defined in `docker-compose.production.yml`. They communicate on an internal bridge network — nothing is exposed except port 80 via nginx.
 
-| Service | Image | Internal port | Purpose | Health check |
-|---------|-------|---------------|---------|--------------|
-| `nginx` | `nginx:alpine` | **80 → public** | Reverse proxy. Routes `/` → web, `/api/` → server, `/socket.io/` → server | — |
-| `server` | `mundial-poker-server` (built) | 5174 | Node.js + Express + Socket.io | `GET /api/health` |
-| `web` | `mundial-poker-web` (built) | 80 | React SPA served by nginx | — |
-| `postgres` | `postgres:16-alpine` | 5432 | PostgreSQL 16, persistent volume | `pg_isready -U wpc` |
-| `redis` | `redis:7-alpine` | 6379 | Redis 7, AOF persistence | `redis-cli ping` |
+| Service    | Image                          | Internal port   | Purpose                                                                   | Health check        |
+| ---------- | ------------------------------ | --------------- | ------------------------------------------------------------------------- | ------------------- |
+| `nginx`    | `nginx:alpine`                 | **80 → public** | Reverse proxy. Routes `/` → web, `/api/` → server, `/socket.io/` → server | —                   |
+| `server`   | `mundial-poker-server` (built) | 5174            | Node.js + Express + Socket.io                                             | `GET /api/health`   |
+| `web`      | `mundial-poker-web` (built)    | 80              | React SPA served by nginx                                                 | —                   |
+| `postgres` | `postgres:16-alpine`           | 5432            | PostgreSQL 16, persistent volume                                          | `pg_isready -U wpc` |
+| `redis`    | `redis:7-alpine`               | 6379            | Redis 7, AOF persistence                                                  | `redis-cli ping`    |
 
 ### Nginx routing (`nginx.conf`)
 
@@ -117,6 +118,7 @@ Deploy complete
 ```
 
 CI (`.github/workflows/ci.yml`) runs on every PR and push to `main`/`develop`:
+
 - lint + typecheck (parallel)
 - test-shared, test-web, test-server (parallel, server job uses real PostgreSQL service container)
 - build (gated — only runs if all tests pass)
@@ -240,21 +242,22 @@ docker system df
 
 Template committed at `.env.production.template`. Actual file lives **only on EC2** at `/opt/mundial-poker/.env.production` — never committed.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DB_PASSWORD` | Yes | PostgreSQL password for `wpc` user |
-| `JWT_SECRET` | Yes | JWT signing secret (32+ chars) |
-| `NODE_ENV` | Yes | Set to `production` |
+| Variable      | Required | Description                        |
+| ------------- | -------- | ---------------------------------- |
+| `DB_PASSWORD` | Yes      | PostgreSQL password for `wpc` user |
+| `JWT_SECRET`  | Yes      | JWT signing secret (32+ chars)     |
+| `NODE_ENV`    | Yes      | Set to `production`                |
 
 The server container also receives these via `docker-compose.production.yml`:
 
-| Variable | Value (set in compose) | Description |
-|----------|----------------------|-------------|
-| `PORT` | `5174` | Express server port (internal) |
-| `DATABASE_URL` | `postgres://wpc:${DB_PASSWORD}@postgres:5432/world_poker_cup` | Constructed from DB_PASSWORD |
-| `REDIS_URL` | `redis://redis:6379` | Redis connection (internal network) |
+| Variable       | Value (set in compose)                                        | Description                         |
+| -------------- | ------------------------------------------------------------- | ----------------------------------- |
+| `PORT`         | `5174`                                                        | Express server port (internal)      |
+| `DATABASE_URL` | `postgres://wpc:${DB_PASSWORD}@postgres:5432/world_poker_cup` | Constructed from DB_PASSWORD        |
+| `REDIS_URL`    | `redis://redis:6379`                                          | Redis connection (internal network) |
 
 Generate strong values with:
+
 ```bash
 openssl rand -base64 32  # for DB_PASSWORD
 openssl rand -base64 48  # for JWT_SECRET
@@ -266,13 +269,13 @@ openssl rand -base64 48  # for JWT_SECRET
 
 Configured in repo Settings → Secrets → Actions. Names only — values are not stored anywhere in the repo.
 
-| Secret | Purpose |
-|--------|---------|
-| `EC2_HOST` | Elastic IP (`52.49.249.190`) |
-| `EC2_USER` | SSH username (`ec2-user`) |
-| `EC2_SSH_KEY` | Ed25519 private key for deploy user |
+| Secret        | Purpose                                         |
+| ------------- | ----------------------------------------------- |
+| `EC2_HOST`    | Elastic IP (`52.49.249.190`)                    |
+| `EC2_USER`    | SSH username (`ec2-user`)                       |
+| `EC2_SSH_KEY` | Ed25519 private key for deploy user             |
 | `DB_PASSWORD` | PostgreSQL password (same as `.env.production`) |
-| `JWT_SECRET` | JWT signing secret (same as `.env.production`) |
+| `JWT_SECRET`  | JWT signing secret (same as `.env.production`)  |
 
 To rotate any secret: update it in GitHub Settings → Secrets, and update `.env.production` on EC2 to match, then restart the `server` container.
 
@@ -335,8 +338,8 @@ When ready:
 
 ## Files in This Folder
 
-| File | Purpose |
-|------|---------|
-| `README.md` | This file — full infrastructure overview |
-| `ec2-setup.md` | Step-by-step EC2 provisioning runbook (use if rebuilding from scratch) |
+| File                     | Purpose                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| `README.md`              | This file — full infrastructure overview                                             |
+| `ec2-setup.md`           | Step-by-step EC2 provisioning runbook (use if rebuilding from scratch)               |
 | `infrastructure-plan.md` | Sprint 3 planning doc — deployment target decision, Redis/DB choices, load estimates |

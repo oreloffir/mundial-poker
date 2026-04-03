@@ -52,7 +52,6 @@ const NEXT_ROUND_DELAY_MS = 7_000
 
 const activeTimers = new Map<string, { readonly cancel: () => void }>()
 
-
 interface RoundBlindInfo {
   readonly dealerSeatIndex: number
   readonly sbSeatIndex: number
@@ -67,7 +66,10 @@ interface RoundBlindInfo {
 interface SerializableFixtureData {
   readonly fixtureIds: readonly string[]
   readonly fixtureRows: Record<string, { readonly homeTeamId: string; readonly awayTeamId: string }>
-  readonly fixtureTeams: Record<string, { readonly name: string; readonly flagEmoji: string | null }>
+  readonly fixtureTeams: Record<
+    string,
+    { readonly name: string; readonly flagEmoji: string | null }
+  >
 }
 
 function emitToRoom(io: Server, tableId: string, event: string, data: unknown): void {
@@ -166,13 +168,17 @@ async function startDemoFixtureTimer(roundId: string, tableId: string, io: Serve
         awayPenaltiesScored: result.awayPenalties ?? undefined,
       }
       // Fire-and-forget phase update (async in sync callback context)
-      getRoundPhaseState(tableId).then((phaseState) =>
-        updateRoundPhase(tableId, {
-          roundId,
-          currentPhase: 'fixtures',
-          resolvedFixtures: [...(phaseState?.resolvedFixtures ?? []), fixturePayload],
-        }),
-      ).catch((err) => console.error('GameService - fixturePhaseUpdate - failed', { roundId, error: err }))
+      getRoundPhaseState(tableId)
+        .then((phaseState) =>
+          updateRoundPhase(tableId, {
+            roundId,
+            currentPhase: 'fixtures',
+            resolvedFixtures: [...(phaseState?.resolvedFixtures ?? []), fixturePayload],
+          }),
+        )
+        .catch((err) =>
+          console.error('GameService - fixturePhaseUpdate - failed', { roundId, error: err }),
+        )
       emitToRoom(io, tableId, 'fixture:result', fixturePayload)
     },
     () => {

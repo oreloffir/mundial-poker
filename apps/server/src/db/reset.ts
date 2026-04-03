@@ -13,7 +13,8 @@ if (env === 'production') {
 }
 
 async function reset() {
-  const url = process.env.DATABASE_URL ?? 'postgres://wpc:wpc_dev_pass@localhost:5432/world_poker_cup'
+  const url =
+    process.env.DATABASE_URL ?? 'postgres://wpc:wpc_dev_pass@localhost:5432/world_poker_cup'
   const pool = new pg.Pool({ connectionString: url })
   const database = drizzle(pool, { schema })
 

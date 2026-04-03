@@ -10,6 +10,7 @@
 Three sprints on localhost. The game is demo-ready. Now it needs to live somewhere real.
 
 Sprint 4 has two tracks:
+
 1. **Infrastructure (Devsi + Soni):** Deploy to AWS EC2 with Docker Compose, PostgreSQL, Redis. CI/CD auto-deploys on push to main. Database seeded and accessible.
 2. **Frontend polish (Doni + Joni):** Custom chip designs per denomination, pot pill in table center, winner prize animation, mobile/desktop tweaks.
 
@@ -17,13 +18,13 @@ Plus Mark builds a QA plan for testing against the deployed dev environment.
 
 ### Task files
 
-| Developer | File | Focus |
-|-----------|------|-------|
-| **Devsi** | [`devsi-tasks.md`](./devsi-tasks.md) | EC2 setup, Docker Compose, Nginx, SSL, CI/CD pipeline |
-| **Soni** | [`soni-tasks.md`](./soni-tasks.md) | Dockerize server, env config, Redis migration, DB seeding |
-| **Joni** | [`joni-tasks.md`](./joni-tasks.md) | Custom chips, pot pill, winner animation, mobile polish |
-| **Doni** | Design direction in Joni's task file + shared ticket | Chip denomination colors, pot pill design, animation specs |
-| **Mark** | [`mark-tasks.md`](./mark-tasks.md) | Dev environment QA plan, DB cleanup strategy, E2E against deployed URL |
+| Developer | File                                                 | Focus                                                                  |
+| --------- | ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Devsi** | [`devsi-tasks.md`](./devsi-tasks.md)                 | EC2 setup, Docker Compose, Nginx, SSL, CI/CD pipeline                  |
+| **Soni**  | [`soni-tasks.md`](./soni-tasks.md)                   | Dockerize server, env config, Redis migration, DB seeding              |
+| **Joni**  | [`joni-tasks.md`](./joni-tasks.md)                   | Custom chips, pot pill, winner animation, mobile polish                |
+| **Doni**  | Design direction in Joni's task file + shared ticket | Chip denomination colors, pot pill design, animation specs             |
+| **Mark**  | [`mark-tasks.md`](./mark-tasks.md)                   | Dev environment QA plan, DB cleanup strategy, E2E against deployed URL |
 
 ---
 
@@ -53,6 +54,7 @@ EC2 Instance (t2.micro / t3.micro)
 ### Devsi + Soni (Infrastructure Track)
 
 **Devsi owns:**
+
 - EC2 instance setup (security groups, SSH keys, Docker install)
 - `docker-compose.production.yml` (all services configured for production)
 - Nginx config (reverse proxy, WebSocket upgrade, SSL if domain available)
@@ -60,6 +62,7 @@ EC2 Instance (t2.micro / t3.micro)
 - Monitoring (health check endpoint, basic uptime)
 
 **Soni owns:**
+
 - Dockerize the server (`Dockerfile` for apps/server)
 - Dockerize the web build (`Dockerfile` for apps/web with Nginx)
 - Environment config (`.env.production` template, DB connection, Redis, JWT secrets)
@@ -70,12 +73,14 @@ EC2 Instance (t2.micro / t3.micro)
 ### Doni + Joni (Frontend Polish Track)
 
 **Doni designs, Joni implements:**
+
 - Custom chip denominations (different colors per value: 5, 10, 25, 50, 100, 200)
 - Pot pill in center of table (replace the plain number with a styled chip-stack pill)
 - Winner prize animation (chips animate from pot to winner's seat)
 - Small desktop/mobile polish from Doni's mobile review
 
 ### Mark (QA Track)
+
 - QA plan for testing against the deployed dev environment
 - DB cleanup strategy (wipe test data after each QA session)
 - E2E tests configured to run against deployed URL (not just localhost)
@@ -114,6 +119,7 @@ FIRST DEPLOY ◄─────────────────────�
 ## Definition of done
 
 Same as Sprint 3, plus:
+
 - [ ] The game is accessible via a real URL (EC2 IP or domain)
 - [ ] CI/CD: push to main → auto-deploys within 5 minutes
 - [ ] Database persists across deploys (volume-mounted)

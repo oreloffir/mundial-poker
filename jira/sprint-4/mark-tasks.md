@@ -28,16 +28,16 @@ The game is moving from localhost to a real EC2 server. QA needs to work against
 
 2. **First deploy smoke test** — when Devsi/Soni confirm the first deploy, run this checklist:
 
-   | # | Check | How |
-   |---|-------|-----|
-   | 1 | Site loads at EC2 IP | `curl http://<ip>` returns HTML |
-   | 2 | Guest login works | Create guest session via UI |
-   | 3 | WebSocket connects | Create table → should see real-time updates |
-   | 4 | Database has teams | Lobby shows tables can be created |
-   | 5 | Redis connected | Play a round → server doesn't crash on betting state |
-   | 6 | Full round works | Create table → add bots → start → bet → showdown → winner |
-   | 7 | State survives restart | Mid-round, ask Devsi to restart server container → reconnect → game resumes |
-   | 8 | No CORS errors | Browser console clean of CORS/mixed-content errors |
+   | #   | Check                  | How                                                                         |
+   | --- | ---------------------- | --------------------------------------------------------------------------- |
+   | 1   | Site loads at EC2 IP   | `curl http://<ip>` returns HTML                                             |
+   | 2   | Guest login works      | Create guest session via UI                                                 |
+   | 3   | WebSocket connects     | Create table → should see real-time updates                                 |
+   | 4   | Database has teams     | Lobby shows tables can be created                                           |
+   | 5   | Redis connected        | Play a round → server doesn't crash on betting state                        |
+   | 6   | Full round works       | Create table → add bots → start → bet → showdown → winner                   |
+   | 7   | State survives restart | Mid-round, ask Devsi to restart server container → reconnect → game resumes |
+   | 8   | No CORS errors         | Browser console clean of CORS/mixed-content errors                          |
 
 3. **Run the flow audit against deployed URL:**
    - Same checklist as flow-audit-v2 but against `http://<ec2-ip>`
@@ -57,6 +57,7 @@ The game is moving from localhost to a real EC2 server. QA needs to work against
    - Verify it works against the deployed URL
 
 6. **Document the QA workflow** at `docs/qa-workflow.md`:
+
    ```
    Before QA:
    1. Verify dev URL is accessible
@@ -135,7 +136,9 @@ After Joni ships the frontend polish (J16 custom chips, J17 pot pill, J18 winner
 ## Delivery Log
 
 ### M8 — Dev Environment QA
+
 **Status:** Not started (blocked on first deploy)
 
 ### M9 — Visual Regression
+
 **Status:** Not started (blocked on J16-J18)

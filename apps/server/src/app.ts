@@ -79,7 +79,9 @@ async function start(): Promise<void> {
   await connectRedis()
 
   server.listen(config.port, () => {
-    ensureBotsExist().catch((err) => console.error('App - ensureBotsExist - failed', { error: err }))
+    ensureBotsExist().catch((err) =>
+      console.error('App - ensureBotsExist - failed', { error: err }),
+    )
     cleanupStaleTables().catch((err) =>
       console.error('App - cleanupStaleTables - failed', { error: err }),
     )
