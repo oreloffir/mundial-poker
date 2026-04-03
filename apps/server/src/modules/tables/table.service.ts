@@ -106,7 +106,6 @@ export async function addBotsToTable(tableId: string, requestingUserId: string) 
   if (table.status !== 'WAITING') throw new GameError('Cannot add bots after game started')
 
   const currentPlayerIds = new Set(table.players.map((p) => p.userId))
-  const existingBotIds = table.players.filter((p) => isBotUser(p.userId)).map((p) => p.userId)
   const botsToAdd = (BOT_IDS as readonly string[]).filter((id) => !currentPlayerIds.has(id))
 
   const availableSeats = Array.from({ length: MAX_PLAYERS }, (_, i) => i).filter(
@@ -163,10 +162,8 @@ export async function startGame(tableId: string, userId: string) {
 }
 
 export async function cleanupStaleTables(): Promise<void> {
-  const result = await db
+  await db
     .update(tables)
     .set({ status: 'COMPLETED', updatedAt: new Date() })
     .where(ne(tables.status, 'COMPLETED'))
-    .returning({ id: tables.id })
-
 }

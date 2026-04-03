@@ -1,4 +1,4 @@
-import type { Server, Socket } from 'socket.io'
+import type { Server } from 'socket.io'
 import { eq, and, desc, ne, inArray } from 'drizzle-orm'
 import { db } from '../../db/index.js'
 import {
@@ -22,12 +22,6 @@ interface SocketData {
   readonly email: string
 }
 
-type TypedSocket = Socket<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  Record<string, never>,
-  SocketData
->
 
 async function getTableState(tableId: string, userId: string): Promise<GameState | null> {
   const [table] = await db.select().from(tables).where(eq(tables.id, tableId)).limit(1)
