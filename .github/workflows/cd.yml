@@ -83,6 +83,9 @@ jobs:
             echo "--- Starting services ---"
             docker-compose -f docker-compose.production.yml up -d
 
+            echo "--- Reloading nginx (flush stale upstream IPs) ---"
+            docker-compose -f docker-compose.production.yml restart nginx
+
             echo "--- Running DB migrations ---"
             cat apps/server/src/db/migrations/*.sql | \
               docker-compose -f docker-compose.production.yml exec -T postgres \
