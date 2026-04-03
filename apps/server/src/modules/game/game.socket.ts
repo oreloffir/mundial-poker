@@ -1,4 +1,4 @@
-import type { Server, Socket } from 'socket.io'
+import type { Server } from 'socket.io'
 import { eq, and, desc, ne, inArray } from 'drizzle-orm'
 import { db } from '../../db/index.js'
 import {
@@ -13,22 +13,16 @@ import {
 } from '../../db/schema.js'
 import { verifyToken } from '../auth/auth.service.js'
 import * as gameService from './game.service.js'
+import { getRoundPhaseState } from './phase-tracker.js'
 import { getBettingState, getAllowedActions } from './betting.service.js'
-import type { BetAction, ClientToServerEvents, ServerToClientEvents } from '@wpc/shared'
+import type { BetAction, ClientToServerEvents, GameState, ServerToClientEvents } from '@wpc/shared'
 
 interface SocketData {
   readonly userId: string
   readonly email: string
 }
 
-type TypedSocket = Socket<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  Record<string, never>,
-  SocketData
->
-
-async function getTableState(tableId: string, userId: string) {
+async function getTableState(tableId: string, userId: string): Promise<GameState | null> {
   const [table] = await db.select().from(tables).where(eq(tables.id, tableId)).limit(1)
   if (!table) return null
 
@@ -52,21 +46,7 @@ async function getTableState(tableId: string, userId: string) {
     .orderBy(desc(rounds.roundNumber))
     .limit(1)
 
-  let roundInfo: null | {
-    roundId: string
-    roundNumber: number
-    status: string
-    pot: number
-    dealerSeatIndex: number
-    cards: readonly unknown[]
-    betPrompt: unknown | null
-    waitingForResults: boolean
-    currentPhase?: string
-    resolvedFixtures?: readonly unknown[]
-    revealedPlayerScores?: readonly unknown[]
-    activePlayerId?: string | null
-    currentBet?: number
-  } = null
+  let roundInfo: GameState['roundInfo'] = null
 
   if (activeRound) {
     const [myHand] = await db
@@ -112,7 +92,7 @@ async function getTableState(tableId: string, userId: string) {
       })
     }
 
-    const bettingState = getBettingState(activeRound.id)
+    const bettingState = await getBettingState(activeRound.id)
     let betPrompt: unknown | null = null
     if (bettingState) {
       const currentPlayer = bettingState.playerStates[bettingState.currentPlayerIndex]
@@ -142,7 +122,7 @@ async function getTableState(tableId: string, userId: string) {
     }
   }
 
-  const phaseState = gameService.getRoundPhaseState(tableId)
+  const phaseState = await getRoundPhaseState(tableId)
   if (roundInfo && phaseState) {
     roundInfo = {
       ...roundInfo,
@@ -158,7 +138,7 @@ async function getTableState(tableId: string, userId: string) {
     table: {
       id: table.id,
       name: table.name,
-      status: table.status,
+      status: table.status as GameState['table']['status'],
       players: players.map((p) => ({
         userId: p.userId,
         username: p.username,
@@ -169,7 +149,7 @@ async function getTableState(tableId: string, userId: string) {
         isEliminated: p.chipStack <= 0,
       })),
       maxPlayers: 5,
-      blinds: { small: table.smallBlind, big: table.bigBlind },
+      blinds: { small: table.smallBlind ?? 5, big: table.bigBlind ?? 10 },
       currentRoundId: activeRound?.id ?? null,
       createdAt: table.createdAt.toISOString(),
     },
@@ -178,7 +158,14 @@ async function getTableState(tableId: string, userId: string) {
 }
 
 export function setupGameSocket(io: Server): void {
-  io.use((socket, next) => {
+  const typedIo = io as unknown as Server<
+    ClientToServerEvents,
+    ServerToClientEvents,
+    Record<string, never>,
+    SocketData
+  >
+
+  typedIo.use((socket, next) => {
     try {
       const token = socket.handshake.auth?.token as string | undefined
       if (!token) {
@@ -193,11 +180,9 @@ export function setupGameSocket(io: Server): void {
     }
   })
 
-  io.on('connection', (rawSocket) => {
-    const socket = rawSocket as unknown as TypedSocket
+  typedIo.on('connection', (socket) => {
     const userId = socket.data.userId
     socket.join(`user:${userId}`)
-    console.log('GameSocket - connected', { socketId: socket.id, userId })
 
     socket.on('table:join', async (payload, callback) => {
       try {
@@ -210,7 +195,7 @@ export function setupGameSocket(io: Server): void {
           return
         }
 
-        socket.emit('table:state', state as never)
+        socket.emit('table:state', state)
 
         const [player] = await db
           .select()
@@ -242,7 +227,6 @@ export function setupGameSocket(io: Server): void {
         }
 
         callback({ success: true })
-        console.log('GameSocket - table:join', { socketId: socket.id, userId, tableId })
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to join table'
         console.error('GameSocket - table:join - failed', { userId, error })
@@ -255,7 +239,6 @@ export function setupGameSocket(io: Server): void {
         const { tableId } = payload
         socket.leave(`table:${tableId}`)
         socket.to(`table:${tableId}`).emit('player:left', { userId })
-        console.log('GameSocket - table:leave', { socketId: socket.id, userId, tableId })
       } catch (error) {
         console.error('GameSocket - table:leave - failed', { userId, error })
       }
@@ -288,9 +271,7 @@ export function setupGameSocket(io: Server): void {
       }
     })
 
-    socket.on('round:ready', (_payload) => {
-      console.log('GameSocket - round:ready', { userId, roundId: _payload.roundId })
-    })
+    socket.on('round:ready', (_payload) => {})
 
     socket.on('disconnect', async () => {
       try {
@@ -307,13 +288,9 @@ export function setupGameSocket(io: Server): void {
 
           socket.to(`table:${seat.tableId}`).emit('player:disconnected', { userId })
         }
-
-        console.log('GameSocket - disconnected', { socketId: socket.id, userId })
       } catch (error) {
         console.error('GameSocket - disconnect - failed', { userId, error })
       }
     })
   })
-
-  console.log('GameSocket - initialized', {})
 }

@@ -207,13 +207,6 @@ export async function dealCards(
 
   await db.insert(playerHands).values(handInserts)
 
-  console.log('DealingService - dealCards', {
-    roundId: round!.id,
-    tableId,
-    playerCount: players.length,
-    cardCount: cardIndex,
-  })
-
   return {
     roundId: round!.id,
     roundNumber: lastRoundNumber + 1,

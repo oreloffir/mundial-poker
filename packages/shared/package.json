@@ -2,13 +2,29 @@
   "name": "@wpc/shared",
   "version": "0.1.0",
   "type": "module",
-  "main": "./index.ts",
+  "main": "./dist/index.js",
   "types": "./index.ts",
   "exports": {
-    ".": "./index.ts",
-    "./types": "./types/game.types.ts",
-    "./types/socket-events": "./types/socket-events.ts",
-    "./utils": "./utils/scoring.ts"
+    ".": {
+      "types": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./types/game.types.ts",
+      "import": "./dist/types/game.types.js",
+      "default": "./dist/types/game.types.js"
+    },
+    "./types/socket-events": {
+      "types": "./types/socket-events.ts",
+      "import": "./dist/types/socket-events.js",
+      "default": "./dist/types/socket-events.js"
+    },
+    "./utils": {
+      "types": "./utils/scoring.ts",
+      "import": "./dist/utils/scoring.js",
+      "default": "./dist/utils/scoring.js"
+    }
   },
   "scripts": {
     "build": "tsc",

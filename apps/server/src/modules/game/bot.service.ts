@@ -79,7 +79,6 @@ export async function createSingleBot(): Promise<{
 
   await db.insert(users).values({ id, email, username, passwordHash })
   dynamicBotIds.add(id)
-  console.log('BotService - createSingleBot', { botId: id, username })
   return { id, username }
 }
 
@@ -95,10 +94,6 @@ export async function ensureBotsExist(): Promise<void> {
       await db
         .insert(users)
         .values({ id: bot.id, email: bot.email, username: bot.username, passwordHash })
-      console.log('BotService - ensureBotsExist - created', {
-        botId: bot.id,
-        username: bot.username,
-      })
     }
   }
 }
@@ -106,8 +101,8 @@ export async function ensureBotsExist(): Promise<void> {
 const BOT_ACTION_DELAY_MS = 1500
 
 export function scheduleBotAction(roundId: string, botUserId: string, io: Server): void {
-  setTimeout(() => {
-    const state = getBettingState(roundId)
+  setTimeout(async () => {
+    const state = await getBettingState(roundId)
     if (!state) return
 
     const currentPlayer = state.playerStates[state.currentPlayerIndex]

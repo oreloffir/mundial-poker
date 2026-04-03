@@ -12,6 +12,8 @@ import {
   fixtures,
 } from '../../db/schema.js'
 import { NotFoundError, GameError } from '../../shared/errors.js'
+import { stateGet, stateSet, stateDel } from '../../lib/game-state-store.js'
+import { getRoundPhaseState, updateRoundPhase, clearRoundPhase } from './phase-tracker.js'
 import { dealCards } from './dealing.service.js'
 import {
   initBettingRound,
@@ -50,51 +52,6 @@ const NEXT_ROUND_DELAY_MS = 7_000
 
 const activeTimers = new Map<string, { readonly cancel: () => void }>()
 
-// ─── Round phase tracking (for reconnect state recovery) ─────────────────────
-
-type RoundPhase = 'dealing' | 'betting' | 'waiting' | 'fixtures' | 'scoring' | 'reveals' | 'winner'
-
-interface RoundPhaseState {
-  readonly roundId: string
-  readonly currentPhase: RoundPhase
-  readonly resolvedFixtures: readonly FixtureResultPayload[]
-  readonly revealedPlayerScores: readonly PlayerScoredPayload[]
-  readonly bettingRound: number
-  readonly currentBet: number
-  readonly pot: number
-  readonly activePlayerId: string | null
-}
-
-const roundPhaseMap = new Map<string, RoundPhaseState>()
-
-export function getRoundPhaseState(tableId: string): RoundPhaseState | undefined {
-  return roundPhaseMap.get(tableId)
-}
-
-function updateRoundPhase(
-  tableId: string,
-  update: Partial<RoundPhaseState> & { roundId: string },
-): void {
-  const existing = roundPhaseMap.get(tableId)
-  roundPhaseMap.set(tableId, {
-    roundId: update.roundId,
-    currentPhase: update.currentPhase ?? existing?.currentPhase ?? 'dealing',
-    resolvedFixtures: update.resolvedFixtures ?? existing?.resolvedFixtures ?? [],
-    revealedPlayerScores: update.revealedPlayerScores ?? existing?.revealedPlayerScores ?? [],
-    bettingRound: update.bettingRound ?? existing?.bettingRound ?? 0,
-    currentBet: update.currentBet ?? existing?.currentBet ?? 0,
-    pot: update.pot ?? existing?.pot ?? 0,
-    activePlayerId:
-      update.activePlayerId !== undefined
-        ? update.activePlayerId
-        : (existing?.activePlayerId ?? null),
-  })
-}
-
-function clearRoundPhase(tableId: string): void {
-  roundPhaseMap.delete(tableId)
-}
-
 interface RoundBlindInfo {
   readonly dealerSeatIndex: number
   readonly sbSeatIndex: number
@@ -105,21 +62,15 @@ interface RoundBlindInfo {
   readonly bbAmount: number
 }
 
-const roundBlindCache = new Map<string, RoundBlindInfo>()
-
-interface RoundFixtureData {
+// Serializable version of RoundFixtureData (plain objects instead of Maps)
+interface SerializableFixtureData {
   readonly fixtureIds: readonly string[]
-  readonly fixtureRowMap: ReadonlyMap<
-    string,
-    { readonly homeTeamId: string; readonly awayTeamId: string }
-  >
-  readonly fixtureTeamMap: ReadonlyMap<
+  readonly fixtureRows: Record<string, { readonly homeTeamId: string; readonly awayTeamId: string }>
+  readonly fixtureTeams: Record<
     string,
     { readonly name: string; readonly flagEmoji: string | null }
   >
 }
-
-const roundFixtureDataCache = new Map<string, RoundFixtureData>()
 
 function emitToRoom(io: Server, tableId: string, event: string, data: unknown): void {
   io.to(`table:${tableId}`).emit(event, data)
@@ -170,8 +121,8 @@ async function getPlayersWithUsernames(tableId: string) {
     .orderBy(asc(tablePlayers.seatIndex))
 }
 
-function startDemoFixtureTimer(roundId: string, tableId: string, io: Server): void {
-  const data = roundFixtureDataCache.get(roundId)
+async function startDemoFixtureTimer(roundId: string, tableId: string, io: Server): Promise<void> {
+  const data = await stateGet<SerializableFixtureData>('fixture-data', roundId)
   if (!data) {
     console.error('GameService - startDemoFixtureTimer - no fixture data cached', { roundId })
     resolveRound(roundId, io).catch((err) =>
@@ -183,17 +134,17 @@ function startDemoFixtureTimer(roundId: string, tableId: string, io: Server): vo
     return
   }
 
-  const { fixtureIds, fixtureRowMap, fixtureTeamMap } = data
-  roundFixtureDataCache.delete(roundId)
+  const { fixtureIds, fixtureRows, fixtureTeams } = data
+  await stateDel('fixture-data', roundId)
 
   const timer = resolveDemoFixturesProgressive(
     fixtureIds,
     FIXTURE_REVEAL_INTERVAL_MS,
     (fixtureId, result) => {
-      const row = fixtureRowMap.get(fixtureId)
+      const row = fixtureRows[fixtureId]
       if (!row) return
-      const ht = fixtureTeamMap.get(row.homeTeamId)
-      const at = fixtureTeamMap.get(row.awayTeamId)
+      const ht = fixtureTeams[row.homeTeamId]
+      const at = fixtureTeams[row.awayTeamId]
       const fixturePayload: FixtureResultPayload = {
         fixtureId,
         homeTeamId: row.homeTeamId,
@@ -216,24 +167,27 @@ function startDemoFixtureTimer(roundId: string, tableId: string, io: Server): vo
         homePenaltiesScored: result.homePenalties ?? undefined,
         awayPenaltiesScored: result.awayPenalties ?? undefined,
       }
-      const phaseState = roundPhaseMap.get(tableId)
-      updateRoundPhase(tableId, {
-        roundId,
-        currentPhase: 'fixtures',
-        resolvedFixtures: [...(phaseState?.resolvedFixtures ?? []), fixturePayload],
-      })
+      // Fire-and-forget phase update (async in sync callback context)
+      getRoundPhaseState(tableId)
+        .then((phaseState) =>
+          updateRoundPhase(tableId, {
+            roundId,
+            currentPhase: 'fixtures',
+            resolvedFixtures: [...(phaseState?.resolvedFixtures ?? []), fixturePayload],
+          }),
+        )
+        .catch((err) =>
+          console.error('GameService - fixturePhaseUpdate - failed', { roundId, error: err }),
+        )
       emitToRoom(io, tableId, 'fixture:result', fixturePayload)
-      console.log('PHASE: fixture:result', 'fixtureId:', fixtureId, Date.now())
     },
     () => {
-      console.log('PHASE: all-fixtures-resolved → resolveRound', 'roundId:', roundId, Date.now())
       resolveRound(roundId, io).catch((err) =>
         console.error('GameService - demoResolveCallback - failed', { roundId, error: err }),
       )
     },
   )
   activeTimers.set(roundId, timer)
-  console.log('PHASE: fixture-timer-started', 'roundId:', roundId, Date.now())
 }
 
 async function startBettingRound(
@@ -259,7 +213,7 @@ async function startBettingRound(
     hasFolded: handMap.get(p.userId)?.hasFolded ?? false,
   }))
 
-  const blindInfo = roundBlindCache.get(roundId)
+  const blindInfo = await stateGet<RoundBlindInfo>('blinds', roundId)
 
   let startingSeatIndex: number | undefined
   if (blindInfo) {
@@ -284,7 +238,7 @@ async function startBettingRound(
     }
   }
 
-  const state = initBettingRound(
+  const state = await initBettingRound(
     roundId,
     playerData,
     bettingRoundNumber,
@@ -295,24 +249,18 @@ async function startBettingRound(
   if (getActivePlayers(state).length <= 1) {
     await db.update(rounds).set({ status: 'WAITING_FOR_RESULTS' }).where(eq(rounds.id, roundId))
     const rfRows = await db.select().from(roundFixtures).where(eq(roundFixtures.roundId, roundId))
-    updateRoundPhase(tableId, { roundId, currentPhase: 'waiting', activePlayerId: null })
+    await updateRoundPhase(tableId, { roundId, currentPhase: 'waiting', activePlayerId: null })
     emitToRoom(io, tableId, 'round:pause', {
       roundId,
       fixtureIds: rfRows.map((rf) => rf.fixtureId),
       resumeAt: new Date(Date.now() + NEXT_ROUND_DELAY_MS).toISOString(),
     })
-    console.log(
-      'PHASE: waiting (early-exit, ≤1 active player)',
-      'bettingRound:',
-      bettingRoundNumber,
-      Date.now(),
-    )
-    startDemoFixtureTimer(roundId, tableId, io)
+    await startDemoFixtureTimer(roundId, tableId, io)
     return
   }
 
   const prompt = buildBetPrompt(state)
-  updateRoundPhase(tableId, {
+  await updateRoundPhase(tableId, {
     roundId,
     currentPhase: 'betting',
     bettingRound: bettingRoundNumber,
@@ -321,14 +269,6 @@ async function startBettingRound(
     activePlayerId: prompt.userId,
   })
   emitToRoom(io, tableId, 'bet:prompt', prompt)
-  console.log(
-    'PHASE: betting',
-    'bettingRound:',
-    bettingRoundNumber,
-    'promptedPlayer:',
-    prompt.userId,
-    Date.now(),
-  )
 
   if (isBotUser(prompt.userId)) {
     scheduleBotAction(roundId, prompt.userId, io)
@@ -347,8 +287,6 @@ async function startBettingRound(
     .set({ status: statusMap[bettingRoundNumber] ?? 'BETTING_ROUND_1' })
     .where(eq(rounds.id, roundId))
     .catch(() => {})
-
-  console.log('GameService - startBettingRound', { roundId, bettingRound: bettingRoundNumber })
 }
 
 export async function startRound(tableId: string, io: Server): Promise<void> {
@@ -377,15 +315,14 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
       .update(tables)
       .set({ status: 'COMPLETED', updatedAt: new Date() })
       .where(eq(tables.id, tableId))
-    clearRoundPhase(tableId)
+    await clearRoundPhase(tableId)
     listTables()
       .then((updatedTables) => io.emit('lobby:tables', { tables: updatedTables }))
       .catch(() => {})
-    console.log('GameService - startRound - gameOver', { tableId, winnerId: winner?.userId })
     return
   }
 
-  clearRoundPhase(tableId)
+  await clearRoundPhase(tableId)
 
   const fixtureIds = await createDemoFixtures(DEMO_FIXTURE_COUNT)
   const dealResult = await dealCards(tableId, fixtureIds)
@@ -443,20 +380,12 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
     sbAmount,
     bbAmount,
   }
-  roundBlindCache.set(dealResult.roundId, blindInfo)
-  updateRoundPhase(tableId, {
+  await stateSet('blinds', dealResult.roundId, blindInfo)
+  await updateRoundPhase(tableId, {
     roundId: dealResult.roundId,
     currentPhase: 'dealing',
     resolvedFixtures: [],
     revealedPlayerScores: [],
-  })
-
-  console.log('GameService - blindsPosted', {
-    roundId: dealResult.roundId,
-    sbSeat: blindPositions.sbSeatIndex,
-    bbSeat: blindPositions.bbSeatIndex,
-    sbAmount,
-    bbAmount,
   })
 
   for (const playerDeal of dealResult.playerDeals) {
@@ -516,14 +445,18 @@ export async function startRound(tableId: string, io: Server): Promise<void> {
   await startBettingRound(dealResult.roundId, tableId, 1, io)
 
   // Cache fixture display data — timer starts only after betting completes (round:pause)
-  const fixtureRowMap = new Map(dealResult.fixtureRows.map((f) => [f.id, f]))
-  roundFixtureDataCache.set(dealResult.roundId, { fixtureIds, fixtureRowMap, fixtureTeamMap })
-  console.log('PHASE: betting-round-1-started', 'roundId:', dealResult.roundId, Date.now())
-
-  console.log('GameService - startRound', {
-    tableId,
-    roundId: dealResult.roundId,
-    roundNumber: dealResult.roundNumber,
+  const fixtureRowRecord: Record<string, { homeTeamId: string; awayTeamId: string }> = {}
+  for (const f of dealResult.fixtureRows) {
+    fixtureRowRecord[f.id] = { homeTeamId: f.homeTeamId, awayTeamId: f.awayTeamId }
+  }
+  const fixtureTeamRecord: Record<string, { name: string; flagEmoji: string | null }> = {}
+  for (const [id, t] of fixtureTeamMap) {
+    fixtureTeamRecord[id] = { name: t.name, flagEmoji: t.flagEmoji }
+  }
+  await stateSet<SerializableFixtureData>('fixture-data', dealResult.roundId, {
+    fixtureIds,
+    fixtureRows: fixtureRowRecord,
+    fixtureTeams: fixtureTeamRecord,
   })
 }
 
@@ -537,7 +470,7 @@ export async function handleBetAction(
 ): Promise<void> {
   cancelBetTimer(roundId, userId)
 
-  const state = getBettingState(roundId)
+  const state = await getBettingState(roundId)
   if (!state) throw new GameError('No active betting round for this round')
 
   const tableId = await getTableIdForRound(roundId)
@@ -583,8 +516,8 @@ export async function handleBetAction(
         .update(rounds)
         .set({ winnerId: winner.userId, status: 'COMPLETE', resolvedAt: new Date() })
         .where(eq(rounds.id, roundId))
-      clearBettingState(roundId)
-      roundBlindCache.delete(roundId)
+      await clearBettingState(roundId)
+      await stateDel('blinds', roundId)
       activeTimers.get(roundId)?.cancel()
       activeTimers.delete(roundId)
       emitToRoom(io, tableId, 'round:showdown', [
@@ -601,25 +534,13 @@ export async function handleBetAction(
         })),
       )
       await scheduleNextRound(tableId, io)
-      console.log('GameService - handleBetAction - lastPlayerStanding', {
-        roundId,
-        winnerId: winner.userId,
-      })
     }
     return
   }
 
   if (isBettingRoundComplete(newState)) {
-    clearBettingState(roundId)
-    roundBlindCache.delete(roundId)
-    console.log(
-      'PHASE: betting-round-complete',
-      'bettingRound:',
-      newState.bettingRound,
-      'roundId:',
-      roundId,
-      Date.now(),
-    )
+    await clearBettingState(roundId)
+    await stateDel('blinds', roundId)
 
     if (newState.bettingRound < 3) {
       await startBettingRound(roundId, tableId, newState.bettingRound + 1, io)
@@ -627,29 +548,21 @@ export async function handleBetAction(
       await db.update(rounds).set({ status: 'WAITING_FOR_RESULTS' }).where(eq(rounds.id, roundId))
 
       const rfRows = await db.select().from(roundFixtures).where(eq(roundFixtures.roundId, roundId))
-      updateRoundPhase(tableId, { roundId, currentPhase: 'waiting', activePlayerId: null })
+      await updateRoundPhase(tableId, { roundId, currentPhase: 'waiting', activePlayerId: null })
       emitToRoom(io, tableId, 'round:pause', {
         roundId,
         fixtureIds: rfRows.map((rf) => rf.fixtureId),
         resumeAt: new Date(Date.now() + NEXT_ROUND_DELAY_MS).toISOString(),
       })
-      console.log(
-        'PHASE: waiting → round:pause emitted',
-        'bettingRound:',
-        newState.bettingRound,
-        'roundId:',
-        roundId,
-        Date.now(),
-      )
 
       // Fixture timer starts HERE — only after all betting is done
-      startDemoFixtureTimer(roundId, tableId, io)
+      await startDemoFixtureTimer(roundId, tableId, io)
     }
     return
   }
 
   const prompt = buildBetPrompt(newState)
-  updateRoundPhase(tableId, {
+  await updateRoundPhase(tableId, {
     roundId,
     activePlayerId: prompt.userId,
     currentBet: newState.currentBet,
@@ -703,10 +616,10 @@ async function distributeWinnings(
   }
 }
 
-export function cancelRoundTimers(roundId: string): void {
+export async function cancelRoundTimers(roundId: string): Promise<void> {
   activeTimers.get(roundId)?.cancel()
   activeTimers.delete(roundId)
-  roundFixtureDataCache.delete(roundId)
+  await stateDel('fixture-data', roundId)
   cleanupBetTimers(roundId)
 }
 
@@ -724,43 +637,21 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
       'BETTING_ROUND_3',
     ]
     if (activeBettingStatuses.includes(round.status)) {
-      console.log(
-        'PHASE: resolveRound-blocked (still betting)',
-        'status:',
-        round.status,
-        Date.now(),
-      )
       return
     }
 
-    console.log(
-      'PHASE: resolve-round-start',
-      'roundId:',
-      roundId,
-      'status:',
-      round.status,
-      Date.now(),
-    )
     await db.update(rounds).set({ status: 'SCORING' }).where(eq(rounds.id, roundId))
 
     const scoringResult = await scoreRound(roundId)
-    console.log(
-      'PHASE: scoring-complete',
-      'roundId:',
-      roundId,
-      'winners:',
-      scoringResult.winnerIds,
-      Date.now(),
-    )
 
-    clearBettingState(roundId)
-    roundBlindCache.delete(roundId)
-    roundFixtureDataCache.delete(roundId)
+    await clearBettingState(roundId)
+    await stateDel('blinds', roundId)
+    await stateDel('fixture-data', roundId)
     activeTimers.get(roundId)?.cancel()
     activeTimers.delete(roundId)
 
     // ① round:scoring signal
-    updateRoundPhase(tableId, { roundId, currentPhase: 'scoring', activePlayerId: null })
+    await updateRoundPhase(tableId, { roundId, currentPhase: 'scoring', activePlayerId: null })
     emitToRoom(io, tableId, 'round:scoring', { roundId })
     await new Promise((resolve) => setTimeout(resolve, SCORING_PAUSE_MS))
 
@@ -844,8 +735,8 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
         rank: i + 1,
         isWinner: scoringResult.winnerIds.includes(r.userId),
       }
-      const revealPhaseState = roundPhaseMap.get(tableId)
-      updateRoundPhase(tableId, {
+      const revealPhaseState = await getRoundPhaseState(tableId)
+      await updateRoundPhase(tableId, {
         roundId,
         currentPhase: 'reveals',
         revealedPlayerScores: [
@@ -868,15 +759,7 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
       const bonus = i === 0 ? scoringResult.potAmount - share * scoringResult.winnerIds.length : 0
       potDist[id] = share + bonus
     })
-    console.log(
-      'PHASE: winner',
-      'roundId:',
-      roundId,
-      'winnerIds:',
-      scoringResult.winnerIds,
-      Date.now(),
-    )
-    updateRoundPhase(tableId, { roundId, currentPhase: 'winner' })
+    await updateRoundPhase(tableId, { roundId, currentPhase: 'winner' })
     emitToRoom(io, tableId, 'round:winner', {
       winnerIds: scoringResult.winnerIds,
       potDistribution: potDist,
@@ -896,11 +779,6 @@ export async function resolveRound(roundId: string, io: Server): Promise<void> {
     )
 
     await scheduleNextRound(tableId, io)
-    console.log('GameService - resolveRound', {
-      roundId,
-      winnerIds: scoringResult.winnerIds,
-      pot: scoringResult.potAmount,
-    })
   } catch (error) {
     console.error('GameService - resolveRound - failed', { roundId, error })
     throw error
@@ -936,11 +814,10 @@ async function scheduleNextRound(tableId: string, io: Server): Promise<void> {
       .update(tables)
       .set({ status: 'COMPLETED', updatedAt: new Date() })
       .where(eq(tables.id, tableId))
-    clearRoundPhase(tableId)
+    await clearRoundPhase(tableId)
     listTables()
       .then((updatedTables) => io.emit('lobby:tables', { tables: updatedTables }))
       .catch(() => {})
-    console.log('GameService - scheduleNextRound - gameOver', { tableId, winnerId: winner?.userId })
     return
   }
 

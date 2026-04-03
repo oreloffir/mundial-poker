@@ -295,17 +295,31 @@ const TEAMS_DATA = [
 ] as const
 
 async function seed() {
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+  const url =
+    process.env.DATABASE_URL ?? 'postgres://wpc:wpc_dev_pass@localhost:5432/world_poker_cup'
+  const pool = new pg.Pool({ connectionString: url })
   const database = drizzle(pool)
 
   try {
     console.log('Seed - start', { teamCount: TEAMS_DATA.length })
 
-    await database.delete(teams)
+    const existing = await database.select({ id: teams.id }).from(teams)
+    const existingIds = new Set(existing.map((t) => t.id))
+    const newTeams = TEAMS_DATA.filter((t) => !existingIds.has(t.id))
 
-    await database.insert(teams).values([...TEAMS_DATA])
-
-    console.log('Seed - complete', { inserted: TEAMS_DATA.length })
+    if (newTeams.length > 0) {
+      await database.insert(teams).values([...newTeams])
+      console.log('Seed - complete', {
+        inserted: newTeams.length,
+        skipped: TEAMS_DATA.length - newTeams.length,
+      })
+    } else {
+      console.log('Seed - complete', {
+        inserted: 0,
+        skipped: TEAMS_DATA.length,
+        message: 'all teams already exist',
+      })
+    }
   } catch (error) {
     console.error('Seed - failed', { error })
     process.exit(1)
@@ -314,4 +328,4 @@ async function seed() {
   }
 }
 
-seed()
+void seed()

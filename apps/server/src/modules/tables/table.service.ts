@@ -3,7 +3,7 @@ import { db } from '../../db/index.js'
 import { tables } from '../../db/schema.js'
 import * as tableRepo from './table.repository.js'
 import { NotFoundError, GameError, ForbiddenError } from '../../shared/errors.js'
-import { BOT_IDS, isBotUser, createSingleBot } from '../game/bot.service.js'
+import { BOT_IDS, createSingleBot } from '../game/bot.service.js'
 
 const MAX_PLAYERS = 5
 const DEFAULT_STARTING_CHIPS = 500
@@ -106,7 +106,6 @@ export async function addBotsToTable(tableId: string, requestingUserId: string) 
   if (table.status !== 'WAITING') throw new GameError('Cannot add bots after game started')
 
   const currentPlayerIds = new Set(table.players.map((p) => p.userId))
-  const existingBotIds = table.players.filter((p) => isBotUser(p.userId)).map((p) => p.userId)
   const botsToAdd = (BOT_IDS as readonly string[]).filter((id) => !currentPlayerIds.has(id))
 
   const availableSeats = Array.from({ length: MAX_PLAYERS }, (_, i) => i).filter(
@@ -117,12 +116,6 @@ export async function addBotsToTable(tableId: string, requestingUserId: string) 
   for (let i = 0; i < slotsToFill; i++) {
     await tableRepo.addPlayer(tableId, botsToAdd[i]!, availableSeats[i]!, table.startingChips)
   }
-
-  console.log('TableService - addBotsToTable', {
-    tableId,
-    added: slotsToFill,
-    existingBots: existingBotIds.length,
-  })
 
   return tableRepo.findById(tableId)
 }
@@ -143,11 +136,6 @@ export async function addSingleBotToTable(tableId: string, requestingUserId: str
   const bot = await createSingleBot()
   await tableRepo.addPlayer(tableId, bot.id, nextSeat, table.startingChips)
 
-  console.log('TableService - addSingleBotToTable', {
-    tableId,
-    botId: bot.id,
-    username: bot.username,
-  })
   return tableRepo.findById(tableId)
 }
 
@@ -174,16 +162,8 @@ export async function startGame(tableId: string, userId: string) {
 }
 
 export async function cleanupStaleTables(): Promise<void> {
-  const result = await db
+  await db
     .update(tables)
     .set({ status: 'COMPLETED', updatedAt: new Date() })
     .where(ne(tables.status, 'COMPLETED'))
-    .returning({ id: tables.id })
-
-  if (result.length > 0) {
-    console.log('TableService - cleanupStaleTables', {
-      cleaned: result.length,
-      ids: result.map((r) => r.id),
-    })
-  }
 }

@@ -54,7 +54,7 @@ async function getLatestRoundId(tableId: string): Promise<string | null> {
 async function driveAllBetting(roundId: string, io: Server): Promise<void> {
   let iterations = 0
   while (iterations < MAX_DRIVE_ITERATIONS) {
-    const state = getBettingState(roundId)
+    const state = await getBettingState(roundId)
     if (!state) break
 
     const currentPlayer = state.playerStates[state.currentPlayerIndex]
@@ -132,7 +132,7 @@ export async function seedGame(req: SeedRequest, io: Server): Promise<SeedRespon
 
   if (req.phase === 'showdown') {
     // Cancel fixture timers and resolve immediately, then kick off resolveRound async
-    cancelRoundTimers(roundId)
+    await cancelRoundTimers(roundId)
     await resolveFixturesImmediately(roundId)
     // Fire-and-forget: resolveRound emits player:scored events progressively
     resolveRound(roundId, io).catch((err) =>
@@ -151,13 +151,6 @@ export async function seedGame(req: SeedRequest, io: Server): Promise<SeedRespon
     .from(tablePlayers)
     .innerJoin(users, eq(tablePlayers.userId, users.id))
     .where(eq(tablePlayers.tableId, table.id))
-
-  console.log('TestService - seedGame', {
-    tableId: table.id,
-    phase: req.phase,
-    playerCount: finalPlayers.length,
-    roundId,
-  })
 
   return {
     tableId: table.id,
@@ -184,6 +177,5 @@ export async function cleanupTestTables(): Promise<number> {
   // tablePlayers has ON DELETE CASCADE, so deleting tables removes players too
   await db.delete(tables).where(inArray(tables.id, ids))
 
-  console.log('TestService - cleanupTestTables', { count: testTables.length, ids })
   return testTables.length
 }
