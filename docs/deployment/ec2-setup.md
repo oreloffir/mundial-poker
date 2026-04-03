@@ -1,0 +1,228 @@
+# EC2 Setup — Mundial Poker Production
+
+**Author:** Devsi
+**Sprint:** 4
+**Date:** April 10, 2026
+
+This document records the exact steps to provision and configure the EC2 instance for production.
+Treat this as the runbook — if we ever need to rebuild from scratch, follow these steps.
+
+---
+
+## Instance Spec
+
+| Setting | Value |
+|---------|-------|
+| Instance type | t2.micro (free tier eligible) |
+| AMI | Amazon Linux 2023 (latest) |
+| Region | **Ask Orel — TBD** |
+| Storage | 20GB gp3 |
+| Elastic IP | Yes — assigned after launch |
+| Key pair | `mundial-poker-ec2` (create new) |
+
+---
+
+## Step 1 — Launch EC2 Instance
+
+In the AWS Console:
+
+1. Go to EC2 → Launch Instance
+2. Name: `mundial-poker-production`
+3. AMI: Amazon Linux 2023 AMI (64-bit x86)
+4. Instance type: `t2.micro`
+5. Key pair: Create new → `mundial-poker-ec2` → ED25519 → download `.pem`
+6. Network settings:
+   - VPC: default
+   - Subnet: default
+   - Auto-assign public IP: **Disable** (we'll use Elastic IP)
+   - Firewall: Create security group `mundial-poker-sg` (see Step 2)
+7. Storage: 20 GiB gp3
+8. Launch
+
+---
+
+## Step 2 — Security Group Rules
+
+Security group name: `mundial-poker-sg`
+
+| Type | Port | Protocol | Source | Purpose |
+|------|------|----------|--------|---------|
+| SSH | 22 | TCP | `<OREL_IP>/32` | Admin access only |
+| HTTP | 80 | TCP | `0.0.0.0/0` | Web traffic |
+| HTTPS | 443 | TCP | `0.0.0.0/0` | Web traffic (SSL — Sprint 5) |
+
+**All other inbound traffic: DENY**
+
+Outbound: all allowed (default).
+
+> Replace `<OREL_IP>` with Orel's actual IP. Get it from: `curl ifconfig.me`
+
+---
+
+## Step 3 — Assign Elastic IP
+
+1. EC2 → Elastic IPs → Allocate Elastic IP address
+2. Select the new allocation → Associate → select `mundial-poker-production`
+3. Record the IP: `<ELASTIC_IP>`
+
+This IP never changes even if the instance is stopped/started. Use it everywhere.
+
+---
+
+## Step 4 — SSH Into the Instance
+
+```bash
+chmod 400 mundial-poker-ec2.pem
+ssh -i mundial-poker-ec2.pem ec2-user@<ELASTIC_IP>
+```
+
+---
+
+## Step 5 — Install Docker
+
+```bash
+# Update packages
+sudo dnf update -y
+
+# Install Docker
+sudo dnf install -y docker
+
+# Start Docker and enable on boot
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add ec2-user to docker group (no sudo needed)
+sudo usermod -aG docker ec2-user
+
+# Apply group change (or re-login)
+newgrp docker
+
+# Verify
+docker --version
+```
+
+---
+
+## Step 6 — Install Docker Compose
+
+```bash
+# Install Docker Compose plugin (v2)
+sudo dnf install -y docker-compose-plugin
+
+# Verify
+docker compose version
+```
+
+---
+
+## Step 7 — Install Git and Node (for migrations)
+
+```bash
+sudo dnf install -y git
+
+# Verify
+git --version
+```
+
+---
+
+## Step 8 — Clone the Repository
+
+```bash
+# Create app directory
+sudo mkdir -p /opt/mundial-poker
+sudo chown ec2-user:ec2-user /opt/mundial-poker
+
+# Clone
+git clone https://github.com/<ORG>/world-poker-cup.git /opt/mundial-poker
+
+cd /opt/mundial-poker
+```
+
+---
+
+## Step 9 — Create Deploy Key for GitHub Actions
+
+The CD pipeline needs to SSH into EC2 without a password. We use a dedicated Ed25519 key.
+
+**On the EC2 instance:**
+
+```bash
+# Generate deploy key (no passphrase)
+ssh-keygen -t ed25519 -f ~/.ssh/deploy_key -N "" -C "github-actions-deploy"
+
+# Add public key to authorized_keys
+cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+# Print private key — copy this into GitHub Secrets as EC2_SSH_KEY
+cat ~/.ssh/deploy_key
+```
+
+**In GitHub (repo Settings → Secrets → Actions):**
+
+| Secret | Value |
+|--------|-------|
+| `EC2_HOST` | `<ELASTIC_IP>` |
+| `EC2_USER` | `ec2-user` |
+| `EC2_SSH_KEY` | contents of `~/.ssh/deploy_key` (private key) |
+| `DB_PASSWORD` | strong random password |
+| `JWT_SECRET` | strong random string (32+ chars) |
+
+---
+
+## Step 10 — Create .env on EC2
+
+```bash
+cd /opt/mundial-poker
+
+# Copy the template
+cp .env.production.template .env.production
+
+# Edit with real values
+nano .env.production
+```
+
+Fill in:
+- `DB_PASSWORD` — same as GitHub Secret
+- `JWT_SECRET` — same as GitHub Secret
+- `REDIS_PASSWORD` — set if you add Redis auth (optional for now)
+
+The `.env.production` file lives **only on EC2**. Never commit it.
+
+---
+
+## Step 11 — Verify Docker Works
+
+```bash
+cd /opt/mundial-poker
+
+# Test services start
+docker compose -f docker-compose.production.yml pull
+docker compose -f docker-compose.production.yml up -d postgres redis
+
+# Check health
+docker compose -f docker-compose.production.yml ps
+```
+
+---
+
+## Instance Details (fill in after provisioning)
+
+| Field | Value |
+|-------|-------|
+| Instance ID | `i-XXXXXXXXXXXXXXXXX` |
+| Elastic IP | `X.X.X.X` |
+| Region | TBD |
+| AMI | `ami-XXXXXXXXXXXXXXXXX` |
+| Key pair file | `mundial-poker-ec2.pem` (stored securely, not in repo) |
+
+---
+
+## Maintenance Notes
+
+- **Stop/Start:** Elastic IP stays assigned. No IP change.
+- **Reboot:** Docker services restart automatically (`restart: unless-stopped`).
+- **SSH:** Always use the `.pem` key. Orel's IP only.
+- **Secrets:** `.env.production` lives only on EC2. Back it up securely.
+- **Disk:** 20GB gp3. PostgreSQL data + Docker images will use ~3–5GB. Monitor with `df -h`.

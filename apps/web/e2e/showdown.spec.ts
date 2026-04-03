@@ -34,6 +34,10 @@ import {
 // ---------------------------------------------------------------------------
 
 test.describe('Showdown Flow', () => {
+  test.afterAll(async ({ request }) => {
+    await request.delete('/api/test/cleanup').catch(() => {})
+  })
+
   test.beforeEach(async ({ page }) => {
     await guestLogin(page)
     await setupGame(page, { botCount: 4 })
@@ -262,6 +266,10 @@ test.describe('Showdown Flow', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Showdown Edge Cases', () => {
+  test.afterAll(async ({ request }) => {
+    await request.delete('/api/test/cleanup').catch(() => {})
+  })
+
   test('SD13: all fold except one — pot awarded immediately, no showdown overlay', async ({
     page,
   }) => {
