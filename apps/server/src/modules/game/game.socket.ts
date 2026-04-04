@@ -15,6 +15,7 @@ import { verifyToken } from '../auth/auth.service.js'
 import * as gameService from './game.service.js'
 import { getRoundPhaseState } from './phase-tracker.js'
 import { getBettingState, getAllowedActions } from './betting.service.js'
+import { joinTable } from '../tables/table.service.js'
 import type { BetAction, ClientToServerEvents, GameState, ServerToClientEvents } from '@wpc/shared'
 
 interface SocketData {
@@ -189,6 +190,24 @@ export function setupGameSocket(io: Server): void {
         const { tableId } = payload
         socket.join(`table:${tableId}`)
 
+        // Auto-join: if user is not seated and table is WAITING, add them as a player
+        const [existingPlayer] = await db
+          .select()
+          .from(tablePlayers)
+          .where(and(eq(tablePlayers.tableId, tableId), eq(tablePlayers.userId, userId)))
+          .limit(1)
+
+        if (!existingPlayer) {
+          const [table] = await db.select().from(tables).where(eq(tables.id, tableId)).limit(1)
+          if (table && table.status === 'WAITING') {
+            try {
+              await joinTable(tableId, userId)
+            } catch {
+              // Table full or other join error — continue as spectator
+            }
+          }
+        }
+
         const state = await getTableState(tableId, userId)
         if (!state) {
           callback({ success: false, error: 'Table not found' })
@@ -197,6 +216,7 @@ export function setupGameSocket(io: Server): void {
 
         socket.emit('table:state', state)
 
+        // Re-check after potential auto-join
         const [player] = await db
           .select()
           .from(tablePlayers)
