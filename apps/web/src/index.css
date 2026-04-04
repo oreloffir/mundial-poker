@@ -375,6 +375,7 @@ input {
   --chip-btn-font-size: 0.7rem;
   --preset-padding: 4px 10px;
   --preset-font-size: 0.625rem;
+  --action-btn-size: 48px;
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
@@ -395,6 +396,7 @@ input {
     --chip-btn-font-size: 0.575rem;
     --preset-padding: 4px 8px;
     --preset-font-size: 0.625rem;
+    --action-btn-size: 40px;
     --fixture-tile-w: 60px;
   }
 
