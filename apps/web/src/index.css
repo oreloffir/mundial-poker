@@ -335,6 +335,27 @@ input {
   }
 }
 
+@keyframes fixture-board-pulse {
+  0%,
+  100% {
+    border-color: rgba(212, 168, 67, 0.25);
+  }
+  50% {
+    border-color: rgba(212, 168, 67, 0.65);
+  }
+}
+
+@keyframes fade-out-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
 /* ============ MOBILE LANDSCAPE RESPONSIVE ============ */
 
 :root {
