@@ -4,6 +4,7 @@ import { useGameStore } from '@/stores/gameStore'
 import { useAuth } from '@/hooks/useAuth'
 import { PokerTable } from '@/components/game/PokerTable'
 import { BettingControls } from '@/components/game/BettingControls'
+import { ScoringReference } from '@/components/game/ScoringReference'
 import { GameOverOverlay } from '@/components/game/GameOverOverlay'
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
@@ -26,6 +27,7 @@ export function GameTable() {
   const waitingForResults = useGameStore((s) => s.waitingForResults)
   const fixtures = useGameStore((s) => s.fixtures)
   const activeTurn = useGameStore((s) => s.activeTurn)
+  const showdownPhase = useGameStore((s) => s.showdownPhase)
   const error = useGameStore((s) => s.error)
   const setError = useGameStore((s) => s.setError)
   const reset = useGameStore((s) => s.reset)
@@ -205,25 +207,17 @@ export function GameTable() {
         </div>
       )}
 
-      {/* Bottom betting controls - floating */}
+      {/* Bottom-right corner — action buttons (only on my turn) */}
       {myTurn && betPrompt && (
-        <div
-          className="absolute bottom-0 left-0 right-0 z-30 px-4 py-2 betting-bar-wrapper"
-          style={{
-            background: 'rgba(5,10,24,0.82)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(212,168,67,0.12)',
-          }}
-        >
-          <div className="max-w-xl mx-auto">
-            <BettingControls
-              prompt={betPrompt}
-              onAction={sendBetAction}
-              myHand={myHand}
-              myChips={myPlayer?.chips}
-            />
-          </div>
+        <div className="absolute bottom-4 right-4 z-30">
+          <BettingControls prompt={betPrompt} onAction={sendBetAction} />
+        </div>
+      )}
+
+      {/* Bottom-left corner — scoring reference (visible during betting phase only) */}
+      {currentRound && showdownPhase === 'idle' && (
+        <div className="absolute bottom-4 left-4 z-30">
+          <ScoringReference />
         </div>
       )}
 

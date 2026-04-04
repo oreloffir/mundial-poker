@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import type { BetAction, TeamCard } from '@wpc/shared'
+import type { BetAction } from '@wpc/shared'
 import { PokerChip } from '@/components/shared/PokerChip'
 
 interface BetPrompt {
@@ -15,17 +15,16 @@ interface BetPrompt {
 interface BettingControlsProps {
   readonly prompt: BetPrompt
   readonly onAction: (action: BetAction, amount: number) => void
-  readonly myHand?: readonly TeamCard[] | null
-  readonly myChips?: number
 }
 
-const CHIP_DENOMS = [5, 10, 25, 50, 100, 200] as const
+// Chip denominations shown in the raise expansion panel (high → low)
+const CHIP_DENOMS = [200, 100, 50, 25, 10, 5] as const
 
-export function BettingControls({ prompt, onAction, myHand, myChips }: BettingControlsProps) {
+export function BettingControls({ prompt, onAction }: BettingControlsProps) {
   const [raiseAmount, setRaiseAmount] = useState(prompt.minimumBet)
   const [timeLeft, setTimeLeft] = useState(prompt.timeoutMs)
-  const [pressedChip, setPressedChip] = useState<number | null>(null)
   const [raiseExpanded, setRaiseExpanded] = useState(false)
+  const [pressedChip, setPressedChip] = useState<number | null>(null)
   const startTimeRef = useRef(Date.now())
 
   useEffect(() => {
@@ -45,14 +44,11 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
     return () => clearInterval(interval)
   }, [prompt.timeoutMs])
 
-  const timePercent = (timeLeft / prompt.timeoutMs) * 100
   const timeSeconds = Math.ceil(timeLeft / 1000)
-  const isAllowed = (action: string) => prompt.allowedActions.includes(action)
+  const isUrgent = timeLeft > 0 && timeLeft <= 5000
   const timerColor =
     timeLeft > 10000 ? 'var(--green-glow)' : timeLeft > 5000 ? 'var(--gold)' : 'var(--red)'
-  const isUrgent = timeLeft > 0 && timeLeft <= 5000
-
-  const raiseDisabled = raiseAmount < prompt.minimumBet
+  const isAllowed = (action: string) => prompt.allowedActions.includes(action)
   const raiseIsAllIn = raiseAmount >= prompt.chips
 
   const handleChipPress = (denom: number) => {
@@ -61,343 +57,246 @@ export function BettingControls({ prompt, onAction, myHand, myChips }: BettingCo
     setTimeout(() => setPressedChip(null), 100)
   }
 
-  const presets = [
-    { label: 'Min', value: prompt.minimumBet },
-    { label: '½ Pot', value: Math.max(prompt.minimumBet, Math.floor(prompt.pot / 2)) },
-    { label: 'Pot', value: Math.min(prompt.pot, prompt.chips) },
-    { label: 'All In', value: prompt.chips },
-  ]
+  const handleRaiseClick = () => {
+    if (!raiseExpanded) {
+      setRaiseExpanded(true)
+      return
+    }
+    // Second tap confirms the raise
+    setRaiseExpanded(false)
+    onAction(raiseIsAllIn ? 'ALL_IN' : 'RAISE', raiseIsAllIn ? prompt.chips : raiseAmount)
+  }
 
-  // ─── Sub-components ──────────────────────────────────────────────────────
+  const handleCancelRaise = () => {
+    setRaiseExpanded(false)
+    setRaiseAmount(prompt.minimumBet)
+  }
 
-  const handPreview = myHand && myHand.length > 0 && (
-    <div className="flex items-center gap-1.5 flex-shrink-0">
-      {myHand.map((card) => (
-        <div
-          key={card.teamId}
-          className="rounded-md flex flex-col items-center justify-center gap-0.5 overflow-hidden flex-shrink-0"
-          style={{
-            width: 28,
-            height: 38,
-            background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
-            border: '1px solid rgba(212,168,67,0.3)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
-          }}
-        >
-          <span style={{ fontSize: '0.8rem', lineHeight: 1 }}>{card.team.flagUrl}</span>
-          <span
-            style={{
-              fontSize: '5px',
-              fontWeight: 800,
-              color: 'rgba(255,255,255,0.8)',
-              lineHeight: 1,
-              letterSpacing: '0.02em',
-            }}
-          >
-            {card.team.code}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
+  // CSS variable — 48px desktop, 40px mobile (set in index.css responsive block)
+  const btnSize = 'var(--action-btn-size)'
 
-  const chipBadge = myChips !== undefined && (
+  const circleBtn = {
+    width: btnSize,
+    height: btnSize,
+    borderRadius: '50%',
+    fontFamily: "'Outfit', sans-serif",
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  } as const
+
+  return (
     <div
-      className="flex items-center gap-1 px-2 py-0.5 rounded-full flex-shrink-0"
-      style={{
-        background: 'rgba(5,10,24,0.85)',
-        border: '1px solid rgba(212,168,67,0.25)',
-        pointerEvents: 'none',
-      }}
+      data-testid="betting-controls"
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}
     >
-      {/* SVG elements don't inherit pointer-events from parent divs — must be explicit */}
-      <PokerChip size={12} style={{ flexShrink: 0, pointerEvents: 'none' }} />
-      <span className="font-outfit font-black text-xs" style={{ color: 'var(--gold-bright)' }}>
-        {myChips}
-      </span>
-    </div>
-  )
-
-  const timerBar = (
-    <div
-      data-testid="bet-timer"
-      className="flex items-center gap-2 flex-1 min-w-0"
-      style={{ pointerEvents: 'none' }}
-    >
-      <div
-        className="flex-1 h-1 rounded-full overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.06)' }}
-      >
-        <div
-          className="h-full rounded-full transition-all duration-100"
-          style={{
-            width: `${timePercent}%`,
-            background: timerColor,
-            ...(isUrgent ? { animation: 'blink 0.7s ease-in-out infinite' } : {}),
-          }}
-        />
-      </div>
+      {/* Timer text — top of the stack */}
       <span
-        className="text-xs font-mono font-bold flex-shrink-0 tabular-nums"
+        data-testid="bet-timer"
+        className="font-mono font-bold tabular-nums"
         style={{
+          fontSize: 11,
           color: timerColor,
-          minWidth: '2.5ch',
           ...(isUrgent ? { animation: 'blink 0.7s ease-in-out infinite' } : {}),
         }}
       >
         {timeSeconds}s
       </span>
-    </div>
-  )
 
-  const chipRow = (
-    <div className="flex items-center gap-1.5 flex-wrap justify-center">
-      {CHIP_DENOMS.map((denom) => {
-        const wouldExceed = raiseAmount + denom > prompt.chips
-        const isPressed = pressedChip === denom
-        return (
-          <button
-            key={denom}
-            data-testid={`chip-denomination-${denom}`}
-            onClick={() => handleChipPress(denom)}
-            disabled={wouldExceed}
-            className="relative flex items-center justify-center transition-all duration-100"
-            style={{
-              width: 'var(--chip-btn-size)',
-              height: 'var(--chip-btn-size)',
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              opacity: wouldExceed ? 0.28 : 1,
-              transform: isPressed ? 'scale(0.88) translateY(1px)' : undefined,
-              cursor: wouldExceed ? 'not-allowed' : 'pointer',
-              filter: wouldExceed
-                ? 'none'
-                : isPressed
-                  ? 'drop-shadow(0 0 6px rgba(212,168,67,0.5))'
-                  : 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
-            }}
-          >
-            <PokerChip
-              size={36}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-            />
-            <span
-              className="relative font-bold"
-              style={{
-                fontSize: 'var(--chip-btn-font-size)',
-                color: wouldExceed ? 'rgba(212,168,67,0.4)' : '#f0d060',
-                textShadow: wouldExceed ? 'none' : '0 1px 3px rgba(0,0,0,0.9)',
-                fontFamily: "'Outfit', sans-serif",
-              }}
-            >
-              {denom}
-            </span>
-          </button>
-        )
-      })}
-      <button
-        onClick={() => setRaiseAmount(prompt.minimumBet)}
-        style={{
-          fontSize: 'var(--chip-btn-font-size)',
-          color: 'var(--text-muted)',
-          padding: '0 6px',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-        }}
-      >
-        ↩
-      </button>
-    </div>
-  )
-
-  const presetRow = (
-    <div className="flex items-center gap-1.5 flex-wrap justify-center">
-      {presets.map(({ label, value }) => {
-        const isActive = raiseAmount === value
-        return (
-          <button
-            key={label}
-            onClick={() => setRaiseAmount(value)}
-            className="rounded-full transition-all duration-150 font-semibold"
-            style={{
-              padding: 'var(--preset-padding)',
-              fontSize: 'var(--preset-font-size)',
-              background: isActive ? 'rgba(212,168,67,0.12)' : 'rgba(255,255,255,0.05)',
-              border: isActive
-                ? '1px solid rgba(212,168,67,0.5)'
-                : '1px solid rgba(255,255,255,0.1)',
-              color: isActive ? 'var(--gold-bright)' : 'var(--text-dim)',
-            }}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
-  )
-
-  // ─── Unified layout (replaces separate desktop/mobile) ───────────────────
-  return (
-    <div data-testid="betting-controls" className="space-y-1.5">
-      {/* ── Raise drawer — slides up from above the action bar ── */}
-      {isAllowed('RAISE') && (
-        <div
-          className="overflow-hidden"
+      {/* FOLD */}
+      {isAllowed('FOLD') && (
+        <button
+          onClick={() => onAction('FOLD', 0)}
           style={{
-            maxHeight: raiseExpanded ? '200px' : '0px',
-            opacity: raiseExpanded ? 1 : 0,
-            transition: 'max-height 220ms ease-out, opacity 180ms ease-out',
+            ...circleBtn,
+            background: 'rgba(231,76,60,0.15)',
+            border: '1.5px solid rgba(231,76,60,0.5)',
+            color: 'var(--red)',
+            fontSize: 10,
           }}
         >
-          <div
-            className="space-y-1.5 pb-2"
-            style={{
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-              paddingBottom: '10px',
-              marginBottom: '4px',
-            }}
-          >
-            {chipRow}
-            {presetRow}
-            {/* Confirm row */}
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              <span style={{ fontSize: 'var(--preset-font-size)', color: 'var(--text-muted)' }}>
-                Raise to:{' '}
-                <span
-                  className="font-outfit font-black"
-                  style={{
-                    fontSize: 'var(--btn-font-size)',
-                    color: raiseDisabled ? 'var(--red)' : 'var(--gold-bright)',
-                  }}
-                >
-                  {raiseIsAllIn ? 'All In' : raiseAmount}
-                </span>
-              </span>
-              <button
-                onClick={() => {
-                  setRaiseExpanded(false)
-                  onAction('RAISE', raiseAmount)
-                }}
-                disabled={raiseDisabled}
-                className="rounded-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{
-                  padding: 'var(--btn-padding)',
-                  fontSize: 'var(--btn-font-size)',
-                  background: raiseDisabled ? 'rgba(212,168,67,0.04)' : 'rgba(212,168,67,0.12)',
-                  color: 'var(--gold)',
-                  border: `1px solid ${raiseDisabled ? 'rgba(212,168,67,0.1)' : 'rgba(212,168,67,0.4)'}`,
-                }}
-              >
-                {raiseIsAllIn ? 'All In' : `Raise ${raiseAmount}`}
-              </button>
-              <button
-                onClick={() => {
-                  setRaiseExpanded(false)
-                  setRaiseAmount(prompt.minimumBet)
-                }}
-                style={{
-                  fontSize: 'var(--preset-font-size)',
-                  color: 'var(--text-muted)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px 6px',
-                }}
-              >
-                ✕ Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+          FOLD
+        </button>
       )}
 
-      {/* ── Info row: your hand · chip count · timer ── */}
-      <div className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
-        {handPreview}
-        {chipBadge}
-        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-        {timerBar}
-      </div>
+      {/* CHECK */}
+      {isAllowed('CHECK') && (
+        <button
+          onClick={() => onAction('CHECK', 0)}
+          style={{
+            ...circleBtn,
+            background: 'rgba(52,152,219,0.15)',
+            border: '1.5px solid rgba(52,152,219,0.4)',
+            color: 'var(--blue)',
+            fontSize: 10,
+          }}
+        >
+          CHECK
+        </button>
+      )}
 
-      {/* ── Action row: Fold · Call/Check · Raise ▲ · All In ── */}
-      <div className="flex items-center gap-2">
-        {isAllowed('FOLD') && (
+      {/* CALL */}
+      {isAllowed('CALL') && (
+        <button
+          onClick={() => onAction('CALL', prompt.currentBet)}
+          style={{
+            ...circleBtn,
+            flexDirection: 'column',
+            background: 'rgba(52,152,219,0.15)',
+            border: '1.5px solid rgba(52,152,219,0.4)',
+            color: 'var(--blue)',
+            fontSize: 9,
+            lineHeight: 1.2,
+            textAlign: 'center',
+          }}
+        >
+          <span style={{ fontSize: 8, fontWeight: 600, opacity: 0.7 }}>CALL</span>
+          <span>{prompt.currentBet}</span>
+        </button>
+      )}
+
+      {/* RAISE — relative container so chip panel pops above it */}
+      {isAllowed('RAISE') && (
+        <div style={{ position: 'relative' }}>
+          {/* Chip denomination panel — expands above the RAISE button */}
+          {raiseExpanded && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 'calc(100% + 6px)',
+                right: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                background: 'rgba(5,10,24,0.9)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(212,168,67,0.25)',
+                borderRadius: 10,
+                padding: '4px 6px 6px',
+              }}
+            >
+              {/* Cancel */}
+              <button
+                onClick={handleCancelRaise}
+                aria-label="Cancel raise"
+                style={{
+                  alignSelf: 'flex-end',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: 10,
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                  padding: '0 2px 3px',
+                }}
+              >
+                ✕
+              </button>
+
+              {/* Chips high → low */}
+              {CHIP_DENOMS.map((denom) => {
+                const wouldExceed = raiseAmount + denom > prompt.chips
+                const isPressed = pressedChip === denom
+                return (
+                  <button
+                    key={denom}
+                    onClick={() => handleChipPress(denom)}
+                    disabled={wouldExceed}
+                    data-testid={`chip-denomination-${denom}`}
+                    style={{
+                      position: 'relative',
+                      width: btnSize,
+                      height: btnSize,
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: wouldExceed ? 'not-allowed' : 'pointer',
+                      opacity: wouldExceed ? 0.28 : 1,
+                      transform: isPressed ? 'scale(0.88)' : undefined,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <PokerChip
+                      size={36}
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                    <span
+                      className="font-bold"
+                      style={{
+                        position: 'relative',
+                        fontSize: 'var(--chip-btn-font-size)',
+                        color: wouldExceed ? 'rgba(212,168,67,0.4)' : '#f0d060',
+                        textShadow: wouldExceed ? 'none' : '0 1px 3px rgba(0,0,0,0.9)',
+                        fontFamily: "'Outfit', sans-serif",
+                      }}
+                    >
+                      {denom}
+                    </span>
+                  </button>
+                )
+              })}
+
+              {/* Reset to minimum */}
+              <button
+                onClick={() => setRaiseAmount(prompt.minimumBet)}
+                aria-label="Reset raise amount"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  padding: '1px 4px',
+                }}
+              >
+                ↩
+              </button>
+            </div>
+          )}
+
+          {/* RAISE button — first tap opens panel, second tap confirms */}
           <button
-            onClick={() => onAction('FOLD', 0)}
-            className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-1px] flex-shrink-0"
+            onClick={handleRaiseClick}
             style={{
-              padding: 'var(--btn-padding)',
-              fontSize: 'var(--btn-font-size)',
-              background: 'rgba(231,76,60,0.1)',
-              color: 'var(--red)',
-              border: '1px solid rgba(231,76,60,0.3)',
+              ...circleBtn,
+              flexDirection: 'column',
+              background: raiseExpanded ? 'rgba(212,168,67,0.22)' : 'rgba(212,168,67,0.12)',
+              border: `1.5px solid ${raiseExpanded ? 'rgba(212,168,67,0.7)' : 'rgba(212,168,67,0.4)'}`,
+              color: 'var(--gold)',
+              fontSize: raiseExpanded ? 8 : 10,
+              lineHeight: 1.2,
+              textAlign: 'center',
+              boxShadow: raiseExpanded ? '0 0 14px rgba(212,168,67,0.2)' : 'none',
             }}
           >
-            Fold
+            {raiseExpanded ? (
+              <>
+                <span style={{ fontSize: 7 }}>{raiseIsAllIn ? 'ALL IN' : 'RAISE'}</span>
+                <span style={{ fontSize: 9, color: 'var(--gold-bright)' }}>
+                  {raiseIsAllIn ? prompt.chips : raiseAmount}
+                </span>
+              </>
+            ) : (
+              'RAISE'
+            )}
           </button>
-        )}
-
-        {isAllowed('CHECK') && (
-          <button
-            onClick={() => onAction('CHECK', 0)}
-            className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-1px] flex-1"
-            style={{
-              padding: 'var(--btn-padding)',
-              fontSize: 'var(--btn-font-size)',
-              background: 'rgba(255,255,255,0.04)',
-              color: 'var(--text)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            Check
-          </button>
-        )}
-
-        {isAllowed('CALL') && (
-          <button
-            onClick={() => onAction('CALL', prompt.currentBet)}
-            className="rounded-xl font-bold transition-all duration-200 hover:translate-y-[-1px] flex-1"
-            style={{
-              padding: 'var(--btn-padding)',
-              fontSize: 'var(--btn-font-size)',
-              background: 'rgba(52,152,219,0.1)',
-              color: 'var(--blue)',
-              border: '1px solid rgba(52,152,219,0.3)',
-            }}
-          >
-            Call {prompt.currentBet}
-          </button>
-        )}
-
-        {isAllowed('RAISE') && (
-          <button
-            onClick={() => setRaiseExpanded((prev) => !prev)}
-            className="rounded-xl font-bold transition-all duration-150 flex-shrink-0"
-            style={{
-              padding: 'var(--btn-padding)',
-              fontSize: 'var(--btn-font-size)',
-              background: raiseExpanded ? 'rgba(212,168,67,0.18)' : 'rgba(212,168,67,0.08)',
-              color: raiseExpanded ? 'var(--gold-bright)' : 'var(--gold)',
-              border: `1px solid ${raiseExpanded ? 'rgba(212,168,67,0.55)' : 'rgba(212,168,67,0.25)'}`,
-              boxShadow: raiseExpanded ? '0 0 12px rgba(212,168,67,0.15)' : 'none',
-            }}
-          >
-            Raise {raiseExpanded ? '▼' : '▲'}
-          </button>
-        )}
-
-        {isAllowed('ALL_IN') && (
-          <button
-            onClick={() => onAction('ALL_IN', prompt.chips)}
-            className="wpc-btn-primary flex-shrink-0"
-            style={{ padding: 'var(--btn-padding)', fontSize: 'var(--btn-font-size)' }}
-          >
-            All In
-          </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
