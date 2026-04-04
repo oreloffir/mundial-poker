@@ -39,25 +39,25 @@
 
 Seats are absolute-positioned inside the pitch div. Index → position:
 
-| Seat | Position anchor | Notes |
-|---|---|---|
-| 0 | `bottom: 4%`, `left: 50%`, `translateX(-50%)` | Current user default seat, bottom center |
-| 1 | `top: 38%`, `left: 5%`, `translate(-50%, -50%)` | Left mid — partially off viewport edge at mobile |
-| 2 | `top: 6%`, `left: 24%` | Top left |
-| 3 | `top: 6%`, `right: 24%` | Top right |
-| 4 | `top: 38%`, `right: 5%` | Right mid — partially off viewport edge at mobile |
+| Seat | Position anchor                                 | Notes                                             |
+| ---- | ----------------------------------------------- | ------------------------------------------------- |
+| 0    | `bottom: 4%`, `left: 50%`, `translateX(-50%)`   | Current user default seat, bottom center          |
+| 1    | `top: 38%`, `left: 5%`, `translate(-50%, -50%)` | Left mid — partially off viewport edge at mobile  |
+| 2    | `top: 6%`, `left: 24%`                          | Top left                                          |
+| 3    | `top: 6%`, `right: 24%`                         | Top right                                         |
+| 4    | `top: 38%`, `right: 5%`                         | Right mid — partially off viewport edge at mobile |
 
 ### Score popup direction rules
 
 `SeatScorePopup` currently positions with `bottom: 100%` for all seats, which clips the top seats above the viewport. Direction by seat:
 
-| Seats | Direction | CSS |
-|---|---|---|
-| 0 (bottom center) | Extend UP | `bottom: 100%; top: auto` (current default — keep) |
-| 1 (left mid) | Extend RIGHT-UP | `bottom: 80%; left: 100%; transform: none` |
-| 2 (top left) | Extend DOWN | `top: 100%; bottom: auto; left: 50%; transform: translateX(-50%)` |
-| 3 (top right) | Extend DOWN | `top: 100%; bottom: auto; left: 50%; transform: translateX(-50%)` |
-| 4 (right mid) | Extend LEFT-UP | `bottom: 80%; right: 100%; left: auto; transform: none` |
+| Seats             | Direction       | CSS                                                               |
+| ----------------- | --------------- | ----------------------------------------------------------------- |
+| 0 (bottom center) | Extend UP       | `bottom: 100%; top: auto` (current default — keep)                |
+| 1 (left mid)      | Extend RIGHT-UP | `bottom: 80%; left: 100%; transform: none`                        |
+| 2 (top left)      | Extend DOWN     | `top: 100%; bottom: auto; left: 50%; transform: translateX(-50%)` |
+| 3 (top right)     | Extend DOWN     | `top: 100%; bottom: auto; left: 50%; transform: translateX(-50%)` |
+| 4 (right mid)     | Extend LEFT-UP  | `bottom: 80%; right: 100%; left: auto; transform: none`           |
 
 Pass `seatIndex` to `SeatScorePopup` and derive the position style from it. This is the single most implementation-sensitive detail in this spec — top-seat popups clip the viewport if left at `bottom: 100%`.
 
@@ -100,10 +100,16 @@ The `FixtureBoard` component is wrapped in a new `FixtureBoardContainer` div in 
 `isWaiting` = `showdownPhase === 'waiting' || showdownPhase === 'fixtures'`
 
 New keyframe in `index.css`:
+
 ```css
 @keyframes fixture-board-pulse {
-  0%, 100% { border-color: rgba(212,168,67,0.25); }
-  50%       { border-color: rgba(212,168,67,0.65); }
+  0%,
+  100% {
+    border-color: rgba(212, 168, 67, 0.25);
+  }
+  50% {
+    border-color: rgba(212, 168, 67, 0.65);
+  }
 }
 ```
 
@@ -111,14 +117,14 @@ New keyframe in `index.css`:
 
 ## Phase Color Reference
 
-| Phase | `showdownPhase` value | Ambient signal | Phase badge color |
-|---|---|---|---|
-| Idle / dealing | `'idle'` | None | — |
-| Waiting for results | `'waiting'` | Fixture board border pulses gold | `var(--gold)` |
-| Fixtures revealing | `'fixtures'` | Tile reveals, board pulse continues | `var(--gold)` |
-| Calculating | `'calculating'` | Subtle spinner on pot display | `var(--blue)` |
-| Score reveals | `'reveals'` | Seat popups appear inline | `var(--green-glow)` |
-| Winner | `'winner'` | Winner seat glows, banner on table | `var(--gold-bright)` |
+| Phase               | `showdownPhase` value | Ambient signal                      | Phase badge color    |
+| ------------------- | --------------------- | ----------------------------------- | -------------------- |
+| Idle / dealing      | `'idle'`              | None                                | —                    |
+| Waiting for results | `'waiting'`           | Fixture board border pulses gold    | `var(--gold)`        |
+| Fixtures revealing  | `'fixtures'`          | Tile reveals, board pulse continues | `var(--gold)`        |
+| Calculating         | `'calculating'`       | Subtle spinner on pot display       | `var(--blue)`        |
+| Score reveals       | `'reveals'`           | Seat popups appear inline           | `var(--green-glow)`  |
+| Winner              | `'winner'`            | Winner seat glows, banner on table  | `var(--gold-bright)` |
 
 ---
 
@@ -134,6 +140,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `table === null` in gameStore
 
 **Mobile layout:**
+
 - Top bar: `← Leave` button + "Loading..." in Cinzel gold
 - Center: spinner `w-8 h-8 border-2 rounded-full animate-spin` in gold, `borderTopColor: transparent`
 - Below spinner: "Connecting to table..." in `var(--text-dim)`
@@ -151,6 +158,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** Players are seated but game hasn't started
 
 **Mobile layout:**
+
 - Top bar: table name + player count (e.g., "2/5") + `+ Add Bot` button + `Start Game` button (disabled until ≥2 players)
 - Pitch: rendered, `PokerTable` visible
 - Seats: filled seats show avatar + name + chip count; empty seats show dashed circle with "Empty" label
@@ -173,6 +181,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `currentRound` exists, `myHand` is empty or populating, `showdownPhase === 'idle'`
 
 **Mobile layout:**
+
 - Top bar: table name + round number + chip count
 - Pitch: full poker table
 - Seats: avatars + chip balances + blind position badges (SB/BB) appear on newly assigned seats
@@ -194,6 +203,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `myTurn === false`, `activeTurn` points to another player
 
 **Mobile layout:**
+
 - Active player: timer ring visible (green → gold → red), seat container has `rgba(46,204,113,0.05)` tint
 - Action badge: most recent action floats above active player's avatar (`badge-pop 2s ease-out forwards`)
 - My seat (current user): cards face-up, YOU badge, no timer ring
@@ -212,6 +222,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `myTurn === true`, `betPrompt` populated
 
 **Mobile layout:**
+
 - My seat: timer ring active (green → gold → red), seat tinted
 - Betting bar: slides in from bottom — `absolute bottom-0 left-0 right-0 z-30`
   - Glassmorphism: `rgba(5,10,24,0.82)` + `blur(20px)`
@@ -233,6 +244,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `showdownPhase === 'waiting'`
 
 **Mobile layout:**
+
 - Betting bar: gone (betting closed)
 - All player seats: visible, no timers
 - Fixture board container: **appears**, "LIVE FIXTURES" label, pulsing gold border
@@ -253,6 +265,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `showdownPhase === 'fixtures'`, tiles updating with scores
 
 **Mobile layout:**
+
 - Same as Frame 6 base layout
 - Fixture tiles: as each result arrives, tile transitions from pending style to finished style:
   - Background: `rgba(13,20,36,0.55)` (slightly darker/more opaque)
@@ -272,6 +285,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `showdownPhase === 'calculating'`
 
 **Mobile layout:**
+
 - Fixture board: all tiles showing results, board pulse stops (border returns to static gold)
 - "Calculating scores..." text replaces the waiting text — same position, `var(--text-dim)` + spinner dot
 - Seats: all visible, no change to cards or avatars
@@ -290,6 +304,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `showdownPhase === 'reveals'`, `scoreResult` populating per seat
 
 **Mobile layout:**
+
 - Seats: as each player's score arrives, `SeatScorePopup` appears on their seat
   - Direction determined by `seatIndex` — see positioning rules in Layout System section
   - Animation: `score-pop 0.4s ease-out both`
@@ -312,6 +327,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `showdownPhase === 'winner'`, `isWinner` flag set on winning player
 
 **Mobile layout:**
+
 - Winner seat container: `background: rgba(212,168,67,0.08)`, `border: 1px solid var(--gold-dim)`
 - Winner avatar: `border: 2.5px solid var(--gold)`, `gold-burst 1.2s ease-out infinite` pulse animation
 - Winner chip count: already reflects the pot being awarded (real-time from socket)
@@ -339,10 +355,17 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 - `GameOverOverlay` (table status COMPLETED): still triggers for the final game, this frame is for round winners
 
 **New keyframe needed:**
+
 ```css
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 ```
 
@@ -358,6 +381,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `showdownPhase === 'idle'` (after reset), `currentRound` null
 
 **Mobile layout:**
+
 - Score popups: fade out via `fade-out-down 0.4s ease-in both` when `resetShowdownPhase()` is called
 - Winner banner: fades out at same time
 - Cards: removed from seats as round data clears
@@ -366,10 +390,17 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 - Status shows waiting for next deal
 
 **New keyframe:**
+
 ```css
 @keyframes fade-out-down {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(6px); }
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 ```
 
@@ -383,6 +414,7 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 **State:** `table.status === 'COMPLETED'`
 
 **Mobile layout:**
+
 - `GameOverOverlay` renders: `absolute inset-0 z-40`
 - This is the existing component — **not modified**. It covers the table for the final end state (someone ran out of chips). This is the one case where a full overlay is acceptable: the game is over, there is no table to see.
 - Players table: sorted by chips descending, winner at top with gold badge
@@ -396,19 +428,19 @@ Each frame is defined mobile-first (667×375). Desktop delta lists only what cha
 
 A single round from deal to reset:
 
-| t | Event | Animation |
-|---|---|---|
-| 0ms | Cards dealt | `card-deal 0.3s` per seat, staggered by `0.1s × seatIndex` |
-| ~0ms | SB/BB blinds posted | Action badge (`badge-pop 2s`) on SB/BB seats |
-| Variable | Player action (fold/call/raise/etc.) | `badge-pop 2s` on acting player's seat |
-| Variable | Pot updates | `pot-flash 0.6s` on pot display |
-| After last bet | Fixture board appears | Container fades in `0.3s`, label appears |
-| Per result | Fixture tile reveals | `tile-reveal 0.3s` per tile as data arrives |
-| After all fixtures | Score reveal begins | Stagger 200ms per seat: `score-pop 0.4s` on popup, `card-flip 0.4s` on opponent cards |
-| After last score | Winner banner | `fade-in-up 0.6s` |
-| Winner avatar | Gold burst | `gold-burst 1.2s infinite` |
-| Reset | Clear popups + banner | `fade-out-down 0.4s` |
-| Reset | Chip balance flash | Green (winner) / Red (losers) border flash, 0.8s |
+| t                  | Event                                | Animation                                                                             |
+| ------------------ | ------------------------------------ | ------------------------------------------------------------------------------------- |
+| 0ms                | Cards dealt                          | `card-deal 0.3s` per seat, staggered by `0.1s × seatIndex`                            |
+| ~0ms               | SB/BB blinds posted                  | Action badge (`badge-pop 2s`) on SB/BB seats                                          |
+| Variable           | Player action (fold/call/raise/etc.) | `badge-pop 2s` on acting player's seat                                                |
+| Variable           | Pot updates                          | `pot-flash 0.6s` on pot display                                                       |
+| After last bet     | Fixture board appears                | Container fades in `0.3s`, label appears                                              |
+| Per result         | Fixture tile reveals                 | `tile-reveal 0.3s` per tile as data arrives                                           |
+| After all fixtures | Score reveal begins                  | Stagger 200ms per seat: `score-pop 0.4s` on popup, `card-flip 0.4s` on opponent cards |
+| After last score   | Winner banner                        | `fade-in-up 0.6s`                                                                     |
+| Winner avatar      | Gold burst                           | `gold-burst 1.2s infinite`                                                            |
+| Reset              | Clear popups + banner                | `fade-out-down 0.4s`                                                                  |
+| Reset              | Chip balance flash                   | Green (winner) / Red (losers) border flash, 0.8s                                      |
 
 ---
 
@@ -416,22 +448,22 @@ A single round from deal to reset:
 
 ### New elements (to create)
 
-| Element | Where | What |
-|---|---|---|
-| `FixtureBoardContainer` | `PokerTable.tsx` | Wrapper div around `<FixtureBoard>` — glassmorphism backing card with "LIVE FIXTURES" label and phase-dependent border. Not a separate file — inline in `PokerTable.tsx`. |
-| Winner banner | `PokerTable.tsx` | Inline absolute-positioned text strip. Not a separate component. Renders when `showdownPhase === 'winner'`. |
-| `fade-in-up` keyframe | `index.css` | For winner banner entrance |
-| `fade-out-down` keyframe | `index.css` | For popup/banner exit on reset |
-| `fixture-board-pulse` keyframe | `index.css` | For fixture board border pulse during waiting phase |
+| Element                        | Where            | What                                                                                                                                                                      |
+| ------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FixtureBoardContainer`        | `PokerTable.tsx` | Wrapper div around `<FixtureBoard>` — glassmorphism backing card with "LIVE FIXTURES" label and phase-dependent border. Not a separate file — inline in `PokerTable.tsx`. |
+| Winner banner                  | `PokerTable.tsx` | Inline absolute-positioned text strip. Not a separate component. Renders when `showdownPhase === 'winner'`.                                                               |
+| `fade-in-up` keyframe          | `index.css`      | For winner banner entrance                                                                                                                                                |
+| `fade-out-down` keyframe       | `index.css`      | For popup/banner exit on reset                                                                                                                                            |
+| `fixture-board-pulse` keyframe | `index.css`      | For fixture board border pulse during waiting phase                                                                                                                       |
 
 ### Modified components
 
-| Component | Change |
-|---|---|
-| `PlayerSeat.tsx` | Bot indicator (🤖), YOU badge, `--ring-scale` on timer SVG — see `avatar-system-spec.md` |
-| `SeatScorePopup.tsx` | Add `seatIndex` prop, derive directional positioning CSS from it (Section: Score popup direction rules) |
-| `PokerTable.tsx` | Add `FixtureBoardContainer` wrapper, winner banner, pass `seatIndex` to `SeatScorePopup`, pass `showdownPhase` for fixture board visibility logic |
-| `index.css` | New keyframes, `--ring-scale` token, bot color tokens — see avatar spec and Section 9 of avatar spec |
+| Component            | Change                                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PlayerSeat.tsx`     | Bot indicator (🤖), YOU badge, `--ring-scale` on timer SVG — see `avatar-system-spec.md`                                                          |
+| `SeatScorePopup.tsx` | Add `seatIndex` prop, derive directional positioning CSS from it (Section: Score popup direction rules)                                           |
+| `PokerTable.tsx`     | Add `FixtureBoardContainer` wrapper, winner banner, pass `seatIndex` to `SeatScorePopup`, pass `showdownPhase` for fixture board visibility logic |
+| `index.css`          | New keyframes, `--ring-scale` token, bot color tokens — see avatar spec and Section 9 of avatar spec                                              |
 
 ### Unchanged components
 
@@ -439,11 +471,11 @@ A single round from deal to reset:
 
 ### Explicitly retired — do not implement, do not wire
 
-| Component | Why |
-|---|---|
+| Component             | Why                                                                                                                                                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `RoundResultsOverlay` | Full-screen overlay over the table. Violates DN1 constraint: table must stay visible during reveals. Component exists as dead code from J13. Leave the file — don't delete it yet — but do not import or render it anywhere. |
-| `CalculatingOverlay` | Same reason. Was planned but not yet built. Do not create. |
-| `RevealedPlayerMini` | Was a sub-component planned for `RoundResultsOverlay`. Do not create. |
+| `CalculatingOverlay`  | Same reason. Was planned but not yet built. Do not create.                                                                                                                                                                   |
+| `RevealedPlayerMini`  | Was a sub-component planned for `RoundResultsOverlay`. Do not create.                                                                                                                                                        |
 
 ---
 
