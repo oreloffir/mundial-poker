@@ -199,6 +199,7 @@ export function PokerTable({
   }, [])
 
   const isWinnerPhase = showdownPhase === 'winner'
+  const isWaiting = showdownPhase === 'waiting' || showdownPhase === 'fixtures'
 
   return (
     <div className="absolute inset-0 flex items-center justify-center">
@@ -251,12 +252,29 @@ export function PokerTable({
             </div>
           </div>
 
-          {/* Fixtures — upper half of pitch */}
-          <div
-            className="absolute pointer-events-none flex flex-col items-center gap-2"
-            style={{ top: '18%', left: '50%', transform: 'translateX(-50%)' }}
-          >
-            <div className="pointer-events-auto">
+          {/* Fixture board container — glassmorphism backing, visible from 'waiting' phase onward */}
+          {showdownPhase !== 'idle' && (
+            <div
+              className="absolute pointer-events-auto"
+              style={{
+                top: '18%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'rgba(5,10,24,0.55)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                borderRadius: '12px',
+                border: `1px solid ${isWaiting ? 'rgba(212,168,67,0.45)' : 'rgba(255,255,255,0.07)'}`,
+                padding: '6px 8px 4px',
+                animation: isWaiting ? 'fixture-board-pulse 2s ease-in-out infinite' : 'none',
+              }}
+            >
+              <p
+                className="text-center font-outfit font-bold uppercase mb-1"
+                style={{ fontSize: '8px', letterSpacing: '3px', color: 'var(--gold)', opacity: 0.7 }}
+              >
+                Live Fixtures
+              </p>
               <FixtureBoard
                 fixtures={fixtures as unknown as readonly RawFixture[]}
                 revealedCount={revealedFixtureCount}
@@ -270,7 +288,7 @@ export function PokerTable({
                 </div>
               )}
             </div>
-          </div>
+          )}
 
           {/* Player seats */}
           {seatStyles.map((style, index) => {
