@@ -96,5 +96,10 @@ jobs:
             sleep 5
             curl -f http://localhost/api/health
 
+            echo "--- Pruning unused Docker images and build cache ---"
+            docker system prune -f
+            docker builder prune -f
+
             echo "--- Deploy complete ---"
             docker-compose -f docker-compose.production.yml ps
+            echo "Disk usage:" && df -h / | tail -1
