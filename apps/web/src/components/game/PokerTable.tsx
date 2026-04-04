@@ -271,7 +271,12 @@ export function PokerTable({
             >
               <p
                 className="text-center font-outfit font-bold uppercase mb-1"
-                style={{ fontSize: '8px', letterSpacing: '3px', color: 'var(--gold)', opacity: 0.7 }}
+                style={{
+                  fontSize: '8px',
+                  letterSpacing: '3px',
+                  color: 'var(--gold)',
+                  opacity: 0.7,
+                }}
               >
                 Live Fixtures
               </p>
