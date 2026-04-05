@@ -42,6 +42,7 @@ Right now, one EBS failure = all data gone. This is the single biggest risk to t
 6. **Document** in `docs/devops/backup-recovery.md`: how to restore, where backups live, retention policy.
 
 ### Out of Scope
+
 - Redis backup (AOF is already enabled — good enough for now)
 - Automated restore testing (manual verify is fine for Sprint 7)
 
@@ -119,12 +120,12 @@ Currently deploy.sh does `docker compose up -d` and hopes for the best. Add a po
 
 ## Delivery Log
 
-| Task | Status | PR | Deployed |
-|------|--------|----|----------|
-| D8 | ✅ Done (my side) — blocked on Orel (AWS setup + EC2 cron) | #34 | ⬜ pending merge + Orel |
-| D9 | ✅ Done (my side) — blocked on Orel (UptimeRobot) + Soni (health endpoint) | #38 | ⬜ pending merge |
-| D10 | ✅ Done | #39 | ⬜ pending merge |
-| D11 | ✅ Done | #41 | ⬜ pending merge |
+| Task | Status                                                                     | PR  | Deployed                |
+| ---- | -------------------------------------------------------------------------- | --- | ----------------------- |
+| D8   | ✅ Done (my side) — blocked on Orel (AWS setup + EC2 cron)                 | #34 | ⬜ pending merge + Orel |
+| D9   | ✅ Done (my side) — blocked on Orel (UptimeRobot) + Soni (health endpoint) | #38 | ⬜ pending merge        |
+| D10  | ✅ Done                                                                    | #39 | ⬜ pending merge        |
+| D11  | ✅ Done                                                                    | #41 | ⬜ pending merge        |
 
 ### D8 Progress Log — April 5, 2026
 
