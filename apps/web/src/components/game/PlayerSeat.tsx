@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import type { TablePlayer, TeamCard } from '@wpc/shared'
+import type { TablePlayer } from '@wpc/shared'
 import { PokerChip } from '@/components/shared/PokerChip'
 import { getAvatarColor } from '@/utils/avatarColor'
 import type { PlayerScoredData } from '@/stores/gameStore'
@@ -22,7 +22,6 @@ interface PlayerSeatProps {
   readonly scoreResult: PlayerScoredData | null
   readonly isCurrent: boolean
   readonly isWinner: boolean
-  readonly cards: readonly TeamCard[] | null
   readonly hasCards: boolean
   readonly blindPosition?: 'SB' | 'BB' | null
 }
@@ -135,7 +134,6 @@ export function PlayerSeat({
   scoreResult,
   isCurrent,
   isWinner,
-  cards,
   hasCards,
   blindPosition,
 }: PlayerSeatProps) {
@@ -191,7 +189,7 @@ export function PlayerSeat({
   const dimmed = (isFolded || player.isEliminated) && !inShowdown
   const avatarColor = getAvatarColor(player.username)
 
-  const showFaceUp = isCurrentUser && cards && cards.length > 0
+  // Current user's face-up cards live in PlayerCardDock (J25) — never render them on the pitch seat
   // When scored, show opponent cards face-up (flip) — otherwise face-down while in round
   const showScoredCards = !isCurrentUser && inShowdown && scoreResult.hand.length > 0
   const showFaceDown = !isCurrentUser && hasCards && !inShowdown && !isFolded
@@ -211,8 +209,10 @@ export function PlayerSeat({
         transition: 'all 0.4s ease',
       }}
     >
-      {/* Inline score popup — shown above seat when this player has been scored */}
-      {inShowdown && <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />}
+      {/* Score popup — shown above seat for opponents only; current user's shows in PlayerCardDock (J25) */}
+      {inShowdown && !isCurrentUser && (
+        <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />
+      )}
 
       {/* Action badge */}
       {lastAction && !inShowdown && <ActionBadge {...lastAction} />}
@@ -227,14 +227,7 @@ export function PlayerSeat({
             ))}
           </div>
         )}
-        {!showScoredCards && showFaceUp && (
-          <div className="flex gap-0.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
-            {cards!.map((card) => (
-              <FaceUpMiniCard key={card.teamId} card={card} />
-            ))}
-          </div>
-        )}
-        {!showScoredCards && !showFaceUp && showFaceDown && (
+        {!showScoredCards && showFaceDown && (
           <div className="flex gap-0.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
             <FaceDownCard />
             <FaceDownCard />
@@ -365,8 +358,8 @@ export function PlayerSeat({
         </div>
       </div>
 
-      {/* Score total — shown below chips once scored */}
-      {inShowdown && (
+      {/* Score total — shown below chips once scored (opponents only; current user's shows in dock) */}
+      {inShowdown && !isCurrentUser && (
         <div
           data-testid="showdown-score"
           className="mt-0.5 text-[10px] font-outfit font-black px-2.5 py-0.5 rounded-lg"
