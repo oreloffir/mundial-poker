@@ -274,9 +274,13 @@ async function startBettingRound(
   if (isBotUser(prompt.userId)) {
     scheduleBotAction(roundId, prompt.userId, io)
   } else {
-    startBetTimer(roundId, prompt.userId, prompt.allowedActions, (rid, uid, action, amount, auto) =>
-      handleBetAction(rid, uid, action, amount, io, auto),
-    tableId)
+    startBetTimer(
+      roundId,
+      prompt.userId,
+      prompt.allowedActions,
+      (rid, uid, action, amount, auto) => handleBetAction(rid, uid, action, amount, io, auto),
+      tableId,
+    )
   }
 
   const statusMap: Record<number, string> = {
@@ -572,9 +576,13 @@ export async function handleBetAction(
   if (isBotUser(prompt.userId)) {
     scheduleBotAction(roundId, prompt.userId, io)
   } else {
-    startBetTimer(roundId, prompt.userId, prompt.allowedActions, (rid, uid, act, amt, auto) =>
-      handleBetAction(rid, uid, act, amt, io, auto),
-    tableId)
+    startBetTimer(
+      roundId,
+      prompt.userId,
+      prompt.allowedActions,
+      (rid, uid, act, amt, auto) => handleBetAction(rid, uid, act, amt, io, auto),
+      tableId,
+    )
   }
 }
 

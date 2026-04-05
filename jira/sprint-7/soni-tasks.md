@@ -59,6 +59,7 @@ Currently, turn timers are in-memory. When the Node process restarts (deploy, cr
    - Recovery: stale timer (no game state) is cleaned up
 
 ### Out of Scope
+
 - Don't change the timer duration values
 - Don't add WebSocket recovery (reconnect already works from PR #10)
 - Don't persist betting round state — just the timer
@@ -74,6 +75,7 @@ Currently, turn timers are in-memory. When the Node process restarts (deploy, cr
 - [ ] PR opened, deployed, tested
 
 ### CONTRACT (for Joni)
+
 No frontend changes needed. The timer recovery is invisible to the client — the server picks up where it left off and the existing socket events (`turn:start`, `turn:timeout`) fire normally.
 
 ---
@@ -119,18 +121,19 @@ Joni's first backend task. She's building `GET /api/tables/:tableId/stats`. Your
 
 Review every PR as it opens. Sprint 7 PRs to expect:
 
-| PR | Author | What |
-|----|--------|------|
-| Mark M14 | Mark | E2E test fixes |
-| Joni J37 | Joni | BUG-MP-01 host-only buttons |
-| Joni J38 | Joni | Fixture-card visual link |
-| Joni J40 | Joni | Match ticket cards |
-| Joni J41 | Joni | Sound effects |
-| Joni J42 | Joni | Table stats endpoint (backend) |
-| Devsi D10 | Devsi | Prettier pre-commit hook |
-| Devsi D11 | Devsi | Deploy health check |
+| PR        | Author | What                           |
+| --------- | ------ | ------------------------------ |
+| Mark M14  | Mark   | E2E test fixes                 |
+| Joni J37  | Joni   | BUG-MP-01 host-only buttons    |
+| Joni J38  | Joni   | Fixture-card visual link       |
+| Joni J40  | Joni   | Match ticket cards             |
+| Joni J41  | Joni   | Sound effects                  |
+| Joni J42  | Joni   | Table stats endpoint (backend) |
+| Devsi D10 | Devsi  | Prettier pre-commit hook       |
+| Devsi D11 | Devsi  | Deploy health check            |
 
 **Review standards:**
+
 - Quick turnaround (within hours, not days)
 - For Joni's frontend PRs: layer model compliance, no z-index hacks, mobile-first
 - For Joni's backend PR (J42): teaching review — explain WHY, not just WHAT
@@ -149,16 +152,17 @@ Review every PR as it opens. Sprint 7 PRs to expect:
 
 ## Delivery Log
 
-| Task | Status | PR | Deployed |
-|------|--------|-----|----------|
-| S21  | ✅ done | feat/timer-persistence | pending |
-| S22  | ⬜     |     |          |
-| S23  | ongoing |     |          |
+| Task | Status  | PR                     | Deployed |
+| ---- | ------- | ---------------------- | -------- |
+| S21  | ✅ done | feat/timer-persistence | pending  |
+| S22  | ⬜      |                        |          |
+| S23  | ongoing |                        |          |
 
 ### S21 — Timer State Persistence
 
 **Branch:** `feat/timer-persistence`
 **Files changed:**
+
 - `apps/server/src/lib/game-state-store.ts` — added `stateKeys(prefix)` + optional `ttlSeconds` param to `stateSet`
 - `apps/server/src/modules/game/betting.service.ts` — `TimerState` interface, `TIMER_PREFIX`, persist timer to Redis on start, delete on cancel/cleanup, `startBetTimerWithDuration` for recovery
 - `apps/server/src/modules/game/timer-recovery.ts` — NEW: `recoverTimers(io)` — scans Redis for active timers, validates state, restarts or auto-folds

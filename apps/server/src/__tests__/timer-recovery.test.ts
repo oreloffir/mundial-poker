@@ -7,7 +7,20 @@ const { mockStore, mockHandleBetAction, mockDbChain } = vi.hoisted(() => {
   const mockHandleBetAction = vi.fn().mockResolvedValue(undefined)
 
   const mockDbChain: Record<string, ReturnType<typeof vi.fn>> = {}
-  const methods = ['select', 'from', 'where', 'limit', 'orderBy', 'innerJoin', 'insert', 'values', 'update', 'set', 'delete', 'catch']
+  const methods = [
+    'select',
+    'from',
+    'where',
+    'limit',
+    'orderBy',
+    'innerJoin',
+    'insert',
+    'values',
+    'update',
+    'set',
+    'delete',
+    'catch',
+  ]
   for (const m of methods) {
     mockDbChain[m] = vi.fn()
   }
@@ -90,8 +103,22 @@ function createBettingState(overrides: Partial<BettingState> = {}): BettingState
     currentBet: 10,
     currentPlayerIndex: 0,
     playerStates: [
-      { userId: 'user-0', seatIndex: 0, hasFolded: false, totalBet: 10, chipStack: 490, hasActed: false },
-      { userId: 'user-1', seatIndex: 1, hasFolded: false, totalBet: 0, chipStack: 500, hasActed: false },
+      {
+        userId: 'user-0',
+        seatIndex: 0,
+        hasFolded: false,
+        totalBet: 10,
+        chipStack: 490,
+        hasActed: false,
+      },
+      {
+        userId: 'user-1',
+        seatIndex: 1,
+        hasFolded: false,
+        totalBet: 0,
+        chipStack: 500,
+        hasActed: false,
+      },
     ],
     pot: 15,
     bbPlayerIndex: null,
@@ -124,10 +151,18 @@ async function setupTimerScenario(
   const tableId = timer.tableId
   await stateSet('timer', tableId, timer)
   if (!options.skipBetting) {
-    await stateSet('betting', timer.roundId, createBettingState({ roundId: timer.roundId, ...bettingOverrides }))
+    await stateSet(
+      'betting',
+      timer.roundId,
+      createBettingState({ roundId: timer.roundId, ...bettingOverrides }),
+    )
   }
   if (!options.skipPhase) {
-    await stateSet('phase', tableId, createPhaseState({ roundId: timer.roundId, ...phaseOverrides }))
+    await stateSet(
+      'phase',
+      tableId,
+      createPhaseState({ roundId: timer.roundId, ...phaseOverrides }),
+    )
   }
 }
 
@@ -194,8 +229,16 @@ describe('Timer Recovery', () => {
   })
 
   it('recovers multiple tables independently', async () => {
-    await setupTimerScenario({ tableId: 'table-1', startedAt: Date.now() - 35_000, allowedActions: ['FOLD'] })
-    await setupTimerScenario({ tableId: 'table-2', roundId: 'round-2', startedAt: Date.now() - 5_000 })
+    await setupTimerScenario({
+      tableId: 'table-1',
+      startedAt: Date.now() - 35_000,
+      allowedActions: ['FOLD'],
+    })
+    await setupTimerScenario({
+      tableId: 'table-2',
+      roundId: 'round-2',
+      startedAt: Date.now() - 5_000,
+    })
 
     const count = await recoverTimers(mockIo)
     expect(count).toBe(2)

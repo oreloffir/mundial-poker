@@ -88,9 +88,7 @@ async function start(): Promise<void> {
     ensureBotsExist().catch((err) =>
       console.error('App - ensureBotsExist - failed', { error: err }),
     )
-    recoverTimers(io).catch((err) =>
-      console.error('App - recoverTimers - failed', { error: err }),
-    )
+    recoverTimers(io).catch((err) => console.error('App - recoverTimers - failed', { error: err }))
   })
 }
 

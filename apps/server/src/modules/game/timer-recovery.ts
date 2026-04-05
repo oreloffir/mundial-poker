@@ -29,14 +29,21 @@ export async function recoverTimers(io: Server): Promise<number> {
     const phaseState = await getRoundPhaseState(tableId)
 
     if (!bettingState || !phaseState || phaseState.currentPhase !== 'betting') {
-      console.error('TimerRecovery - staleTimer - cleaned up', { tableId, roundId: timerState.roundId })
+      console.error('TimerRecovery - staleTimer - cleaned up', {
+        tableId,
+        roundId: timerState.roundId,
+      })
       await stateDel(TIMER_PREFIX, tableId)
       continue
     }
 
     const currentPlayer = bettingState.playerStates[bettingState.currentPlayerIndex]
     if (!currentPlayer || currentPlayer.userId !== timerState.playerId) {
-      console.error('TimerRecovery - playerMismatch - cleaned up', { tableId, roundId: timerState.roundId, expected: timerState.playerId })
+      console.error('TimerRecovery - playerMismatch - cleaned up', {
+        tableId,
+        roundId: timerState.roundId,
+        expected: timerState.playerId,
+      })
       await stateDel(TIMER_PREFIX, tableId)
       continue
     }
@@ -45,19 +52,33 @@ export async function recoverTimers(io: Server): Promise<number> {
     const remaining = timerState.durationMs - elapsed
 
     if (remaining <= 0) {
-      console.error('TimerRecovery - expired - auto-folding', { tableId, roundId: timerState.roundId, playerId: timerState.playerId, elapsedMs: elapsed })
+      console.error('TimerRecovery - expired - auto-folding', {
+        tableId,
+        roundId: timerState.roundId,
+        playerId: timerState.playerId,
+        elapsedMs: elapsed,
+      })
       await stateDel(TIMER_PREFIX, tableId)
       const action = timerState.allowedActions.includes('CHECK') ? 'CHECK' : 'FOLD'
       try {
         await handleBetAction(timerState.roundId, timerState.playerId, action, 0, io, true)
       } catch (err) {
-        console.error('TimerRecovery - autoFoldFailed', { tableId, roundId: timerState.roundId, error: err })
+        console.error('TimerRecovery - autoFoldFailed', {
+          tableId,
+          roundId: timerState.roundId,
+          error: err,
+        })
       }
       recovered++
       continue
     }
 
-    console.error('TimerRecovery - recovered', { tableId, roundId: timerState.roundId, playerId: timerState.playerId, remainingMs: remaining })
+    console.error('TimerRecovery - recovered', {
+      tableId,
+      roundId: timerState.roundId,
+      playerId: timerState.playerId,
+      remainingMs: remaining,
+    })
     startBetTimerWithDuration(
       timerState.roundId,
       timerState.playerId,
