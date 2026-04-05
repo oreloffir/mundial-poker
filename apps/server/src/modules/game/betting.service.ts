@@ -4,6 +4,17 @@ import { GameError } from '../../shared/errors.js'
 import { stateGet, stateSet, stateDel } from '../../lib/game-state-store.js'
 import type { BetAction } from '@wpc/shared'
 
+export interface TimerState {
+  readonly tableId: string
+  readonly roundId: string
+  readonly playerId: string
+  readonly startedAt: number
+  readonly durationMs: number
+  readonly allowedActions: readonly BetAction[]
+}
+
+const TIMER_PREFIX = 'timer'
+
 interface PlayerState {
   readonly userId: string
   readonly seatIndex: number
@@ -41,6 +52,61 @@ export function startBetTimer(
     amount: number,
     autoAction: boolean,
   ) => Promise<void>,
+  tableId?: string,
+): void {
+  const key = `${roundId}:${userId}`
+  cancelBetTimer(roundId, userId)
+
+  const startedAt = Date.now()
+
+  if (tableId) {
+    const timerState: TimerState = {
+      tableId,
+      roundId,
+      playerId: userId,
+      startedAt,
+      durationMs: BET_TIMEOUT_MS,
+      allowedActions,
+    }
+    const ttlSeconds = Math.ceil((BET_TIMEOUT_MS + 5_000) / 1_000)
+    stateSet(TIMER_PREFIX, tableId, timerState, ttlSeconds).catch((err) =>
+      console.error('BettingService - persistTimer - failed', { tableId, roundId, error: err }),
+    )
+  }
+
+  const timer = setTimeout(async () => {
+    betTimers.delete(key)
+    if (tableId) {
+      stateDel(TIMER_PREFIX, tableId).catch(() => {})
+    }
+    const state = await getBettingState(roundId)
+    if (!state) return
+    const player = state.playerStates[state.currentPlayerIndex]
+    if (!player || player.userId !== userId) return
+
+    const action: BetAction = allowedActions.includes('CHECK') ? 'CHECK' : 'FOLD'
+    try {
+      await handleAction(roundId, userId, action, 0, true)
+    } catch (err) {
+      console.error('BettingService - betTimeout - failed', { roundId, userId, error: err })
+    }
+  }, BET_TIMEOUT_MS)
+
+  betTimers.set(key, timer)
+}
+
+export function startBetTimerWithDuration(
+  roundId: string,
+  userId: string,
+  allowedActions: readonly BetAction[],
+  durationMs: number,
+  handleAction: (
+    roundId: string,
+    userId: string,
+    action: BetAction,
+    amount: number,
+    autoAction: boolean,
+  ) => Promise<void>,
 ): void {
   const key = `${roundId}:${userId}`
   cancelBetTimer(roundId, userId)
@@ -58,26 +124,32 @@ export function startBetTimer(
     } catch (err) {
       console.error('BettingService - betTimeout - failed', { roundId, userId, error: err })
     }
-  }, BET_TIMEOUT_MS)
+  }, durationMs)
 
   betTimers.set(key, timer)
 }
 
-export function cancelBetTimer(roundId: string, userId: string): void {
+export function cancelBetTimer(roundId: string, userId: string, tableId?: string): void {
   const key = `${roundId}:${userId}`
   const timer = betTimers.get(key)
   if (timer) {
     clearTimeout(timer)
     betTimers.delete(key)
   }
+  if (tableId) {
+    stateDel(TIMER_PREFIX, tableId).catch(() => {})
+  }
 }
 
-export function cleanupBetTimers(roundId: string): void {
+export function cleanupBetTimers(roundId: string, tableId?: string): void {
   for (const [key, timer] of betTimers) {
     if (key.startsWith(`${roundId}:`)) {
       clearTimeout(timer)
       betTimers.delete(key)
     }
+  }
+  if (tableId) {
+    stateDel(TIMER_PREFIX, tableId).catch(() => {})
   }
 }
 
@@ -410,4 +482,4 @@ function findNextActiveIndex(players: readonly PlayerState[], currentIndex: numb
   return currentIndex
 }
 
-export { getAllowedActions }
+export { getAllowedActions, TIMER_PREFIX }

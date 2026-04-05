@@ -25,7 +25,8 @@ const baseURL = process.env.DEV_URL ?? 'http://localhost:5173'
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 120_000,
+  // Increase timeout for remote server (cold-start latency on first game setup)
+  timeout: baseURL.includes('localhost') ? 120_000 : 180_000,
   expect: { timeout: 10_000 },
 
   // Game state is shared via a real DB — run tests sequentially to avoid interference
