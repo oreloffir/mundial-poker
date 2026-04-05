@@ -38,11 +38,10 @@ The fixture board is invisible on mobile. It blends into the pitch. This is the 
 4. The container is a NEW wrapper div — don't modify `FixtureBoard.tsx` internals.
 
 ### Deliverables
-
-- [ ] Glassmorphism container with "LIVE FIXTURES" label
-- [ ] Positioned in upper pitch, not overlapping any seat
-- [ ] Border pulses gold during fixture:result phase
-- [ ] Readable on mobile 667x375
+- [x] Glassmorphism container with "LIVE FIXTURES" label
+- [x] Positioned in upper pitch, not overlapping any seat
+- [x] Border pulses gold during fixture:result phase
+- [x] Readable on mobile 667x375
 
 ---
 
@@ -57,7 +56,6 @@ Player cards currently sit on the pitch overlapping fixtures. Move them to a fix
 ### Requirements
 
 1. Create a fixed-height bottom dock (above betting controls):
-
    ```
    ┌─────────────────────────────────────┐
    │   [🇰🇷 KOR]  [🇦🇺 AUS]  │ 💰 490  │
@@ -77,11 +75,10 @@ Player cards currently sit on the pitch overlapping fixtures. Move them to a fix
 6. Mobile: dock is ~44px for cards + ~44px for controls = ~88px total bottom area.
 
 ### Deliverables
-
-- [ ] Player cards in fixed bottom shelf
-- [ ] Cards never overlap pitch/fixtures
-- [ ] Chip count visible next to cards
-- [ ] Opponent cards at seat positions on rail
+- [x] Player cards in fixed bottom shelf
+- [x] Cards never overlap pitch/fixtures
+- [x] Chip count visible next to cards
+- [x] Opponent cards at seat positions on rail
 
 ---
 
@@ -111,11 +108,10 @@ Avatars, names, chip counts, and badges currently draw on the pitch. Move them t
 4. Mobile: reduce avatar size if needed (40px → 32px) to fit on rail.
 
 ### Deliverables
-
-- [ ] All player info on rail/outside pitch
-- [ ] Pitch is sacred — only fixtures + pot
-- [ ] Badge priority system (1 secondary max)
-- [ ] Works on 667x375
+- [x] All player info on rail/outside pitch
+- [x] Pitch is sacred — only fixtures + pot
+- [x] Badge priority system (1 secondary max)
+- [x] Works on 667x375
 
 ---
 
@@ -130,7 +126,6 @@ Replace the static "Round N" text with a phase-aware badge.
 ### Requirements
 
 1. Replace `Round {N}` in `GameTable.tsx` top bar with:
-
    ```
    ┌──────────────────┐
    │ Round 1           │
@@ -150,10 +145,9 @@ Replace the static "Round N" text with a phase-aware badge.
 4. Compact on mobile: single line `"R1 · BETTING"` if space is tight.
 
 ### Deliverables
-
-- [ ] Phase badge with color-coded state
-- [ ] Updates in real-time as phase transitions
-- [ ] Readable on mobile
+- [x] Phase badge with color-coded state
+- [x] Updates in real-time as phase transitions
+- [x] Readable on mobile
 
 ---
 
@@ -182,11 +176,10 @@ Score popups clip above viewport for top seats. Fix with directional positioning
    `"W+5 HS+4 CS+2 = 11"`
 
 ### Deliverables
-
-- [ ] No viewport clipping on any seat
-- [ ] Correct direction per seat position
-- [ ] Readable at 100px on mobile
-- [ ] Winner popup gold treatment
+- [x] No viewport clipping on any seat
+- [x] Correct direction per seat position
+- [x] Readable at 100px on mobile
+- [x] Winner popup gold treatment
 
 ---
 
@@ -201,7 +194,6 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
 ### Requirements
 
 1. Create `apps/web/public/manifest.json`:
-
    ```json
    {
      "name": "Mundial Poker",
@@ -216,29 +208,25 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
    ```
 
 2. Add to `index.html`:
-
    ```html
-   <link rel="manifest" href="/manifest.json" />
-   <meta name="apple-mobile-web-app-capable" content="yes" />
-   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+   <link rel="manifest" href="/manifest.json">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
    ```
 
 3. Screen orientation lock on game pages:
-
    ```typescript
    screen.orientation?.lock('landscape').catch(() => {})
    ```
-
    Call this in `GameTable.tsx` on mount.
 
 4. "Add to Home Screen" banner: show a dismissible prompt on first visit suggesting users add to home screen for full-screen experience.
 
 ### Deliverables
-
-- [ ] PWA manifest with landscape orientation
-- [ ] Full-screen mode when launched from home screen
-- [ ] Orientation lock attempt on game pages
-- [ ] "Add to Home Screen" prompt on first visit
+- [x] PWA manifest with landscape orientation
+- [x] Full-screen mode when launched from home screen
+- [x] Orientation lock attempt on game pages
+- [x] "Add to Home Screen" prompt on first visit
 
 ---
 
@@ -257,10 +245,9 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
 3. Remove the timer bar from `BettingControls.tsx` on mobile. Keep just the countdown text "12s" in the controls.
 
 ### Deliverables
-
-- [ ] YOU label on seat 0, always visible
-- [ ] One timer display only (ring on seat)
-- [ ] Timer text in controls (no bar on mobile)
+- [x] YOU label on seat 0, always visible
+- [x] One timer display only (ring on seat)
+- [x] Timer text in controls (no bar on mobile)
 
 ---
 
@@ -268,13 +255,13 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
 
 Update after EVERY task. Clodi reads this in real-time.
 
-| Task | Status     | PR  | Deployed      |
-| ---- | ---------- | --- | ------------- |
-| J24  | ✅ PR open | #11 | pending merge |
-| J25  | ✅ PR open | #15 | pending merge |
-| J26  | ✅ PR open | #17 | pending merge |
-| J27  | ✅ PR open | #18 | pending merge |
-| J28  | ✅ PR open | #19 | pending merge |
-| J29  | ⬜         |     |               |
-| J30  | ⬜         |     |               |
-| J31  | ✅ PR open | #14 | pending merge |
+| Task | Status | PR  | Deployed |
+|------|--------|-----|----------|\
+| J24 | ✅ PR open | #11 | pending merge |
+| J25 | ✅ PR open | #15 | pending merge |
+| J26 | ✅ PR open | #17 | pending merge |
+| J27 | ✅ PR open | #18 | pending merge |
+| J28 | ✅ PR open | #19 | pending merge |
+| J29 | ✅ PR open | #20 | pending merge |
+| J30 | ✅ PR open | #21 | pending merge |
+| J31 | ✅ PR open | #14 | pending merge |
