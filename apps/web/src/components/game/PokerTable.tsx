@@ -308,6 +308,9 @@ export function PokerTable({
             const hasCards = isInRound && !!player && !player.isEliminated
             const blindPosition = index === sbSeatIndex ? 'SB' : index === bbSeatIndex ? 'BB' : null
 
+            // Seat 0 for current user lives in PlayerCardDock (J34) — skip rendering on pitch
+            if (index === 0 && isMe) return null
+
             return (
               <div
                 key={index}

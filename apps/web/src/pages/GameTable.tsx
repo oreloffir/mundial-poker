@@ -316,7 +316,7 @@ export function GameTable() {
         </div>
       )}
 
-      {/* Bottom-center — player card dock (cards + chips + score during showdown) */}
+      {/* Bottom-center — player dock: avatar + cards + chips, always visible when seated (J34) */}
       {myPlayer && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bottom-dock-safe">
           <PlayerCardDock
@@ -325,6 +325,8 @@ export function GameTable() {
             isInRound={!!currentRound}
             scoreResult={playerScoreReveals.find((r) => r.userId === myPlayer.userId) ?? null}
             isCurrent={playerScoreReveals[currentRevealIndex]?.userId === myPlayer.userId}
+            username={myPlayer.username}
+            isActive={activeTurn?.userId === myPlayer.userId}
           />
         </div>
       )}
