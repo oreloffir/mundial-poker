@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { PokerTable } from '@/components/game/PokerTable'
 import { BettingControls } from '@/components/game/BettingControls'
 import { ScoringReference } from '@/components/game/ScoringReference'
+import { PlayerCardDock } from '@/components/game/PlayerCardDock'
 import { GameOverOverlay } from '@/components/game/GameOverOverlay'
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
@@ -88,6 +89,8 @@ export function GameTable() {
   const fixtures = useGameStore((s) => s.fixtures)
   const activeTurn = useGameStore((s) => s.activeTurn)
   const showdownPhase = useGameStore((s) => s.showdownPhase)
+  const playerScoreReveals = useGameStore((s) => s.playerScoreReveals)
+  const currentRevealIndex = useGameStore((s) => s.currentRevealIndex)
   const error = useGameStore((s) => s.error)
   const setError = useGameStore((s) => s.setError)
   const reset = useGameStore((s) => s.reset)
@@ -247,7 +250,6 @@ export function GameTable() {
           activeTurn={activeTurn}
           fixtures={fixtures}
           pot={currentRound?.pot ?? 0}
-          myHand={myHand}
           waitingForResults={waitingForResults}
           isInRound={!!currentRound}
         />
@@ -276,6 +278,19 @@ export function GameTable() {
       {currentRound && showdownPhase === 'idle' && (
         <div className="absolute bottom-4 left-4 z-30">
           <ScoringReference />
+        </div>
+      )}
+
+      {/* Bottom-center — player card dock (cards + chips + score during showdown) */}
+      {myPlayer && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+          <PlayerCardDock
+            cards={myHand}
+            chips={myPlayer.chips ?? 0}
+            isInRound={!!currentRound}
+            scoreResult={playerScoreReveals.find((r) => r.userId === myPlayer.userId) ?? null}
+            isCurrent={playerScoreReveals[currentRevealIndex]?.userId === myPlayer.userId}
+          />
         </div>
       )}
 
