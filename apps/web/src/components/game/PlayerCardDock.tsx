@@ -1,5 +1,6 @@
 import type { TeamCard } from '@wpc/shared'
 import { PokerChip } from '@/components/shared/PokerChip'
+import { getAvatarColor } from '@/utils/avatarColor'
 import type { PlayerScoredData, CardScoreData } from '@/stores/gameStore'
 
 interface PlayerCardDockProps {
@@ -8,6 +9,8 @@ interface PlayerCardDockProps {
   readonly isInRound: boolean
   readonly scoreResult: PlayerScoredData | null
   readonly isCurrent: boolean
+  readonly username: string
+  readonly isActive: boolean
 }
 
 function getResult(card: CardScoreData): 'W' | 'D' | 'L' {
@@ -81,19 +84,25 @@ export function PlayerCardDock({
   isInRound,
   scoreResult,
   isCurrent,
+  username,
+  isActive,
 }: PlayerCardDockProps) {
-  if (!isInRound && !scoreResult) return null
-  if (!cards && !scoreResult) return null
+  const avatarColor = getAvatarColor(username)
+  const isWinner = scoreResult?.isWinner ?? false
 
-  const borderColor = scoreResult?.isWinner
+  const borderColor = isWinner
     ? 'rgba(212,168,67,0.6)'
-    : isCurrent
-      ? 'rgba(212,168,67,0.35)'
-      : 'rgba(212,168,67,0.18)'
+    : isActive
+      ? 'rgba(46,204,113,0.35)'
+      : isCurrent
+        ? 'rgba(212,168,67,0.35)'
+        : 'rgba(212,168,67,0.18)'
 
-  const boxShadow = scoreResult?.isWinner
+  const boxShadow = isWinner
     ? '0 0 20px rgba(212,168,67,0.3), 0 4px 20px rgba(0,0,0,0.5)'
-    : '0 4px 20px rgba(0,0,0,0.5)'
+    : isActive
+      ? '0 0 12px rgba(46,204,113,0.15), 0 4px 16px rgba(0,0,0,0.5)'
+      : '0 4px 20px rgba(0,0,0,0.5)'
 
   return (
     <div
@@ -109,8 +118,46 @@ export function PlayerCardDock({
         animation: isCurrent && scoreResult ? 'score-pop 0.35s ease-out both' : undefined,
       }}
     >
-      {/* Team card tiles */}
-      {cards && cards.length > 0 && (
+      {/* Avatar — replaces seat 0 on the pitch (J34) */}
+      <div className="flex flex-col items-center gap-0.5" style={{ flexShrink: 0 }}>
+        <div
+          className="rounded-full flex items-center justify-center font-black font-outfit"
+          style={{
+            width: 32,
+            height: 32,
+            background: `linear-gradient(145deg, ${avatarColor}33, ${avatarColor}11)`,
+            border: isActive
+              ? '2px solid var(--green-glow)'
+              : isWinner
+                ? '2px solid var(--gold)'
+                : `2px solid ${avatarColor}44`,
+            boxShadow: isActive
+              ? '0 0 8px rgba(46,204,113,0.3)'
+              : isWinner
+                ? '0 0 12px rgba(212,168,67,0.3)'
+                : '0 2px 6px rgba(0,0,0,0.4)',
+            color: avatarColor,
+            fontSize: 11,
+          }}
+        >
+          {username.substring(0, 2).toUpperCase()}
+        </div>
+        {/* YOU anchor label */}
+        <span
+          className="font-cinzel font-bold uppercase tracking-widest"
+          style={{ fontSize: 6, color: 'var(--gold)', opacity: 0.55 }}
+        >
+          YOU
+        </span>
+      </div>
+
+      {/* Vertical divider */}
+      <div
+        style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
+      />
+
+      {/* Team card tiles — only during a round */}
+      {isInRound && cards && cards.length > 0 && (
         <div className="flex gap-1.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
           {cards.map((card) => {
             const scoreCard = scoreResult?.cardScores.find((cs) => cs.teamId === card.teamId)
@@ -119,15 +166,12 @@ export function PlayerCardDock({
         </div>
       )}
 
-      {/* Vertical divider */}
-      <div
-        style={{
-          width: 1,
-          height: 32,
-          background: 'rgba(255,255,255,0.1)',
-          flexShrink: 0,
-        }}
-      />
+      {/* Vertical divider before chip count */}
+      {isInRound && cards && cards.length > 0 && (
+        <div
+          style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
+        />
+      )}
 
       {/* Chip count */}
       <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
@@ -147,22 +191,17 @@ export function PlayerCardDock({
       {scoreResult && (
         <>
           <div
-            style={{
-              width: 1,
-              height: 32,
-              background: 'rgba(255,255,255,0.1)',
-              flexShrink: 0,
-            }}
+            style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
           />
           <div className="flex flex-col items-center gap-0.5" style={{ minWidth: 44 }}>
             <div className="flex items-baseline gap-1">
-              {scoreResult.isWinner && <span style={{ fontSize: 10 }}>🏆</span>}
+              {isWinner && <span style={{ fontSize: 10 }}>🏆</span>}
               <span
                 className="font-outfit font-black leading-none"
                 style={{
                   fontSize: 15,
-                  color: scoreResult.isWinner ? 'var(--gold-bright)' : 'var(--text)',
-                  textShadow: scoreResult.isWinner ? '0 0 10px rgba(212,168,67,0.5)' : undefined,
+                  color: isWinner ? 'var(--gold-bright)' : 'var(--text)',
+                  textShadow: isWinner ? '0 0 10px rgba(212,168,67,0.5)' : undefined,
                 }}
               >
                 {scoreResult.totalScore}
