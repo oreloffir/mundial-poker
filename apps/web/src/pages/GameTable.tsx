@@ -50,8 +50,8 @@ export function GameTable() {
 
   const [botLoading, setBotLoading] = useState(false)
   const [portraitHintDismissed, setPortraitHintDismissed] = useState(false)
-  const [a2hsDismissed, setA2hsDismissed] = useState(() =>
-    typeof localStorage !== 'undefined' && localStorage.getItem('wpc-a2hs-dismissed') === '1',
+  const [a2hsDismissed, setA2hsDismissed] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem('wpc-a2hs-dismissed') === '1',
   )
 
   if (!tableId) {
