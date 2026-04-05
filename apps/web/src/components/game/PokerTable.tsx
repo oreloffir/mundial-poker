@@ -357,7 +357,7 @@ export function PokerTable({
           {/* Fixture board container — visible whenever fixtures exist (idle=VS state, showdown=scores) */}
           {fixtures.length > 0 && (
             <div
-              className="absolute pointer-events-auto"
+              className="absolute pointer-events-auto fixture-board-container"
               style={{
                 top: '18%',
                 left: '50%',

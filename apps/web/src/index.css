@@ -20,6 +20,16 @@
   --text-muted: #556680;
   --border: rgba(212, 168, 67, 0.15);
   --glow: rgba(212, 168, 67, 0.4);
+
+  /* Z-index layer model */
+  --z-pitch: 20;
+  --z-fixtures: 30;
+  --z-seats: 40;
+  --z-turn: 50;
+  --z-chrome-top: 60;
+  --z-chrome-bottom: 70;
+  --z-toast: 80;
+  --z-modal: 90;
 }
 
 * {
@@ -476,20 +486,63 @@ input {
   }
 }
 
-/* Score popup — fixed width so breakdown text doesn't wrap unpredictably */
+/* Portrait orientation hint — hidden by default, shown on portrait mobile */
+.portrait-hint {
+  display: none;
+}
+
+/* ============ J32 LAYER MODEL POLISH ============ */
+
+/* Fixture container: cap width so it never bleeds into seats 2/3 on desktop */
+.fixture-board-container {
+  max-width: min(65%, 420px);
+  overflow: hidden;
+}
+
+/* Fixture board tiles: horizontal scroll with snap on narrow viewports */
+.fixture-board-scroll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.fixture-board-scroll::-webkit-scrollbar {
+  display: none;
+}
+.fixture-board-scroll > * {
+  scroll-snap-align: center;
+  flex-shrink: 0;
+}
+
+/* Safe area insets for notched devices */
+.top-bar-safe {
+  padding-left: max(var(--top-bar-px), env(safe-area-inset-left));
+  padding-right: max(var(--top-bar-px), env(safe-area-inset-right));
+  padding-top: env(safe-area-inset-top);
+}
+.bottom-dock-safe {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* Score popup: clamp inside pitch on top seats (seats 2/3) */
 .seat-score-popup {
   width: 124px;
+  max-width: 90vw;
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
   .seat-score-popup {
     width: 100px;
   }
-}
 
-/* Portrait orientation hint — hidden by default, shown on portrait mobile */
-.portrait-hint {
-  display: none;
+  /* Mobile: fixture container fills more width, scrolls if needed */
+  .fixture-board-container {
+    max-width: 85%;
+  }
 }
 
 @media (orientation: portrait) and (max-width: 768px) {
