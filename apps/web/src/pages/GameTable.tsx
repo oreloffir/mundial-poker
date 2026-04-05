@@ -14,6 +14,57 @@ function formatChips(chips: number): string {
   return String(chips)
 }
 
+type ShowdownPhase = 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'
+
+const PHASE_CONFIG: Record<ShowdownPhase, { label: string; color: string; pulse: boolean; glow?: boolean }> = {
+  idle:        { label: 'BETTING',  color: 'var(--green-glow)',  pulse: true },
+  waiting:     { label: 'WAITING',  color: 'var(--gold)',        pulse: false },
+  fixtures:    { label: 'WAITING',  color: 'var(--gold)',        pulse: false },
+  calculating: { label: 'SCORING',  color: 'var(--gold-bright)', pulse: false },
+  reveals:     { label: 'SCORING',  color: 'var(--gold-bright)', pulse: false },
+  winner:      { label: 'WINNER',   color: 'var(--gold)',        pulse: false, glow: true },
+}
+
+function PhaseBadge({ roundNumber, phase }: { readonly roundNumber: number; readonly phase: ShowdownPhase }) {
+  const config = PHASE_CONFIG[phase]
+  return (
+    <div
+      className="flex flex-col items-end leading-none"
+      style={{ gap: 2 }}
+    >
+      <span
+        className="font-cinzel font-bold"
+        style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.05em' }}
+      >
+        Round <span data-testid="round-counter" style={{ color: 'var(--text)' }}>{roundNumber}</span>
+      </span>
+      <span
+        className="font-outfit font-black flex items-center gap-1"
+        style={{
+          fontSize: 10,
+          color: config.color,
+          letterSpacing: '0.08em',
+          textShadow: config.glow ? `0 0 8px ${config.color}` : undefined,
+        }}
+      >
+        {config.label}
+        {config.pulse && (
+          <span
+            style={{
+              display: 'inline-block',
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              background: config.color,
+              animation: 'blink 1s ease-in-out infinite',
+            }}
+          />
+        )}
+      </span>
+    </div>
+  )
+}
+
 export function GameTable() {
   const { id: tableId } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -146,12 +197,10 @@ export function GameTable() {
             </>
           )}
           {currentRound && (
-            <span style={{ color: 'var(--text-dim)' }}>
-              Round{' '}
-              <span data-testid="round-counter" className="font-bold text-white">
-                {currentRound.roundNumber}
-              </span>
-            </span>
+            <PhaseBadge
+              roundNumber={currentRound.roundNumber}
+              phase={showdownPhase as ShowdownPhase}
+            />
           )}
           {myPlayer && (
             <span style={{ color: 'var(--text-dim)' }}>
