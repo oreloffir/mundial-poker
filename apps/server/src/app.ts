@@ -8,6 +8,7 @@ import { config } from './config.js'
 import { connectRedis } from './lib/redis.js'
 import { authRouter } from './modules/auth/auth.controller.js'
 import { createTableRouter } from './modules/tables/table.controller.js'
+import { tableStatsRouter } from './modules/tables/table-stats.route.js'
 import { matchDataRouter } from './modules/match-data/match-data.controller.js'
 import { createTestRouter } from './modules/test/test.controller.js'
 import { setupGameSocket } from './modules/game/game.socket.js'
@@ -62,6 +63,7 @@ const io = new Server(server, {
 
 setupGameSocket(io)
 app.use('/api/tables', createTableRouter(io))
+app.use('/api/tables', tableStatsRouter)
 
 if (config.nodeEnv !== 'production') {
   app.use('/api/test', createTestRouter(io))
