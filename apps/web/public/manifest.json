@@ -1,0 +1,10 @@
+{
+  "name": "Mundial Poker",
+  "short_name": "WPC",
+  "start_url": "/lobby",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050a18",
+  "theme_color": "#D4A843",
+  "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+}

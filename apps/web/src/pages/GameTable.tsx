@@ -15,6 +15,66 @@ function formatChips(chips: number): string {
   return String(chips)
 }
 
+type ShowdownPhase = 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'
+
+const PHASE_CONFIG: Record<
+  ShowdownPhase,
+  { label: string; color: string; pulse: boolean; glow?: boolean }
+> = {
+  idle: { label: 'BETTING', color: 'var(--green-glow)', pulse: true },
+  waiting: { label: 'WAITING', color: 'var(--gold)', pulse: false },
+  fixtures: { label: 'WAITING', color: 'var(--gold)', pulse: false },
+  calculating: { label: 'SCORING', color: 'var(--gold-bright)', pulse: false },
+  reveals: { label: 'SCORING', color: 'var(--gold-bright)', pulse: false },
+  winner: { label: 'WINNER', color: 'var(--gold)', pulse: false, glow: true },
+}
+
+function PhaseBadge({
+  roundNumber,
+  phase,
+}: {
+  readonly roundNumber: number
+  readonly phase: ShowdownPhase
+}) {
+  const config = PHASE_CONFIG[phase]
+  return (
+    <div className="flex flex-col items-end leading-none" style={{ gap: 2 }}>
+      <span
+        className="font-cinzel font-bold"
+        style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.05em' }}
+      >
+        Round{' '}
+        <span data-testid="round-counter" style={{ color: 'var(--text)' }}>
+          {roundNumber}
+        </span>
+      </span>
+      <span
+        className="font-outfit font-black flex items-center gap-1"
+        style={{
+          fontSize: 10,
+          color: config.color,
+          letterSpacing: '0.08em',
+          textShadow: config.glow ? `0 0 8px ${config.color}` : undefined,
+        }}
+      >
+        {config.label}
+        {config.pulse && (
+          <span
+            style={{
+              display: 'inline-block',
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              background: config.color,
+              animation: 'blink 1s ease-in-out infinite',
+            }}
+          />
+        )}
+      </span>
+    </div>
+  )
+}
+
 export function GameTable() {
   const { id: tableId } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -38,6 +98,11 @@ export function GameTable() {
 
   useEffect(() => {
     resetShowdownPhase()
+    // Attempt landscape lock — browser may deny on desktop or non-fullscreen; swallow silently
+    // lock() is a non-standard extension not in TypeScript's lib — cast to access it safely
+    ;(screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> })
+      ?.lock?.('landscape')
+      ?.catch(() => {})
     return () => {
       reset()
     }
@@ -45,6 +110,9 @@ export function GameTable() {
 
   const [botLoading, setBotLoading] = useState(false)
   const [portraitHintDismissed, setPortraitHintDismissed] = useState(false)
+  const [a2hsDismissed, setA2hsDismissed] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem('wpc-a2hs-dismissed') === '1',
+  )
 
   if (!tableId) {
     navigate('/lobby')
@@ -54,6 +122,11 @@ export function GameTable() {
   const handleLeave = () => {
     leaveTable()
     navigate('/lobby')
+  }
+
+  const handleA2hsDismiss = () => {
+    localStorage.setItem('wpc-a2hs-dismissed', '1')
+    setA2hsDismissed(true)
   }
 
   const handleAddBot = async () => {
@@ -106,6 +179,29 @@ export function GameTable() {
         </div>
       )}
 
+      {/* Add to Home Screen banner — shown once, dismissed persistently via localStorage */}
+      {!a2hsDismissed && (
+        <div
+          className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2"
+          style={{
+            background: 'rgba(5,10,24,0.92)',
+            backdropFilter: 'blur(12px)',
+            borderTop: '1px solid rgba(212,168,67,0.25)',
+          }}
+        >
+          <span className="text-xs font-outfit" style={{ color: 'var(--text-dim)' }}>
+            Add to Home Screen for the full-screen experience
+          </span>
+          <button
+            onClick={handleA2hsDismiss}
+            className="wpc-btn-ghost text-xs py-1 px-3 ml-3"
+            style={{ flexShrink: 0 }}
+          >
+            Got it
+          </button>
+        </div>
+      )}
+
       {/* Top bar - floating over table */}
       <div
         className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between"
@@ -149,12 +245,10 @@ export function GameTable() {
             </>
           )}
           {currentRound && (
-            <span style={{ color: 'var(--text-dim)' }}>
-              Round{' '}
-              <span data-testid="round-counter" className="font-bold text-white">
-                {currentRound.roundNumber}
-              </span>
-            </span>
+            <PhaseBadge
+              roundNumber={currentRound.roundNumber}
+              phase={showdownPhase as ShowdownPhase}
+            />
           )}
           {myPlayer && (
             <span style={{ color: 'var(--text-dim)' }}>
