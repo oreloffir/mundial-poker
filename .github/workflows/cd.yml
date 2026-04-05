@@ -72,7 +72,8 @@ jobs:
             cd /opt/mundial-poker
 
             echo "--- Pulling latest main ---"
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "--- Writing .env.production ---"
             cat > .env.production << ENVEOF
@@ -81,6 +82,10 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
             ENVEOF
+
+            echo "--- Tagging current images as rollback ---"
+            docker tag mundial-poker-server:latest mundial-poker-server:rollback 2>/dev/null || echo "No previous server image to tag (first deploy)"
+            docker tag mundial-poker-web:latest mundial-poker-web:rollback 2>/dev/null || echo "No previous web image to tag (first deploy)"
 
             echo "--- Building Docker images ---"
             docker-compose -f docker-compose.production.yml build --no-cache
@@ -97,8 +102,18 @@ jobs:
               psql -U wpc -d world_poker_cup
 
             echo "--- Health check ---"
-            sleep 5
-            curl -f http://localhost/api/health
+            sleep 10
+            HEALTH=$(curl -sf http://localhost/api/health | grep -o '"status":"ok"' || echo "failed")
+            if [ "$HEALTH" != '"status":"ok"' ]; then
+              echo "DEPLOY FAILED — health check returned: $HEALTH"
+              echo "Rolling back to previous images..."
+              docker tag mundial-poker-server:rollback mundial-poker-server:latest 2>/dev/null || true
+              docker tag mundial-poker-web:rollback mundial-poker-web:latest 2>/dev/null || true
+              docker-compose -f docker-compose.production.yml up -d --no-build
+              echo "Rollback complete. Previous version restored."
+              exit 1
+            fi
+            echo "Health check passed."
 
             echo "--- Pruning unused Docker images and build cache ---"
             docker system prune -f
