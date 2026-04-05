@@ -38,6 +38,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:5174/api/health | grep -q ok || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     restart: always
 
   web:
