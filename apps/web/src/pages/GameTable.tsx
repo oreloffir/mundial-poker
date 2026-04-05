@@ -108,7 +108,16 @@ export function GameTable() {
     }
   }, [reset, resetShowdownPhase])
 
+  useEffect(() => {
+    if (!tableId) return
+    api
+      .get<{ data: { table: { hostId: string } } }>(`/tables/${tableId}`)
+      .then((res) => setHostId(res.data.data.table.hostId))
+      .catch(() => {})
+  }, [tableId])
+
   const [botLoading, setBotLoading] = useState(false)
+  const [hostId, setHostId] = useState<string | null>(null)
   const [portraitHintDismissed, setPortraitHintDismissed] = useState(false)
   const [a2hsDismissed, setA2hsDismissed] = useState(
     () => typeof localStorage !== 'undefined' && localStorage.getItem('wpc-a2hs-dismissed') === '1',
@@ -154,6 +163,7 @@ export function GameTable() {
 
   const myPlayer = table?.players.find((p) => p.userId === user?.id)
   const isSeated = !!myPlayer
+  const isHost = !!user?.id && hostId === user.id
 
   return (
     <div
@@ -227,20 +237,32 @@ export function GameTable() {
           {table?.status === 'WAITING' && isSeated && (
             <>
               <span style={{ color: 'var(--text-muted)' }}>{table.players.length}/5</span>
-              <button
-                onClick={handleAddBot}
-                disabled={botLoading || (table?.players.length ?? 0) >= 5}
-                className="wpc-btn-ghost text-xs py-1 px-3 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {botLoading ? 'Adding...' : '+ Add Bot'}
-              </button>
-              <button
-                onClick={handleStartGame}
-                disabled={(table?.players.length ?? 0) < 2}
-                className="wpc-btn-primary text-xs py-1.5 px-4 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Start Game
-              </button>
+              {isHost ? (
+                <>
+                  <button
+                    onClick={handleAddBot}
+                    disabled={botLoading || (table?.players.length ?? 0) >= 5}
+                    className="wpc-btn-ghost text-xs py-1 px-3 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {botLoading ? 'Adding...' : '+ Add Bot'}
+                  </button>
+                  <button
+                    onClick={handleStartGame}
+                    disabled={(table?.players.length ?? 0) < 2}
+                    className="wpc-btn-primary text-xs py-1.5 px-4 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Start Game
+                  </button>
+                </>
+              ) : (
+                <span
+                  className="text-xs font-outfit"
+                  style={{ color: 'var(--text-dim)' }}
+                  data-testid="waiting-for-host"
+                >
+                  Waiting for host...
+                </span>
+              )}
             </>
           )}
           {currentRound && (

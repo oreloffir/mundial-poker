@@ -6,17 +6,18 @@ export const BOTTOM_BAR = 'div[class*="absolute bottom"]'
 /**
  * Scoped locators for betting action buttons.
  * Always scoped to the bottom bar to avoid matching action badge text on the table.
+ * Note: Buttons render in ALL CAPS (CHECK, CALL, FOLD, RAISE) — use case-insensitive filters.
  */
 export function bettingControls(page: Page) {
   const bar = page.locator(BOTTOM_BAR)
   return {
-    check: bar.locator('button').filter({ hasText: 'Check' }).first(),
-    call: bar.locator('button').filter({ hasText: /Call/ }).first(),
-    fold: bar.locator('button').filter({ hasText: 'Fold' }).first(),
-    raise: bar.locator('button').filter({ hasText: /Raise/ }).first(),
+    check: bar.locator('button').filter({ hasText: /check/i }).first(),
+    call: bar.locator('button').filter({ hasText: /call/i }).first(),
+    fold: bar.locator('button').filter({ hasText: /fold/i }).first(),
+    raise: bar.locator('button').filter({ hasText: /raise/i }).first(),
     allIn: bar
       .locator('button')
-      .filter({ hasText: /All.?In/i })
+      .filter({ hasText: /all.?in/i })
       .first(),
   }
 }
