@@ -204,10 +204,9 @@ export function GameTable() {
 
       {/* Top bar - floating over table */}
       <div
-        className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between"
+        className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between top-bar-safe"
         style={{
           height: 'var(--top-bar-h)',
-          padding: '0 var(--top-bar-px)',
           background: 'rgba(5,10,24,0.5)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid var(--border)',
@@ -305,7 +304,7 @@ export function GameTable() {
 
       {/* Bottom-right corner — action buttons (only on my turn) */}
       {myTurn && betPrompt && (
-        <div className="absolute bottom-4 right-4 z-30">
+        <div className="absolute bottom-4 right-4 z-30 bottom-dock-safe">
           <BettingControls prompt={betPrompt} onAction={sendBetAction} />
         </div>
       )}
@@ -319,7 +318,7 @@ export function GameTable() {
 
       {/* Bottom-center — player card dock (cards + chips + score during showdown) */}
       {myPlayer && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bottom-dock-safe">
           <PlayerCardDock
             cards={myHand}
             chips={myPlayer.chips ?? 0}
