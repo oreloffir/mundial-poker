@@ -354,8 +354,8 @@ export function PokerTable({
             </div>
           </div>
 
-          {/* Fixture board container — glassmorphism backing, visible from 'waiting' phase onward */}
-          {showdownPhase !== 'idle' && (
+          {/* Fixture board container — visible whenever fixtures exist (idle=VS state, showdown=scores) */}
+          {fixtures.length > 0 && (
             <div
               className="absolute pointer-events-auto"
               style={{
@@ -408,6 +408,9 @@ export function PokerTable({
             const isMe = player?.userId === currentUserId
             const hasCards = isInRound && !!player && !player.isEliminated
             const blindPosition = index === sbSeatIndex ? 'SB' : index === bbSeatIndex ? 'BB' : null
+
+            // Seat 0 for current user lives in PlayerCardDock (J34) — skip rendering on pitch
+            if (index === 0 && isMe) return null
 
             return (
               <div
