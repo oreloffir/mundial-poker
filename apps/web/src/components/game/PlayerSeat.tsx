@@ -291,8 +291,8 @@ export function PlayerSeat({
         </div>
       </div>
 
-      {/* Blind position badge (SB / BB) */}
-      {blindPosition && (
+      {/* Blind position badge (SB / BB) — badge priority: suppress when turn timer ring is active */}
+      {blindPosition && !isActive && (
         <div className="flex justify-center mt-1">
           <span
             data-testid={blindPosition === 'SB' ? 'sb-badge' : 'bb-badge'}

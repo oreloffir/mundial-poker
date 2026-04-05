@@ -40,6 +40,9 @@ export default defineConfig({
   use: {
     baseURL,
 
+    // Accept self-signed certs on dev server
+    ignoreHTTPSErrors: !!process.env.DEV_URL,
+
     // Never use networkidle — use domcontentloaded + explicit waits
     waitUntil: 'domcontentloaded',
 
