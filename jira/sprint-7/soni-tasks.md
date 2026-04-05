@@ -152,8 +152,24 @@ Review every PR as it opens. Sprint 7 PRs to expect:
 
 ## Delivery Log
 
-| Task | Status  | PR  | Deployed |
-| ---- | ------- | --- | -------- |
-| S21  | ⬜      |     |          |
-| S22  | ⬜      |     |          |
-| S23  | ongoing |     |          |
+| Task | Status  | PR                     | Deployed |
+| ---- | ------- | ---------------------- | -------- |
+| S21  | ✅ done | feat/timer-persistence | pending  |
+| S22  | ⬜      |                        |          |
+| S23  | ongoing |                        |          |
+
+### S21 — Timer State Persistence
+
+**Branch:** `feat/timer-persistence`
+**Files changed:**
+
+- `apps/server/src/lib/game-state-store.ts` — added `stateKeys(prefix)` + optional `ttlSeconds` param to `stateSet`
+- `apps/server/src/modules/game/betting.service.ts` — `TimerState` interface, `TIMER_PREFIX`, persist timer to Redis on start, delete on cancel/cleanup, `startBetTimerWithDuration` for recovery
+- `apps/server/src/modules/game/timer-recovery.ts` — NEW: `recoverTimers(io)` — scans Redis for active timers, validates state, restarts or auto-folds
+- `apps/server/src/modules/game/game.service.ts` — passes `tableId` to `startBetTimer`/`cancelBetTimer`
+- `apps/server/src/app.ts` — calls `recoverTimers(io)` on server startup
+- `apps/server/src/__tests__/timer-recovery.test.ts` — NEW: 8 tests (empty state, recover with time remaining, expired auto-fold, expired auto-check, stale no-betting, stale wrong-phase, player mismatch, multi-table)
+
+**Tests:** 51 passing (43 existing + 8 new), all 3 workspaces typecheck clean.
+
+**CONTRACT: no client changes** — timer recovery is server-side only. Existing socket events (`bet:prompt`, `bet:update`) fire normally after recovery. Joni: no frontend work needed.
