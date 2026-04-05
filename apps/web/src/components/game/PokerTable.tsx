@@ -27,10 +27,10 @@ interface PokerTableProps {
 // Side seats (1, 4) at 4% from edge — translate(-50%) pulls avatar center to the rail.
 const seatStyles: readonly React.CSSProperties[] = [
   { bottom: '4%', left: '50%', transform: 'translateX(-50%)' },
-  { top: '38%', left: '4%', transform: 'translate(-50%, -50%)' },
+  { top: '22%', left: '4%', transform: 'translate(-50%, -50%)' },
   { top: '1%', left: '24%', transform: 'translate(-50%, 0)' },
   { top: '1%', right: '24%', transform: 'translate(50%, 0)' },
-  { top: '38%', right: '4%', transform: 'translate(50%, -50%)' },
+  { top: '22%', right: '4%', transform: 'translate(50%, -50%)' },
 ]
 
 // Denomination tiers: [minPot, chipColor, rimColor]
