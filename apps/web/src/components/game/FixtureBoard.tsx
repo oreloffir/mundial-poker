@@ -52,7 +52,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
     showdownPhase === 'winner'
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className="fixture-board-scroll">
       {fixtures.map((f, index) => {
         // During showdown phases, show all tiles
         const visible = inShowdownPhase || showAll || index < revealedCount
