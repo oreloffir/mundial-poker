@@ -152,9 +152,7 @@ export function PlayerCardDock({
       </div>
 
       {/* Vertical divider */}
-      <div
-        style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
-      />
+      <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
 
       {/* Team card tiles — only during a round */}
       {isInRound && cards && cards.length > 0 && (
@@ -168,9 +166,7 @@ export function PlayerCardDock({
 
       {/* Vertical divider before chip count */}
       {isInRound && cards && cards.length > 0 && (
-        <div
-          style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
-        />
+        <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
       )}
 
       {/* Chip count */}
