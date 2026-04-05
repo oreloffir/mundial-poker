@@ -13,7 +13,11 @@ tableStatsRouter.get('/:tableId/stats', async (req: Request, res: Response, next
     const { tableId } = req.params
 
     // Table existence + createdAt
-    const [table] = await db.select({ createdAt: tables.createdAt }).from(tables).where(eq(tables.id, tableId)).limit(1)
+    const [table] = await db
+      .select({ createdAt: tables.createdAt })
+      .from(tables)
+      .where(eq(tables.id, tableId))
+      .limit(1)
     if (!table) throw new NotFoundError('Table not found')
 
     // Rounds aggregates: total rounds played + current round number

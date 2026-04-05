@@ -14,10 +14,14 @@ import { tableStatsRouter } from '../table-stats.route.js'
 
 function getHandler() {
   // Express Router stores routes in router.stack; pull the GET /:tableId/stats handler
-  const layer = (tableStatsRouter as unknown as { stack: { route: { stack: { handle: unknown }[] } }[] }).stack.find(
-    (l) => l.route?.stack?.[0],
-  )
-  return layer!.route.stack[0].handle as (req: Request, res: Response, next: NextFunction) => Promise<void>
+  const layer = (
+    tableStatsRouter as unknown as { stack: { route: { stack: { handle: unknown }[] } }[] }
+  ).stack.find((l) => l.route?.stack?.[0])
+  return layer!.route.stack[0].handle as (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => Promise<void>
 }
 
 function makeRes() {
@@ -62,13 +66,16 @@ describe('GET /api/tables/:tableId/stats', () => {
     ;(db.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
       callCount++
       const data =
-        callCount === 1 ? [{ createdAt }]
-        : callCount === 2 ? [{ roundsPlayed: 7, currentRound: 8 }]
-        : callCount === 3 ? [{ winnerId: 'user-1', wins: 3 }]
-        : [
-            { userId: 'user-1', chips: 1200, username: 'Player1' },
-            { userId: 'bot-user-1', chips: 800, username: 'Bot-Alpha' },
-          ]
+        callCount === 1
+          ? [{ createdAt }]
+          : callCount === 2
+            ? [{ roundsPlayed: 7, currentRound: 8 }]
+            : callCount === 3
+              ? [{ winnerId: 'user-1', wins: 3 }]
+              : [
+                  { userId: 'user-1', chips: 1200, username: 'Player1' },
+                  { userId: 'bot-user-1', chips: 800, username: 'Bot-Alpha' },
+                ]
       return makeSelectChain(data)
     })
 
@@ -85,7 +92,12 @@ describe('GET /api/tables/:tableId/stats', () => {
     expect(data.roundsPlayed).toBe(7)
     expect(data.currentRound).toBe(8)
     expect(data.createdAt).toBe('2026-04-05T10:00:00.000Z')
-    const players = data.players as { name: string; chips: number; roundsWon: number; isBot?: boolean }[]
+    const players = data.players as {
+      name: string
+      chips: number
+      roundsWon: number
+      isBot?: boolean
+    }[]
     expect(players).toHaveLength(2)
     expect(players[0]).toMatchObject({ name: 'Player1', chips: 1200, roundsWon: 3 })
     expect(players[0].isBot).toBeUndefined()
