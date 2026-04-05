@@ -387,6 +387,17 @@ export function PlayerSeat({
           Folded
         </span>
       )}
+
+      {/* YOU label — permanent anchor below chip count, always visible on current user's seat */}
+      {isCurrentUser && (
+        <span
+          data-testid="you-label"
+          className="font-cinzel font-bold uppercase tracking-widest"
+          style={{ fontSize: 8, color: 'var(--gold)', opacity: 0.6 }}
+        >
+          YOU
+        </span>
+      )}
     </div>
   )
 }
