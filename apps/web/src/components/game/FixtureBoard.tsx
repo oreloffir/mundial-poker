@@ -42,8 +42,9 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
   // Build a lookup map from fixtureId → result for the showdown phase
   const resultMap = new Map(fixtureResults.map((r) => [r.fixtureId, r]))
 
-  // In waiting/fixtures phase, show all tiles (VS state or with score if result arrived)
+  // Show all tiles from round start (idle=VS matchups, showdown=scores)
   const inShowdownPhase =
+    showdownPhase === 'idle' ||
     showdownPhase === 'waiting' ||
     showdownPhase === 'fixtures' ||
     showdownPhase === 'calculating' ||
@@ -83,8 +84,8 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         const events = finished ? getEventIcons(homeGoals!, awayGoals!, hasPenalties) : []
 
         return (
+          <div key={f.id} className="flex flex-col items-center gap-0.5">
           <div
-            key={f.id}
             data-testid={`fixture-card-${index}`}
             className="flex flex-col items-center rounded-xl overflow-hidden"
             style={{
@@ -92,13 +93,13 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               border: isMyFixture
-                ? '1px solid rgba(212,168,67,0.7)'
+                ? '2px solid var(--gold)'
                 : finished
                   ? '1px solid rgba(212, 168, 67, 0.45)'
                   : '1px solid rgba(255, 255, 255, 0.07)',
               width: 'var(--fixture-tile-w)',
               boxShadow: isMyFixture
-                ? '0 0 14px rgba(212,168,67,0.35), 0 8px 24px rgba(0,0,0,0.5)'
+                ? '0 0 8px rgba(212,168,67,0.3), 0 8px 24px rgba(0,0,0,0.5)'
                 : '0 8px 24px rgba(0,0,0,0.5)',
               // Animate tile when a new result just arrived OR during old board:reveal flow
               animation: isNewResult
@@ -201,6 +202,15 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                 ))}
               </div>
             )}
+          </div>
+          {isMyFixture && (
+            <span
+              className="font-outfit font-bold uppercase tracking-widest"
+              style={{ fontSize: 7, color: 'var(--gold)', letterSpacing: '0.05em' }}
+            >
+              YOUR MATCH
+            </span>
+          )}
           </div>
         )
       })}
