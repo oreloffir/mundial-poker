@@ -211,7 +211,11 @@ export function PlayerSeat({
     >
       {/* Score popup — shown above seat for opponents only; current user's shows in PlayerCardDock (J25) */}
       {inShowdown && !isCurrentUser && (
-        <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />
+        <SeatScorePopup
+          result={scoreResult}
+          isCurrent={isCurrent}
+          seatIndex={player?.seatIndex ?? 0}
+        />
       )}
 
       {/* Action badge */}
