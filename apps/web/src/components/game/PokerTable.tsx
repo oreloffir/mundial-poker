@@ -253,8 +253,8 @@ export function PokerTable({
             </div>
           </div>
 
-          {/* Fixture board container — glassmorphism backing, visible from 'waiting' phase onward */}
-          {showdownPhase !== 'idle' && (
+          {/* Fixture board container — visible whenever fixtures exist (idle=VS state, showdown=scores) */}
+          {fixtures.length > 0 && (
             <div
               className="absolute pointer-events-auto fixture-board-container"
               style={{

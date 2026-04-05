@@ -42,8 +42,9 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
   // Build a lookup map from fixtureId → result for the showdown phase
   const resultMap = new Map(fixtureResults.map((r) => [r.fixtureId, r]))
 
-  // In waiting/fixtures phase, show all tiles (VS state or with score if result arrived)
+  // Show all tiles from round start (idle=VS matchups, showdown=scores)
   const inShowdownPhase =
+    showdownPhase === 'idle' ||
     showdownPhase === 'waiting' ||
     showdownPhase === 'fixtures' ||
     showdownPhase === 'calculating' ||
@@ -83,123 +84,132 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         const events = finished ? getEventIcons(homeGoals!, awayGoals!, hasPenalties) : []
 
         return (
-          <div
-            key={f.id}
-            data-testid={`fixture-card-${index}`}
-            className="flex flex-col items-center rounded-xl overflow-hidden"
-            style={{
-              background: finished ? 'rgba(13, 20, 36, 0.55)' : 'rgba(13, 20, 36, 0.4)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: isMyFixture
-                ? '1px solid rgba(212,168,67,0.7)'
-                : finished
-                  ? '1px solid rgba(212, 168, 67, 0.45)'
-                  : '1px solid rgba(255, 255, 255, 0.07)',
-              width: 'var(--fixture-tile-w)',
-              boxShadow: isMyFixture
-                ? '0 0 14px rgba(212,168,67,0.35), 0 8px 24px rgba(0,0,0,0.5)'
-                : '0 8px 24px rgba(0,0,0,0.5)',
-              // Animate tile when a new result just arrived OR during old board:reveal flow
-              animation: isNewResult
-                ? 'tile-reveal 0.4s ease-out both'
-                : !inShowdownPhase && !showAll
-                  ? 'tile-reveal 0.3s ease-out both'
-                  : undefined,
-            }}
-          >
-            {/* Home team */}
-            <div className="flex flex-col items-center pt-2 pb-1 w-full">
-              <span className="text-lg leading-none">{homeTeamFlag || '🏳️'}</span>
-              <span
-                className="text-[8px] font-bold mt-0.5"
-                style={{
-                  color: homeWin
-                    ? 'var(--green-glow)'
-                    : isDraw
-                      ? 'var(--gold)'
-                      : finished
-                        ? 'var(--text-muted)'
-                        : 'var(--text)',
-                }}
-              >
-                {homeCode}
-              </span>
-            </div>
-
-            {/* Score / VS */}
+          <div key={f.id} className="flex flex-col items-center gap-0.5">
             <div
-              className="w-full py-1 flex items-center justify-center"
-              style={{ background: 'rgba(0,0,0,0.2)' }}
+              data-testid={`fixture-card-${index}`}
+              className="flex flex-col items-center rounded-xl overflow-hidden"
+              style={{
+                background: finished ? 'rgba(13, 20, 36, 0.55)' : 'rgba(13, 20, 36, 0.4)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: isMyFixture
+                  ? '2px solid var(--gold)'
+                  : finished
+                    ? '1px solid rgba(212, 168, 67, 0.45)'
+                    : '1px solid rgba(255, 255, 255, 0.07)',
+                width: 'var(--fixture-tile-w)',
+                boxShadow: isMyFixture
+                  ? '0 0 8px rgba(212,168,67,0.3), 0 8px 24px rgba(0,0,0,0.5)'
+                  : '0 8px 24px rgba(0,0,0,0.5)',
+                // Animate tile when a new result just arrived OR during old board:reveal flow
+                animation: isNewResult
+                  ? 'tile-reveal 0.4s ease-out both'
+                  : !inShowdownPhase && !showAll
+                    ? 'tile-reveal 0.3s ease-out both'
+                    : undefined,
+              }}
             >
-              {finished ? (
-                <div className="flex items-center gap-1">
-                  <span
-                    className="font-outfit font-black text-sm"
-                    style={{
-                      color: homeWin
-                        ? 'var(--green-glow)'
-                        : isDraw
-                          ? 'var(--gold)'
-                          : 'var(--text-muted)',
-                    }}
-                  >
-                    {homeGoals}
-                  </span>
-                  <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>
-                    -
-                  </span>
-                  <span
-                    className="font-outfit font-black text-sm"
-                    style={{
-                      color: awayWin
-                        ? 'var(--green-glow)'
-                        : isDraw
-                          ? 'var(--gold)'
-                          : 'var(--text-muted)',
-                    }}
-                  >
-                    {awayGoals}
-                  </span>
-                </div>
-              ) : (
+              {/* Home team */}
+              <div className="flex flex-col items-center pt-2 pb-1 w-full">
+                <span className="text-lg leading-none">{homeTeamFlag || '🏳️'}</span>
                 <span
-                  className="font-outfit font-black text-[10px]"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="text-[8px] font-bold mt-0.5"
+                  style={{
+                    color: homeWin
+                      ? 'var(--green-glow)'
+                      : isDraw
+                        ? 'var(--gold)'
+                        : finished
+                          ? 'var(--text-muted)'
+                          : 'var(--text)',
+                  }}
                 >
-                  VS
+                  {homeCode}
                 </span>
+              </div>
+
+              {/* Score / VS */}
+              <div
+                className="w-full py-1 flex items-center justify-center"
+                style={{ background: 'rgba(0,0,0,0.2)' }}
+              >
+                {finished ? (
+                  <div className="flex items-center gap-1">
+                    <span
+                      className="font-outfit font-black text-sm"
+                      style={{
+                        color: homeWin
+                          ? 'var(--green-glow)'
+                          : isDraw
+                            ? 'var(--gold)'
+                            : 'var(--text-muted)',
+                      }}
+                    >
+                      {homeGoals}
+                    </span>
+                    <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>
+                      -
+                    </span>
+                    <span
+                      className="font-outfit font-black text-sm"
+                      style={{
+                        color: awayWin
+                          ? 'var(--green-glow)'
+                          : isDraw
+                            ? 'var(--gold)'
+                            : 'var(--text-muted)',
+                      }}
+                    >
+                      {awayGoals}
+                    </span>
+                  </div>
+                ) : (
+                  <span
+                    className="font-outfit font-black text-[10px]"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    VS
+                  </span>
+                )}
+              </div>
+
+              {/* Away team */}
+              <div className="flex flex-col items-center pt-1 pb-2 w-full">
+                <span className="text-lg leading-none">{awayTeamFlag || '🏳️'}</span>
+                <span
+                  className="text-[8px] font-bold mt-0.5"
+                  style={{
+                    color: awayWin
+                      ? 'var(--green-glow)'
+                      : isDraw
+                        ? 'var(--gold)'
+                        : finished
+                          ? 'var(--text-muted)'
+                          : 'var(--text)',
+                  }}
+                >
+                  {awayCode}
+                </span>
+              </div>
+
+              {/* Event icons */}
+              {events.length > 0 && (
+                <div className="mobile-landscape-hide flex gap-0.5 pb-1.5">
+                  {events.map((e, i) => (
+                    <span key={i} className="text-[9px]">
+                      {e}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
-
-            {/* Away team */}
-            <div className="flex flex-col items-center pt-1 pb-2 w-full">
-              <span className="text-lg leading-none">{awayTeamFlag || '🏳️'}</span>
+            {isMyFixture && (
               <span
-                className="text-[8px] font-bold mt-0.5"
-                style={{
-                  color: awayWin
-                    ? 'var(--green-glow)'
-                    : isDraw
-                      ? 'var(--gold)'
-                      : finished
-                        ? 'var(--text-muted)'
-                        : 'var(--text)',
-                }}
+                className="font-outfit font-bold uppercase tracking-widest"
+                style={{ fontSize: 7, color: 'var(--gold)', letterSpacing: '0.05em' }}
               >
-                {awayCode}
+                YOUR MATCH
               </span>
-            </div>
-
-            {/* Event icons */}
-            {events.length > 0 && (
-              <div className="mobile-landscape-hide flex gap-0.5 pb-1.5">
-                {events.map((e, i) => (
-                  <span key={i} className="text-[9px]">
-                    {e}
-                  </span>
-                ))}
-              </div>
             )}
           </div>
         )
