@@ -24,6 +24,9 @@ RUN pnpm --filter server build
 FROM node:22-alpine
 WORKDIR /app
 
+ENV NODE_ENV=production
+ENV PORT=5174
+
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Copy workspace config for prod install
@@ -39,7 +42,5 @@ COPY --from=builder /app/apps/server/dist/ apps/server/dist/
 COPY --from=builder /app/packages/shared/dist/ packages/shared/dist/
 
 EXPOSE 5174
-ENV NODE_ENV=production
-ENV PORT=5174
 
 CMD ["node", "apps/server/dist/apps/server/src/app.js"]
