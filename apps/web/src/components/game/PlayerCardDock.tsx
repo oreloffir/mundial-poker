@@ -2,6 +2,7 @@ import type { TeamCard } from '@wpc/shared'
 import { PokerChip } from '@/components/shared/PokerChip'
 import { getAvatarColor } from '@/utils/avatarColor'
 import type { PlayerScoredData, CardScoreData } from '@/stores/gameStore'
+import { useGameStore } from '@/stores/gameStore'
 
 interface PlayerCardDockProps {
   readonly cards: readonly TeamCard[] | null
@@ -30,49 +31,155 @@ const RESULT_COLOR: Record<string, string> = {
 function DockCard({
   card,
   scoreCard,
+  cardIndex,
+  isFixtureRevealed,
+  opponentCode,
 }: {
   readonly card: TeamCard
   readonly scoreCard?: CardScoreData
+  readonly cardIndex: number
+  readonly isFixtureRevealed: boolean
+  readonly opponentCode: string | undefined
 }) {
   const res = scoreCard ? getResult(scoreCard) : null
+
+  const tether =
+    cardIndex === 0
+      ? {
+          color: 'var(--tether-a)',
+          pulseAnim: 'tether-pulse-a 2.4s ease-in-out infinite',
+          flashAnim: 'card-sync-flash-a 0.5s ease-out both',
+        }
+      : {
+          color: 'var(--tether-b)',
+          pulseAnim: 'tether-pulse-b 2.4s ease-in-out infinite',
+          flashAnim: 'card-sync-flash-b 0.5s ease-out both',
+        }
+
+  const accentColor = res ? RESULT_COLOR[res] : tether.color
+
   return (
     <div
-      className="flex flex-col items-center justify-center rounded-lg overflow-hidden relative"
       style={{
-        width: 30,
-        height: 42,
-        background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
-        border: res ? `1.5px solid ${RESULT_COLOR[res]}` : '1.5px solid rgba(212,168,67,0.3)',
-        boxShadow: res ? `0 0 8px ${RESULT_COLOR[res]}44` : '0 2px 8px rgba(0,0,0,0.5)',
+        width: 38,
+        height: 54,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        borderRadius: 8,
+        overflow: 'hidden',
         flexShrink: 0,
-        gap: 2,
-        transition: 'border-color 0.3s ease',
+        borderLeft: `3px solid ${accentColor}`,
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderRight: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        background: 'linear-gradient(160deg, rgba(13,20,36,0.95) 0%, rgba(5,10,24,0.92) 100%)',
+        boxShadow: res ? `0 0 8px ${RESULT_COLOR[res]}44` : undefined,
+        transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+        animation: res ? undefined : isFixtureRevealed ? tether.flashAnim : tether.pulseAnim,
       }}
     >
-      <span style={{ fontSize: '1rem', lineHeight: 1 }}>{card.team.flagUrl}</span>
+      {/* Tether / result header strip */}
+      <div
+        style={{
+          width: '100%',
+          height: 8,
+          background: `linear-gradient(90deg, ${accentColor}66, ${accentColor}22)`,
+          flexShrink: 0,
+          transition: 'background 0.3s ease',
+        }}
+      />
+
+      {/* Flag */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingTop: 4,
+        }}
+      >
+        <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{card.team.flagUrl}</span>
+      </div>
+
+      {/* Team code */}
       <span
         style={{
           fontSize: 7,
+          fontFamily: 'Outfit, sans-serif',
           fontWeight: 700,
-          color: res ? RESULT_COLOR[res] : 'white',
+          color: accentColor,
           lineHeight: 1,
-          letterSpacing: '0.05em',
+          letterSpacing: '0.06em',
+          marginBottom: 3,
           transition: 'color 0.3s ease',
         }}
       >
         {card.team.code}
       </span>
-      {res && (
-        <span
+
+      {/* Perforated divider */}
+      <div
+        style={{
+          width: '80%',
+          borderBottom: '1px dashed rgba(255,255,255,0.15)',
+          marginBottom: 3,
+          flexShrink: 0,
+        }}
+      />
+
+      {/* Opponent or result stamp */}
+      {!res ? (
+        <div
           style={{
-            fontSize: 7,
-            fontWeight: 800,
-            color: RESULT_COLOR[res],
+            fontSize: 6,
+            fontFamily: 'Outfit, sans-serif',
+            fontWeight: 600,
+            color: 'var(--text-muted)',
             lineHeight: 1,
+            paddingBottom: 4,
           }}
         >
-          {res}
-        </span>
+          {opponentCode ? `vs ${opponentCode}` : '—'}
+        </div>
+      ) : (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            paddingBottom: 4,
+            gap: 1,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 7,
+              fontFamily: 'Outfit, sans-serif',
+              fontWeight: 800,
+              color: RESULT_COLOR[res],
+              lineHeight: 1,
+              letterSpacing: '0.04em',
+            }}
+          >
+            {res === 'W' ? 'WIN' : res === 'D' ? 'DRAW' : 'LOSS'}
+          </span>
+          {scoreCard && (
+            <span
+              style={{
+                fontSize: 6,
+                fontFamily: 'Outfit, sans-serif',
+                fontWeight: 700,
+                color: RESULT_COLOR[res],
+                lineHeight: 1,
+                opacity: 0.8,
+              }}
+            >
+              +{scoreCard.totalScore}
+            </span>
+          )}
+        </div>
       )}
     </div>
   )
@@ -88,6 +195,8 @@ export function PlayerCardDock({
   isActive,
 }: PlayerCardDockProps) {
   const avatarColor = getAvatarColor(username)
+  const fixtureResults = useGameStore((s) => s.fixtureResults)
+  const fixtures = useGameStore((s) => s.fixtures)
   const isWinner = scoreResult?.isWinner ?? false
 
   const borderColor = isWinner
@@ -157,9 +266,26 @@ export function PlayerCardDock({
       {/* Team card tiles — only during a round */}
       {isInRound && cards && cards.length > 0 && (
         <div className="flex gap-1.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
-          {cards.map((card) => {
+          {cards.map((card, cardIndex) => {
             const scoreCard = scoreResult?.cardScores.find((cs) => cs.teamId === card.teamId)
-            return <DockCard key={card.teamId} card={card} scoreCard={scoreCard} />
+            const isFixtureRevealed = fixtureResults.some((r) => r.fixtureId === card.fixtureId)
+            const fixture = fixtures.find((fx) => fx.id === card.fixtureId)
+            const opponentCode =
+              fixture?.homeTeamId === card.teamId
+                ? fixture.awayTeam.code
+                : fixture?.awayTeam.code
+                  ? fixture.homeTeam.code
+                  : undefined
+            return (
+              <DockCard
+                key={card.teamId}
+                card={card}
+                scoreCard={scoreCard}
+                cardIndex={cardIndex}
+                isFixtureRevealed={isFixtureRevealed}
+                opponentCode={opponentCode}
+              />
+            )
           })}
         </div>
       )}

@@ -10,7 +10,7 @@ const SCORING_ROWS = [
 ] as const
 
 export function ScoringReference() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
 
   if (collapsed) {
     return (
@@ -44,13 +44,13 @@ export function ScoringReference() {
     <div
       data-testid="scoring-reference"
       style={{
-        background: 'rgba(5,10,24,0.72)',
+        background: 'rgba(5,10,24,0.82)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 12,
-        padding: '8px 10px',
-        minWidth: 108,
+        borderRadius: 10,
+        padding: '6px 8px',
+        minWidth: 88,
       }}
     >
       <div

@@ -29,22 +29,39 @@ function getEventIcons(homeGoals: number, awayGoals: number, hasPenalties: boole
   return icons
 }
 
+const TETHER = [
+  {
+    color: 'var(--tether-a)',
+    glow: 'rgba(61,159,255,0.4)',
+    pulseAnim: 'tether-pulse-a',
+    rowBg: 'rgba(61,159,255,0.08)',
+    rowBorder: 'rgba(61,159,255,0.5)',
+  },
+  {
+    color: 'var(--tether-b)',
+    glow: 'rgba(255,149,0,0.4)',
+    pulseAnim: 'tether-pulse-b',
+    rowBg: 'rgba(255,149,0,0.08)',
+    rowBorder: 'rgba(255,149,0,0.5)',
+  },
+] as const
+
 export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
   const fixtureResults = useGameStore((s) => s.fixtureResults)
   const showdownPhase = useGameStore((s) => s.showdownPhase)
   const myHand = useGameStore((s) => s.myHand)
 
-  // J43: Map fixtureId → my teamId so we can highlight just my team's row
+  // Map fixtureId → cardIndex (0 or 1) — drives tether color assignment
+  const myFixtureMap = new Map(myHand?.map((c, i) => [c.fixtureId, i]) ?? [])
+  // Map fixtureId → teamId — for row-level highlight within the tile
   const myTeamByFixture = new Map(myHand?.map((c) => [c.fixtureId, c.teamId]) ?? [])
 
   if (fixtures.length === 0) return null
 
   const showAll = revealedCount === -1
 
-  // Build a lookup map from fixtureId → result for the showdown phase
   const resultMap = new Map(fixtureResults.map((r) => [r.fixtureId, r]))
 
-  // Show all tiles from round start (idle=VS matchups, showdown=scores)
   const inShowdownPhase =
     showdownPhase === 'idle' ||
     showdownPhase === 'waiting' ||
@@ -56,16 +73,17 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
   return (
     <div className="fixture-board-scroll">
       {fixtures.map((f, index) => {
-        // During showdown phases, show all tiles
         const visible = inShowdownPhase || showAll || index < revealedCount
         if (!visible) return null
 
-        // Use fixtureResult data if available (S6 progressive flow)
         const result = resultMap.get(f.id)
         const isNewResult =
           result !== undefined && fixtureResults[fixtureResults.length - 1]?.fixtureId === f.id
 
-        // J43: track which team is mine (home or away), not just whether fixture is mine
+        const myFixtureIndex = myFixtureMap.get(f.id) // 0, 1, or undefined
+        const isMyFixture = myFixtureIndex !== undefined
+        const tether = isMyFixture ? TETHER[myFixtureIndex] : null
+
         const myTeamId = myTeamByFixture.get(f.id)
         const isMyHomeTeam = myTeamId !== undefined && myTeamId === f.homeTeamId
         const isMyAwayTeam = myTeamId !== undefined && myTeamId === f.awayTeamId
@@ -89,7 +107,6 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         const hasPenalties = result?.hasPenalties ?? false
         const events = finished ? getEventIcons(homeGoals!, awayGoals!, hasPenalties) : []
 
-        // Goal score color per team
         const homeScoreColor = homeWin
           ? 'var(--green-glow)'
           : isDraw
@@ -110,26 +127,32 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                 background: finished ? 'rgba(13, 20, 36, 0.55)' : 'rgba(13, 20, 36, 0.4)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                // J43: plain border on all tiles — no whole-tile gold highlight
-                border: finished
-                  ? '1px solid rgba(212, 168, 67, 0.45)'
-                  : '1px solid rgba(255, 255, 255, 0.07)',
+                border: isMyFixture
+                  ? `2px solid ${tether!.color}`
+                  : finished
+                    ? '1px solid rgba(212, 168, 67, 0.45)'
+                    : '1px solid rgba(255, 255, 255, 0.07)',
                 width: 'var(--fixture-tile-w)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                animation: isNewResult
-                  ? 'tile-reveal 0.4s ease-out both'
-                  : !inShowdownPhase && !showAll
-                    ? 'tile-reveal 0.3s ease-out both'
-                    : undefined,
+                boxShadow: isMyFixture
+                  ? `0 0 14px ${tether!.glow}, 0 8px 24px rgba(0,0,0,0.5)`
+                  : '0 8px 24px rgba(0,0,0,0.5)',
+                animation:
+                  isMyFixture && !finished
+                    ? `${tether!.pulseAnim} 2.4s ease-in-out infinite`
+                    : isNewResult
+                      ? 'tile-reveal 0.4s ease-out both'
+                      : !inShowdownPhase && !showAll
+                        ? 'tile-reveal 0.3s ease-out both'
+                        : undefined,
               }}
             >
-              {/* Home team — J43: goals inline, highlight row if this is MY team */}
+              {/* Home team row */}
               <div
                 className="flex items-center justify-between w-full px-1.5 pt-2 pb-1"
                 style={{
-                  background: isMyHomeTeam ? 'rgba(212,168,67,0.1)' : undefined,
+                  background: isMyHomeTeam ? tether!.rowBg : undefined,
                   borderLeft: isMyHomeTeam
-                    ? '2px solid rgba(212,168,67,0.6)'
+                    ? `2px solid ${tether!.rowBorder}`
                     : '2px solid transparent',
                 }}
               >
@@ -141,37 +164,31 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                       color: finished
                         ? homeScoreColor
                         : isMyHomeTeam
-                          ? 'var(--gold)'
+                          ? tether!.color
                           : 'var(--text)',
                     }}
                   >
                     {homeCode}
                   </span>
                 </div>
-                {/* J43: goal score inline with team row */}
                 {finished && (
                   <span
                     className="font-outfit font-black"
-                    style={{
-                      fontSize: 13,
-                      color: homeScoreColor,
-                      minWidth: 14,
-                      textAlign: 'right',
-                    }}
+                    style={{ fontSize: 13, color: homeScoreColor }}
                   >
                     {homeGoals}
                   </span>
                 )}
               </div>
 
-              {/* VS divider — only shown when not finished */}
+              {/* VS divider — only when not finished */}
               {!finished && (
                 <div
-                  className="w-full flex items-center justify-center py-0.5"
+                  className="w-full py-1 flex items-center justify-center"
                   style={{ background: 'rgba(0,0,0,0.2)' }}
                 >
                   <span
-                    className="font-outfit font-black text-[9px]"
+                    className="font-outfit font-black text-[10px]"
                     style={{ color: 'var(--text-muted)' }}
                   >
                     VS
@@ -179,13 +196,13 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                 </div>
               )}
 
-              {/* Away team — J43: goals inline, highlight row if this is MY team */}
+              {/* Away team row */}
               <div
                 className="flex items-center justify-between w-full px-1.5 pt-1 pb-2"
                 style={{
-                  background: isMyAwayTeam ? 'rgba(212,168,67,0.1)' : undefined,
+                  background: isMyAwayTeam ? tether!.rowBg : undefined,
                   borderLeft: isMyAwayTeam
-                    ? '2px solid rgba(212,168,67,0.6)'
+                    ? `2px solid ${tether!.rowBorder}`
                     : '2px solid transparent',
                 }}
               >
@@ -197,23 +214,17 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                       color: finished
                         ? awayScoreColor
                         : isMyAwayTeam
-                          ? 'var(--gold)'
+                          ? tether!.color
                           : 'var(--text)',
                     }}
                   >
                     {awayCode}
                   </span>
                 </div>
-                {/* J43: goal score inline with team row */}
                 {finished && (
                   <span
                     className="font-outfit font-black"
-                    style={{
-                      fontSize: 13,
-                      color: awayScoreColor,
-                      minWidth: 14,
-                      textAlign: 'right',
-                    }}
+                    style={{ fontSize: 13, color: awayScoreColor }}
                   >
                     {awayGoals}
                   </span>
@@ -231,7 +242,6 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                 </div>
               )}
             </div>
-            {/* J43: "YOUR MATCH" label removed — gold border was enough, now team row highlight */}
           </div>
         )
       })}

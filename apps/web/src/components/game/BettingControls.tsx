@@ -62,7 +62,6 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
       setRaiseExpanded(true)
       return
     }
-    // Second tap confirms the raise
     setRaiseExpanded(false)
     onAction(raiseIsAllIn ? 'ALL_IN' : 'RAISE', raiseIsAllIn ? prompt.chips : raiseAmount)
   }
@@ -72,29 +71,53 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
     setRaiseAmount(prompt.minimumBet)
   }
 
-  // CSS variable — 48px desktop, 40px mobile (set in index.css responsive block)
   const btnSize = 'var(--action-btn-size)'
 
-  const circleBtn = {
-    width: btnSize,
-    height: btnSize,
-    borderRadius: '50%',
+  const pillBtn = {
+    height: 36,
+    minWidth: 52,
+    paddingLeft: 12,
+    paddingRight: 12,
+    borderRadius: 999,
+    border: 'none',
+    background: 'none',
     fontFamily: "'Outfit', sans-serif",
     fontWeight: 700,
+    fontSize: 11,
     cursor: 'pointer',
-    transition: 'all 0.15s ease',
+    transition: 'background 0.12s ease',
     display: 'flex',
+    flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 1,
     flexShrink: 0,
-  } as const
+  }
+
+  // Thin vertical divider between pill segments
+  const divider = (
+    <div
+      style={{
+        width: 1,
+        height: 20,
+        background: 'rgba(255,255,255,0.1)',
+        alignSelf: 'center',
+        flexShrink: 0,
+      }}
+    />
+  )
+
+  const hasFold = isAllowed('FOLD')
+  const hasCheck = isAllowed('CHECK')
+  const hasCall = isAllowed('CALL')
+  const hasRaise = isAllowed('RAISE')
 
   return (
     <div
       data-testid="betting-controls"
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}
     >
-      {/* Timer text — top of the stack */}
+      {/* Timer */}
       <span
         data-testid="bet-timer"
         className="font-mono font-bold tabular-nums"
@@ -107,196 +130,207 @@ export function BettingControls({ prompt, onAction }: BettingControlsProps) {
         {timeSeconds}s
       </span>
 
-      {/* FOLD */}
-      {isAllowed('FOLD') && (
-        <button
-          onClick={() => onAction('FOLD', 0)}
-          style={{
-            ...circleBtn,
-            background: 'rgba(231,76,60,0.15)',
-            border: '1.5px solid rgba(231,76,60,0.5)',
-            color: 'var(--red)',
-            fontSize: 10,
-          }}
-        >
-          FOLD
-        </button>
-      )}
-
-      {/* CHECK */}
-      {isAllowed('CHECK') && (
-        <button
-          onClick={() => onAction('CHECK', 0)}
-          style={{
-            ...circleBtn,
-            background: 'rgba(52,152,219,0.15)',
-            border: '1.5px solid rgba(52,152,219,0.4)',
-            color: 'var(--blue)',
-            fontSize: 10,
-          }}
-        >
-          CHECK
-        </button>
-      )}
-
-      {/* CALL */}
-      {isAllowed('CALL') && (
-        <button
-          onClick={() => onAction('CALL', prompt.currentBet)}
-          style={{
-            ...circleBtn,
-            flexDirection: 'column',
-            background: 'rgba(52,152,219,0.15)',
-            border: '1.5px solid rgba(52,152,219,0.4)',
-            color: 'var(--blue)',
-            fontSize: 9,
-            lineHeight: 1.2,
-            textAlign: 'center',
-          }}
-        >
-          <span style={{ fontSize: 8, fontWeight: 600, opacity: 0.7 }}>CALL</span>
-          <span>{prompt.currentBet}</span>
-        </button>
-      )}
-
-      {/* RAISE — relative container so chip panel pops above it */}
-      {isAllowed('RAISE') && (
-        <div style={{ position: 'relative' }}>
-          {/* Chip denomination panel — expands above the RAISE button */}
-          {raiseExpanded && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 'calc(100% + 6px)',
-                right: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 4,
-                background: 'rgba(5,10,24,0.9)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(212,168,67,0.25)',
-                borderRadius: 10,
-                padding: '4px 6px 6px',
-              }}
-            >
-              {/* Cancel */}
-              <button
-                onClick={handleCancelRaise}
-                aria-label="Cancel raise"
-                style={{
-                  alignSelf: 'flex-end',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  fontSize: 10,
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                  padding: '0 2px 3px',
-                }}
-              >
-                ✕
-              </button>
-
-              {/* Chips high → low */}
-              {CHIP_DENOMS.map((denom) => {
-                const wouldExceed = raiseAmount + denom > prompt.chips
-                const isPressed = pressedChip === denom
-                return (
-                  <button
-                    key={denom}
-                    onClick={() => handleChipPress(denom)}
-                    disabled={wouldExceed}
-                    data-testid={`chip-denomination-${denom}`}
-                    style={{
-                      position: 'relative',
-                      width: btnSize,
-                      height: btnSize,
-                      background: 'none',
-                      border: 'none',
-                      padding: 0,
-                      cursor: wouldExceed ? 'not-allowed' : 'pointer',
-                      opacity: wouldExceed ? 0.28 : 1,
-                      transform: isPressed ? 'scale(0.88)' : undefined,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <PokerChip
-                      size={36}
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        pointerEvents: 'none',
-                      }}
-                    />
-                    <span
-                      className="font-bold"
-                      style={{
-                        position: 'relative',
-                        fontSize: 'var(--chip-btn-font-size)',
-                        color: wouldExceed ? 'rgba(212,168,67,0.4)' : '#f0d060',
-                        textShadow: wouldExceed ? 'none' : '0 1px 3px rgba(0,0,0,0.9)',
-                        fontFamily: "'Outfit', sans-serif",
-                      }}
-                    >
-                      {denom}
-                    </span>
-                  </button>
-                )
-              })}
-
-              {/* Reset to minimum */}
-              <button
-                onClick={() => setRaiseAmount(prompt.minimumBet)}
-                aria-label="Reset raise amount"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  padding: '1px 4px',
-                }}
-              >
-                ↩
-              </button>
-            </div>
-          )}
-
-          {/* RAISE button — first tap opens panel, second tap confirms */}
+      {/* Pill bar */}
+      <div
+        style={{
+          display: 'flex',
+          background: 'rgba(5,10,24,0.88)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 999,
+          padding: '2px 2px',
+          gap: 1,
+          alignItems: 'center',
+        }}
+      >
+        {/* FOLD */}
+        {hasFold && (
           <button
-            onClick={handleRaiseClick}
+            onClick={() => onAction('FOLD', 0)}
             style={{
-              ...circleBtn,
-              flexDirection: 'column',
-              background: raiseExpanded ? 'rgba(212,168,67,0.22)' : 'rgba(212,168,67,0.12)',
-              border: `1.5px solid ${raiseExpanded ? 'rgba(212,168,67,0.7)' : 'rgba(212,168,67,0.4)'}`,
-              color: 'var(--gold)',
-              fontSize: raiseExpanded ? 8 : 10,
-              lineHeight: 1.2,
-              textAlign: 'center',
-              boxShadow: raiseExpanded ? '0 0 14px rgba(212,168,67,0.2)' : 'none',
+              ...pillBtn,
+              background: 'rgba(231,76,60,0.15)',
+              color: 'var(--red)',
             }}
           >
-            {raiseExpanded ? (
-              <>
-                <span style={{ fontSize: 7 }}>{raiseIsAllIn ? 'ALL IN' : 'RAISE'}</span>
-                <span style={{ fontSize: 9, color: 'var(--gold-bright)' }}>
-                  {raiseIsAllIn ? prompt.chips : raiseAmount}
-                </span>
-              </>
-            ) : (
-              'RAISE'
-            )}
+            FOLD
           </button>
-        </div>
-      )}
+        )}
+
+        {/* Divider after FOLD */}
+        {hasFold && (hasCheck || hasCall || hasRaise) && divider}
+
+        {/* CHECK */}
+        {hasCheck && (
+          <button
+            onClick={() => onAction('CHECK', 0)}
+            style={{
+              ...pillBtn,
+              background: 'rgba(52,152,219,0.12)',
+              color: 'var(--blue)',
+            }}
+          >
+            CHECK
+          </button>
+        )}
+
+        {/* Divider after CHECK */}
+        {hasCheck && (hasCall || hasRaise) && divider}
+
+        {/* CALL */}
+        {hasCall && (
+          <button
+            onClick={() => onAction('CALL', prompt.currentBet)}
+            style={{
+              ...pillBtn,
+              background: 'rgba(52,152,219,0.12)',
+              color: 'var(--blue)',
+            }}
+          >
+            <span style={{ fontSize: 8, fontWeight: 600, opacity: 0.7 }}>CALL</span>
+            <span>{prompt.currentBet}</span>
+          </button>
+        )}
+
+        {/* Divider after CALL */}
+        {hasCall && hasRaise && divider}
+
+        {/* RAISE — relative container so chip panel pops above pill bar */}
+        {hasRaise && (
+          <div style={{ position: 'relative' }}>
+            {/* Chip denomination panel — expands above the pill bar */}
+            {raiseExpanded && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 'calc(100% + 6px)',
+                  right: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'rgba(5,10,24,0.9)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(212,168,67,0.25)',
+                  borderRadius: 10,
+                  padding: '4px 6px 6px',
+                }}
+              >
+                {/* Cancel */}
+                <button
+                  onClick={handleCancelRaise}
+                  aria-label="Cancel raise"
+                  style={{
+                    alignSelf: 'flex-end',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    fontSize: 10,
+                    cursor: 'pointer',
+                    lineHeight: 1,
+                    padding: '0 2px 3px',
+                  }}
+                >
+                  ✕
+                </button>
+
+                {/* Chips high → low */}
+                {CHIP_DENOMS.map((denom) => {
+                  const wouldExceed = raiseAmount + denom > prompt.chips
+                  const isPressed = pressedChip === denom
+                  return (
+                    <button
+                      key={denom}
+                      onClick={() => handleChipPress(denom)}
+                      disabled={wouldExceed}
+                      data-testid={`chip-denomination-${denom}`}
+                      style={{
+                        position: 'relative',
+                        width: btnSize,
+                        height: btnSize,
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: wouldExceed ? 'not-allowed' : 'pointer',
+                        opacity: wouldExceed ? 0.28 : 1,
+                        transform: isPressed ? 'scale(0.88)' : undefined,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <PokerChip
+                        size={36}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                      <span
+                        className="font-bold"
+                        style={{
+                          position: 'relative',
+                          fontSize: 'var(--chip-btn-font-size)',
+                          color: wouldExceed ? 'rgba(212,168,67,0.4)' : '#f0d060',
+                          textShadow: wouldExceed ? 'none' : '0 1px 3px rgba(0,0,0,0.9)',
+                          fontFamily: "'Outfit', sans-serif",
+                        }}
+                      >
+                        {denom}
+                      </span>
+                    </button>
+                  )
+                })}
+
+                {/* Reset to minimum */}
+                <button
+                  onClick={() => setRaiseAmount(prompt.minimumBet)}
+                  aria-label="Reset raise amount"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    padding: '1px 4px',
+                  }}
+                >
+                  ↩
+                </button>
+              </div>
+            )}
+
+            {/* RAISE segment of pill */}
+            <button
+              onClick={handleRaiseClick}
+              style={{
+                ...pillBtn,
+                background: raiseExpanded ? 'rgba(212,168,67,0.22)' : 'rgba(212,168,67,0.12)',
+                color: 'var(--gold)',
+                borderRadius: 999,
+                boxShadow: raiseExpanded ? '0 0 14px rgba(212,168,67,0.2)' : 'none',
+              }}
+            >
+              {raiseExpanded ? (
+                <>
+                  <span style={{ fontSize: 7 }}>{raiseIsAllIn ? 'ALL IN' : 'RAISE'}</span>
+                  <span style={{ fontSize: 9, color: 'var(--gold-bright)' }}>
+                    {raiseIsAllIn ? prompt.chips : raiseAmount}
+                  </span>
+                </>
+              ) : (
+                'RAISE'
+              )}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
