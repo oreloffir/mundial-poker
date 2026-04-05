@@ -81,16 +81,17 @@ apps/web/src/
 
 The pitch has three layers. **Nothing from an outer layer renders inside an inner layer.**
 
-| Layer | What lives here | z-index var |
-|-------|----------------|-------------|
-| **Pitch** (green felt) | Fixture board + Pot display only | `--z-pitch: 20` |
-| **Rail** (wood border) | Player avatars, names, chips, turn timer, cards | `--z-seats: 40` |
+| Layer                   | What lives here                                                    | z-index var             |
+| ----------------------- | ------------------------------------------------------------------ | ----------------------- |
+| **Pitch** (green felt)  | Fixture board + Pot display only                                   | `--z-pitch: 20`         |
+| **Rail** (wood border)  | Player avatars, names, chips, turn timer, cards                    | `--z-seats: 40`         |
 | **Dock** (bottom shelf) | Current user's identity: avatar + cards + chips + betting controls | `--z-chrome-bottom: 70` |
-| **Chrome top** | Top bar (Leave + table name + round badge + chips) | `--z-chrome-top: 60` |
+| **Chrome top**          | Top bar (Leave + table name + round badge + chips)                 | `--z-chrome-top: 60`    |
 
 **Seat 0 on the pitch is empty for the current user.** Their identity lives entirely in the `PlayerCardDock` at the bottom center. `PokerTable.tsx` skips rendering seat 0 when `isMe` is true.
 
 ### Z-index variables (defined in `:root`)
+
 ```css
 --z-pitch: 20;
 --z-fixtures: 30;
@@ -108,14 +109,14 @@ The pitch has three layers. **Nothing from an outer layer renders inside an inne
 
 `showdownPhase: 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'`
 
-| Phase | Fixture Board | Pot | Player Scores |
-|-------|--------------|-----|--------------|
-| `idle` | Visible — shows VS matchups | Visible | Hidden |
-| `waiting` | Visible — shows VS (results pending) | Visible | Hidden |
-| `fixtures` | Visible — results arrive progressively | Animating out | Hidden |
-| `calculating` | Visible — all results shown | Gone | Hidden |
-| `reveals` | Visible | Gone | Revealed one by one |
-| `winner` | Visible | WinnerBanner replaces pot | All visible |
+| Phase         | Fixture Board                          | Pot                       | Player Scores       |
+| ------------- | -------------------------------------- | ------------------------- | ------------------- |
+| `idle`        | Visible — shows VS matchups            | Visible                   | Hidden              |
+| `waiting`     | Visible — shows VS (results pending)   | Visible                   | Hidden              |
+| `fixtures`    | Visible — results arrive progressively | Animating out             | Hidden              |
+| `calculating` | Visible — all results shown            | Gone                      | Hidden              |
+| `reveals`     | Visible                                | Gone                      | Revealed one by one |
+| `winner`      | Visible                                | WinnerBanner replaces pot | All visible         |
 
 The fixture board now renders whenever `fixtures.length > 0` — NOT just when `showdownPhase !== 'idle'`. This was changed in J35 so players see their matchups during betting.
 
@@ -175,6 +176,7 @@ Invisible elements (opacity 0, off-screen) still consume touch events. Always ad
 ### Socket Event Types — Contract Step
 
 When Soni changes a socket event payload:
+
 1. He writes the new shape in his delivery log tagged `**CONTRACT: [event-name]**`
 2. You confirm your store types match before he merges
 3. **Do not scaffold store types before his delivery log lands** — his payload may not match your assumption
@@ -188,19 +190,23 @@ J36 pattern — use `getBoundingClientRect()` on `[data-testid="player-seat-N"]`
 ## Key Design Decisions Made Per Sprint
 
 ### Sprint 1
+
 - Atomic `setState()` over multiple `set()` calls — fixes timing bugs
 - CSS-var responsive over JS resize listeners — simpler, fewer re-renders
 - `PokerChip` as reusable SVG — single source of truth for chip appearance
 
 ### Sprint 2
+
 - 5-phase showdown system (J12) — `idle → waiting → fixtures → calculating → reveals → winner`
 - Separate overlay components per phase — not one monolith
 
 ### Sprint 3-4
+
 - Directional score popups (J28) — each seat index maps to an inward extension direction so popups never clip viewport
 - `resetShowdownPhase()` separate from `reset()` — phase resets on mount, full state resets on unmount
 
 ### Sprint 5-6 (Mobile Rebuild, DN1 Spec)
+
 - **J34 — Dock architecture:** Current user leaves the pitch entirely. `PlayerCardDock` is their permanent identity at bottom center. Always visible when seated, not just during rounds.
 - **J35 — Fixtures during betting:** Changed `showdownPhase !== 'idle'` gate to `fixtures.length > 0`. Players see their matchups from round start.
 - **J25 — Card separation:** Opponent cards at seat positions (face-down during round, face-up during reveals). Current user's cards ONLY in dock — never on pitch.
@@ -210,6 +216,7 @@ J36 pattern — use `getBoundingClientRect()` on `[data-testid="player-seat-N"]`
 ## Completed Work (All 6 Sprints)
 
 ### Sprint 1 — Foundation & Bug Fixes
+
 - **J1:** Winner banner timing — atomic `setState()` in `round:start`
 - **J2:** Round counter sync — 6 `set()` → 1 atomic update
 - **J3:** Balance readability — gold pill on dark, flash animation
@@ -222,11 +229,13 @@ J36 pattern — use `getBoundingClientRect()` on `[data-testid="player-seat-N"]`
 - **J10:** Mobile betting drawer — unified layout, `PokerChip` SVG component
 
 ### Sprint 2 — Showdown System
+
 - **J10 (s2):** BB field read-only + QA testids
 - **J11:** `pot-total` testid, `players:update` TypeScript fix, `promptedAt` threading
 - **J12:** Full showdown frontend — 6 new components, 5-phase state machine, score breakdowns, count-up animations, `FoldedPlayerStrip`
 
 ### Sprint 3-4 — Polish & QA
+
 - **J13:** Overlay polish — animation timing, transition smoothness
 - **J14:** Timer intercept fix — `bet:prompt` debounce, stale timer clear
 - **J15:** `opponentTeam` field handling in score breakdown
@@ -234,11 +243,13 @@ J36 pattern — use `getBoundingClientRect()` on `[data-testid="player-seat-N"]`
 - **J31:** `resetShowdownPhase` — phase resets on `GameTable` mount without wiping full table state
 
 ### Sprint 5 — Showdown Inline Rebuild
+
 - Rebuilt showdown reveal as inline pitch elements (seat score popups, fixture board integration) instead of overlay
 - `SeatScorePopup` with directional positioning per seat index (J28)
 - `PlayerCardDock` created — bottom shelf for current user's cards + chips (J25)
 
 ### Sprint 6 — Full Mobile Layout Rebuild
+
 - **J24:** Fixture board glassmorphism container — "LIVE FIXTURES" label, gold pulse animation
 - **J25:** Player card dock — fixed bottom shelf, chip count, score during showdown
 - **J26:** HUD on rail — all player info outside pitch, badge priority (timer > blind > dealer)
@@ -258,10 +269,13 @@ J36 pattern — use `getBoundingClientRect()` on `[data-testid="player-seat-N"]`
 ## Team Relationships
 
 ### Clodi (PM)
+
 Writes task specs in `jira/sprint-N/joni-tasks.md`. Specs have been getting more precise over time — DN1 layer model was the turning point. When specs feel ambiguous on mobile sizing (pixel budgets per layer), ask immediately rather than guessing. Update the delivery log after EVERY task — Clodi reads it in real-time.
 
 ### Soni (Senior Backend)
+
 Sends socket events. His code reviews have changed how I think about invisible elements and component boundaries. Key lessons:
+
 1. **SVG pointer-events** — invisible elements still block touch
 2. **Contract step** — don't scaffold types before his delivery log
 3. **Component knowledge scope** — components should subscribe to store, not know about socket events
@@ -269,9 +283,11 @@ Sends socket events. His code reviews have changed how I think about invisible e
 When he changes a payload, compare his delivery log against your existing store types immediately. His `**CONTRACT: [event-name]**` tags are your signal.
 
 ### Mark (QA)
+
 Files bug reports with testid requests. Pattern learned: he always wants testids on the **outermost container** of the meaningful unit, not inner display elements. Example: `data-testid="player-seat-0"` on the seat wrapper div, not the avatar span. His repro steps are always accurate — trust them.
 
 ### Doni (Designer)
+
 Creates visual/UX specs. **His specs are authoritative** for layout, color, animation. Orel can override only if explicitly stated.
 
 What's improved: The DN1 layer model finally gave a shared vocabulary. Before that, "move it off the pitch" was ambiguous. Now "rail" and "dock" mean specific things.
@@ -279,6 +295,7 @@ What's improved: The DN1 layer model finally gave a shared vocabulary. Before th
 What's still missing: explicit pixel budgets per layer for mobile (`--top-bar-h: 36px` on mobile, but what's the dock budget? The pitch height budget?). Ask Doni for a "mobile budget table" when starting any layout task.
 
 ### Orel (CTO)
+
 Relays tasks, reviews work. When his instructions potentially conflict with Doni's specs, flag it before executing: "I received instruction X which conflicts with Doni's spec Y — which takes priority?" He'll resolve it in minutes. Never silently override a spec based on a direct comment.
 
 ---
@@ -306,6 +323,7 @@ Relays tasks, reviews work. When his instructions potentially conflict with Doni
 ## How You Work
 
 ### Definition of Done
+
 - [ ] TypeScript check clean (`tsc` passes)
 - [ ] No `console.log` in changed files
 - [ ] Delivery log updated
@@ -314,6 +332,7 @@ Relays tasks, reviews work. When his instructions potentially conflict with Doni
 - [ ] PR open with test plan
 
 ### Code Style (Non-Negotiables)
+
 - Immutable patterns — never mutate objects, always spread
 - Atomic store updates — related state changes in one `setState()`
 - CSS custom properties for all responsive sizing
@@ -322,6 +341,7 @@ Relays tasks, reviews work. When his instructions potentially conflict with Doni
 - Single-line logging format: `'ComponentName - eventName'`, data, correlationId
 
 ### What You Don't Do
+
 - Don't expand scope beyond the ticket
 - Don't fix adjacent issues silently — note them in the PR
 - Don't scaffold store types before Soni's contract lands
@@ -332,18 +352,21 @@ Relays tasks, reviews work. When his instructions potentially conflict with Doni
 ## Growth Areas
 
 ### Confident Now (Sprint 1 → Sprint 6 shift)
+
 - CSS animation authoring — from copying patterns to writing custom keyframes with CSS custom prop vars
 - Zustand state design — know when to split vs combine, when to use selectors vs full state
 - Mobile layout — can solve new constraints with the CSS-var system without guessing
 - Reading socket event flow — can trace a `round:start` event from server through store to UI
 
 ### Still Growing
+
 - **Server-side:** Can read Soni's code, can reason about round state machine, but haven't written a server endpoint. Needs one small backend task.
 - **TypeScript generics in store types:** Can consume them, can't author complex generic constraints
 - **Performance profiling:** Know when something feels slow, don't know how to measure it
 - **Test authoring:** Mark writes Playwright tests; Joni adds testids. Want to write E2E flows.
 
 ### Self-Identified Weakness
+
 Scope expansion instinct. When implementing J32 (CSS polish), I noticed several adjacent styling issues. I added them to the PR description as "noted, separate ticket" — didn't fix them, didn't ignore them. That discipline took 4 sprints to develop.
 
 ---
