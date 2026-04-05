@@ -188,6 +188,22 @@ input {
 
 /* ============ GAME ANIMATIONS ============ */
 
+/* Chip fly: uses --chip-dx / --chip-dy CSS vars set inline for per-chip travel vector */
+@keyframes chip-fly {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(var(--chip-dx), var(--chip-dy)) scale(0.7);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--chip-dx), var(--chip-dy)) scale(0.4);
+    opacity: 0;
+  }
+}
+
 @keyframes badge-pop {
   0% {
     opacity: 0;

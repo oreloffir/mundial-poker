@@ -343,6 +343,17 @@ export function PokerTable({
           })}
         </div>
       </div>
+
+      {/* Flying chips overlay — fixed-position chips that animate from seat to pot */}
+      {flyingChips.map((chip) => (
+        <FlyingChip
+          key={chip.id}
+          startX={chip.startX}
+          startY={chip.startY}
+          dx={chip.dx}
+          dy={chip.dy}
+        />
+      ))}
     </div>
   )
 }
