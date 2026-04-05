@@ -72,7 +72,8 @@ jobs:
             cd /opt/mundial-poker
 
             echo "--- Pulling latest main ---"
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "--- Writing .env.production ---"
             cat > .env.production << ENVEOF
