@@ -26,7 +26,6 @@ import {
   clearBettingState,
   getAllowedActions,
   startBetTimer,
-  startBetTimerWithDuration,
   cancelBetTimer,
   cleanupBetTimers,
   type BettingState,
