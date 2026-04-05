@@ -39,8 +39,8 @@ async function playBettingRound(page: Page, prefix: string, roundLabel: string):
     await shot(page, `v2-${prefix}-EARLY-FIXTURE-BUG-${roundLabel}`)
   }
 
-  const checkBtn = betControls.locator('button').filter({ hasText: 'Check' }).first()
-  const callBtn = betControls.locator('button').filter({ hasText: /Call/ }).first()
+  const checkBtn = betControls.locator('button').filter({ hasText: /check/i }).first()
+  const callBtn = betControls.locator('button').filter({ hasText: /call/i }).first()
   if (await checkBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
     await checkBtn.click()
   } else if (await callBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
@@ -175,7 +175,7 @@ test('Flow Audit v2 — Desktop 1400x900', async ({ page }) => {
 // ── Mobile pass ──────────────────────────────────────────────────────────────
 
 test('Flow Audit v2 — Mobile landscape 667x375', async ({ browser }) => {
-  test.setTimeout(600000)
+  test.setTimeout(900000) // 15 min for slower remote server
   const page = await browser.newPage({
     viewport: { width: 667, height: 375 },
   })

@@ -38,7 +38,8 @@ test.describe('Betting Controls', () => {
     await page.screenshot({ path: 'e2e/screenshots/betting-chip-denominations.png' })
   })
 
-  test('new betting controls — preset buttons visible (Min, 1/2 Pot, Pot, All In)', async ({
+  // SKIPPED: J31 replaced preset buttons with dynamic chip denominations in raise expansion
+  test.skip('new betting controls — preset buttons visible (Min, 1/2 Pot, Pot, All In)', async ({
     page,
   }) => {
     await setupGame(page, { name: 'E2E Presets' })
