@@ -26,6 +26,7 @@ import {
   clearBettingState,
   getAllowedActions,
   startBetTimer,
+  startBetTimerWithDuration,
   cancelBetTimer,
   cleanupBetTimers,
   type BettingState,
@@ -275,7 +276,7 @@ async function startBettingRound(
   } else {
     startBetTimer(roundId, prompt.userId, prompt.allowedActions, (rid, uid, action, amount, auto) =>
       handleBetAction(rid, uid, action, amount, io, auto),
-    )
+    tableId)
   }
 
   const statusMap: Record<number, string> = {
@@ -468,12 +469,11 @@ export async function handleBetAction(
   io: Server,
   autoAction = false,
 ): Promise<void> {
-  cancelBetTimer(roundId, userId)
+  const tableId = await getTableIdForRound(roundId)
+  cancelBetTimer(roundId, userId, tableId)
 
   const state = await getBettingState(roundId)
   if (!state) throw new GameError('No active betting round for this round')
-
-  const tableId = await getTableIdForRound(roundId)
 
   validateAction(state, userId, action, amount)
   const newState = await applyAction(state, userId, action, amount)
@@ -574,7 +574,7 @@ export async function handleBetAction(
   } else {
     startBetTimer(roundId, prompt.userId, prompt.allowedActions, (rid, uid, act, amt, auto) =>
       handleBetAction(rid, uid, act, amt, io, auto),
-    )
+    tableId)
   }
 }
 

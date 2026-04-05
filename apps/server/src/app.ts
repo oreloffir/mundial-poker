@@ -12,6 +12,7 @@ import { matchDataRouter } from './modules/match-data/match-data.controller.js'
 import { createTestRouter } from './modules/test/test.controller.js'
 import { setupGameSocket } from './modules/game/game.socket.js'
 import { ensureBotsExist } from './modules/game/bot.service.js'
+import { recoverTimers } from './modules/game/timer-recovery.js'
 import { cleanupStaleTables } from './modules/tables/table.service.js'
 import { AppError } from './shared/errors.js'
 import type { Request, Response, NextFunction } from 'express'
@@ -86,6 +87,9 @@ async function start(): Promise<void> {
   server.listen(config.port, () => {
     ensureBotsExist().catch((err) =>
       console.error('App - ensureBotsExist - failed', { error: err }),
+    )
+    recoverTimers(io).catch((err) =>
+      console.error('App - recoverTimers - failed', { error: err }),
     )
   })
 }
