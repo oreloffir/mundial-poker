@@ -461,6 +461,17 @@ input {
   }
 }
 
+/* Score popup — fixed width so breakdown text doesn't wrap unpredictably */
+.seat-score-popup {
+  width: 124px;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .seat-score-popup {
+    width: 100px;
+  }
+}
+
 /* Portrait orientation hint — hidden by default, shown on portrait mobile */
 .portrait-hint {
   display: none;

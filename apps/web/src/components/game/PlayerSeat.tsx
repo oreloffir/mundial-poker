@@ -211,8 +211,8 @@ export function PlayerSeat({
         transition: 'all 0.4s ease',
       }}
     >
-      {/* Inline score popup — shown above seat when this player has been scored */}
-      {inShowdown && <SeatScorePopup result={scoreResult} isCurrent={isCurrent} />}
+      {/* Score popup — directional per seat position (J28); extends inward to avoid viewport clip */}
+      {inShowdown && <SeatScorePopup result={scoreResult} isCurrent={isCurrent} seatIndex={player.seatIndex} />}
 
       {/* Action badge */}
       {lastAction && !inShowdown && <ActionBadge {...lastAction} />}
