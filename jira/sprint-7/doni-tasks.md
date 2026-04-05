@@ -18,6 +18,7 @@ This is the **#1 UX problem** identified by every team member in the mid-term re
 ### Context
 
 Right now:
+
 - Player holds 2 team cards (e.g., Brazil, Germany) in the bottom dock
 - Fixture board shows 5 matchups (e.g., Brazil vs Japan, Germany vs France)
 - **Nothing connects the two visually.** A first-time player doesn't realize "my Brazil card scores points based on the Brazil vs Japan fixture."
@@ -55,6 +56,7 @@ Deliver an annotated HTML mockup (or detailed spec with exact CSS values) showin
 - [ ] Saved to `docs/design/fixture-card-link-spec.md`
 
 ### What Joni Needs From You
+
 - Exact colors/opacities for the link visual
 - Animation timing (duration, easing)
 - Which elements get which treatment (hand card, fixture tile, both)
@@ -132,7 +134,7 @@ After Joni implements J38 (fixture-card link) and J40 (match tickets), review th
 ## Delivery Log
 
 | Task | Status | Delivered |
-|------|--------|-----------|
+| ---- | ------ | --------- |
 | DN2  | ⬜     |           |
 | DN3  | ⬜     |           |
 | DN4  | ⬜     |           |

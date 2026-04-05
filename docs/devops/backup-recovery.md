@@ -9,20 +9,21 @@
 
 Daily PostgreSQL backups run at 03:00 UTC. Backups go to S3 via the EC2 instance profile — no access keys on the box.
 
-| Field | Value |
-|-------|-------|
-| S3 bucket | `s3://mundial-poker-backups` |
-| Prefix | `daily/` |
-| Format | `YYYYMMDD_HHMMSS.sql.gz` |
-| Retention | 30 days (lifecycle rule) |
-| Versioning | Enabled |
-| Region | eu-west-1 |
+| Field      | Value                        |
+| ---------- | ---------------------------- |
+| S3 bucket  | `s3://mundial-poker-backups` |
+| Prefix     | `daily/`                     |
+| Format     | `YYYYMMDD_HHMMSS.sql.gz`     |
+| Retention  | 30 days (lifecycle rule)     |
+| Versioning | Enabled                      |
+| Region     | eu-west-1                    |
 
 ---
 
 ## Setup (one-time, already done)
 
 Run `scripts/aws-setup.sh` from a machine with AWS admin credentials. This creates:
+
 - S3 bucket with versioning + 30-day lifecycle
 - IAM role `mundial-poker-ec2-backup` with write-only access to the bucket
 - Instance profile attached to `i-0b95a73440e9e9111`
@@ -42,6 +43,7 @@ s3://mundial-poker-backups/
 ```
 
 List backups:
+
 ```bash
 aws s3 ls s3://mundial-poker-backups/daily/ --region eu-west-1
 ```
@@ -51,11 +53,13 @@ aws s3 ls s3://mundial-poker-backups/daily/ --region eu-west-1
 ## Manual Backup (anytime)
 
 SSH into EC2, then:
+
 ```bash
 /opt/mundial-poker/scripts/backup-db.sh
 ```
 
 Check the log:
+
 ```bash
 tail -20 /var/log/mundial-poker-backup.log
 ```
@@ -111,6 +115,7 @@ docker-compose -f docker-compose.production.yml exec -T postgres \
 ## Cron Schedule
 
 Verify the cron job is active:
+
 ```bash
 crontab -l | grep backup
 # Should show: 0 3 * * * /opt/mundial-poker/scripts/backup-db.sh >> /var/log/mundial-poker-backup.log 2>&1
@@ -141,11 +146,13 @@ Log file: `/var/log/mundial-poker-backup.log`
 ### Scenario C: Backup script failing silently
 
 Check the log:
+
 ```bash
 tail -50 /var/log/mundial-poker-backup.log
 ```
 
 Common causes:
+
 - IAM role detached from instance (check EC2 console → IAM role)
 - Docker container not running (`/opt/mundial-poker/compose ps`)
 - Disk full on `/tmp` (`df -h /tmp`)

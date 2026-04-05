@@ -66,7 +66,11 @@ test('Sprint 6 Final Mobile Audit — 3 rounds', async ({ browser }) => {
     await page.locator('button').filter({ hasText: 'Create Table' }).first().click()
     await page.waitForTimeout(1000)
     await page.locator('input[type="text"]').first().fill('Sprint 6 Audit')
-    await page.locator('button').filter({ hasText: /^Create$/ }).last().click()
+    await page
+      .locator('button')
+      .filter({ hasText: /^Create$/ })
+      .last()
+      .click()
     await page.waitForTimeout(5000)
     await shot(page, 'B-table-empty')
 
@@ -132,11 +136,16 @@ test('Sprint 6 Final Mobile Audit — 3 rounds', async ({ browser }) => {
     await shot(page, 'R1-09-winner-announcement')
 
     // Check: winner banner
-    const winnerText = await page.locator('[data-testid="winner-banner"]').textContent().catch(() => '')
+    const winnerText = await page
+      .locator('[data-testid="winner-banner"]')
+      .textContent()
+      .catch(() => '')
     console.log('R1 winner: ' + (winnerText ?? '').slice(0, 40))
 
     // Wait for transition
-    await page.waitForSelector('[data-testid="winner-banner"]', { state: 'hidden', timeout: 30000 }).catch(() => {})
+    await page
+      .waitForSelector('[data-testid="winner-banner"]', { state: 'hidden', timeout: 30000 })
+      .catch(() => {})
     await page.waitForTimeout(3000)
 
     // ── ROUND 2 ─────────────────────────────────────────────────
@@ -159,10 +168,15 @@ test('Sprint 6 Final Mobile Audit — 3 rounds', async ({ browser }) => {
     await page.waitForTimeout(20000)
     await shot(page, 'R2-05-scoring')
 
-    const winner2 = await page.locator('[data-testid="winner-banner"]').textContent().catch(() => '')
+    const winner2 = await page
+      .locator('[data-testid="winner-banner"]')
+      .textContent()
+      .catch(() => '')
     console.log('R2 winner: ' + (winner2 ?? '').slice(0, 40))
 
-    await page.waitForSelector('[data-testid="winner-banner"]', { state: 'hidden', timeout: 30000 }).catch(() => {})
+    await page
+      .waitForSelector('[data-testid="winner-banner"]', { state: 'hidden', timeout: 30000 })
+      .catch(() => {})
     await page.waitForTimeout(3000)
 
     // ── ROUND 3 ─────────────────────────────────────────────────
@@ -184,7 +198,10 @@ test('Sprint 6 Final Mobile Audit — 3 rounds', async ({ browser }) => {
     await page.waitForTimeout(20000)
     await shot(page, 'R3-04-final-scoring')
 
-    const winner3 = await page.locator('[data-testid="winner-banner"]').textContent().catch(() => '')
+    const winner3 = await page
+      .locator('[data-testid="winner-banner"]')
+      .textContent()
+      .catch(() => '')
     console.log('R3 winner: ' + (winner3 ?? '').slice(0, 40))
 
     await shot(page, 'R3-05-winner-final')

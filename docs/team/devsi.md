@@ -28,18 +28,18 @@ national team cards. Hand strength comes from real match results. Launching June
 
 ### EC2 Instance
 
-| Field          | Value                                                            |
-| -------------- | ---------------------------------------------------------------- |
+| Field          | Value                                                           |
+| -------------- | --------------------------------------------------------------- |
 | Instance       | `i-0b95a73440e9e9111` — t2.micro (1 vCPU, 1GB RAM)              |
-| Region         | eu-west-1 (Ireland)                                              |
-| AMI            | Amazon Linux 2023 (`ami-0762bad84218d1ffa`)                      |
-| Elastic IP     | `52.49.249.190`                                                  |
+| Region         | eu-west-1 (Ireland)                                             |
+| AMI            | Amazon Linux 2023 (`ami-0762bad84218d1ffa`)                     |
+| Elastic IP     | `52.49.249.190`                                                 |
 | Domain         | `mundialpoker.duckdns.org` (DuckDNS free, A record → EC2 IP)    |
-| SSL            | Let's Encrypt via certbot — expires **2026-07-03**, auto-renews  |
-| App directory  | `/opt/mundial-poker`                                             |
-| Security group | `sg-0c6ee7ef0e6ee3f37` — ports 22/80/443 open, rest closed       |
+| SSL            | Let's Encrypt via certbot — expires **2026-07-03**, auto-renews |
+| App directory  | `/opt/mundial-poker`                                            |
+| Security group | `sg-0c6ee7ef0e6ee3f37` — ports 22/80/443 open, rest closed      |
 | SSH            | `ssh -i ~/.ssh/mundial-poker-deploy.pem ec2-user@52.49.249.190` |
-| Swap           | 1GB `/swapfile` — added after OOM crash during parallel builds   |
+| Swap           | 1GB `/swapfile` — added after OOM crash during parallel builds  |
 
 ### Docker Services (all 5 on one instance)
 
@@ -68,11 +68,11 @@ CD script also does `docker-compose restart nginx` after `up -d` as belt-and-sus
 
 Secrets live in `/opt/mundial-poker/.env.production` on EC2 only. Never committed.
 
-| Variable       | Description                                                                       |
-| -------------- | --------------------------------------------------------------------------------- |
-| `DB_PASSWORD`  | PostgreSQL password for `wpc` user                                                |
-| `JWT_SECRET`   | JWT signing secret (32+ chars)                                                    |
-| `NODE_ENV`     | `production`                                                                      |
+| Variable       | Description                                                                             |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `DB_PASSWORD`  | PostgreSQL password for `wpc` user                                                      |
+| `JWT_SECRET`   | JWT signing secret (32+ chars)                                                          |
+| `NODE_ENV`     | `production`                                                                            |
 | `CORS_ORIGINS` | `https://mundialpoker.duckdns.org,http://mundialpoker.duckdns.org,http://52.49.249.190` |
 
 **DANGER:** Always use `--env-file .env.production` when running docker-compose manually.
@@ -128,27 +128,27 @@ echo disk usage
 
 ### GitHub Secrets (all required)
 
-| Secret         | Value                                                                           |
-| -------------- | ------------------------------------------------------------------------------- |
-| `EC2_HOST`     | `52.49.249.190`                                                                 |
-| `EC2_USER`     | `ec2-user`                                                                      |
-| `EC2_SSH_KEY`  | Ed25519 private key (`~/.ssh/github_actions_deploy` on EC2)                     |
-| `DB_PASSWORD`  | Real postgres password                                                          |
-| `JWT_SECRET`   | Real JWT secret                                                                 |
+| Secret         | Value                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `EC2_HOST`     | `52.49.249.190`                                                                         |
+| `EC2_USER`     | `ec2-user`                                                                              |
+| `EC2_SSH_KEY`  | Ed25519 private key (`~/.ssh/github_actions_deploy` on EC2)                             |
+| `DB_PASSWORD`  | Real postgres password                                                                  |
+| `JWT_SECRET`   | Real JWT secret                                                                         |
 | `CORS_ORIGINS` | `https://mundialpoker.duckdns.org,http://mundialpoker.duckdns.org,http://52.49.249.190` |
 
 ---
 
 ## Current Metrics (April 5, 2026)
 
-| Metric        | Value  | Threshold | Status                   |
-| ------------- | ------ | --------- | ------------------------ |
-| Disk used     | 22%    | 80%       | ✅                       |
-| Memory free   | 476MB  | 200MB     | ✅                       |
-| Swap used     | 80MB   | 1024MB    | ✅                       |
-| Build cache   | 0B     | —         | ✅ auto-prune working    |
-| SSL expiry    | 89 days| 30 days   | ✅                       |
-| Certbot timer | active | —         | ✅ enabled April 5, 2026 |
+| Metric        | Value   | Threshold | Status                   |
+| ------------- | ------- | --------- | ------------------------ |
+| Disk used     | 22%     | 80%       | ✅                       |
+| Memory free   | 476MB   | 200MB     | ✅                       |
+| Swap used     | 80MB    | 1024MB    | ✅                       |
+| Build cache   | 0B      | —         | ✅ auto-prune working    |
+| SSL expiry    | 89 days | 30 days   | ✅                       |
+| Certbot timer | active  | —         | ✅ enabled April 5, 2026 |
 
 ---
 
@@ -292,18 +292,18 @@ sudo systemctl status certbot-renew.timer   # should be "active (waiting)"
 
 ## Infrastructure Gap to World Cup Launch
 
-| Gap                       | Effort | Priority     |
-| ------------------------- | ------ | ------------ |
-| Database backups (S3)     | 2h     | 🔴 Now       |
-| UptimeRobot monitoring    | 30min  | 🔴 Now       |
-| Real domain (not duckdns) | 1h     | 🟡 Pre-launch|
-| Restrict SSH to team IPs  | 15min  | 🟡 Pre-launch|
-| Staging environment       | 1 day  | 🟡 Sprint 7  |
-| t3.small upgrade          | 30min  | 🟡 Beta      |
-| Zero-downtime deploys     | 2 days | 🟡 Beta      |
-| Redis separate instance   | 1 day  | 🟠 World Cup |
-| Load testing              | 1 day  | 🟠 World Cup |
-| DDoS protection / WAF     | 1 day  | 🟠 World Cup |
+| Gap                       | Effort | Priority      |
+| ------------------------- | ------ | ------------- |
+| Database backups (S3)     | 2h     | 🔴 Now        |
+| UptimeRobot monitoring    | 30min  | 🔴 Now        |
+| Real domain (not duckdns) | 1h     | 🟡 Pre-launch |
+| Restrict SSH to team IPs  | 15min  | 🟡 Pre-launch |
+| Staging environment       | 1 day  | 🟡 Sprint 7   |
+| t3.small upgrade          | 30min  | 🟡 Beta       |
+| Zero-downtime deploys     | 2 days | 🟡 Beta       |
+| Redis separate instance   | 1 day  | 🟠 World Cup  |
+| Load testing              | 1 day  | 🟠 World Cup  |
+| DDoS protection / WAF     | 1 day  | 🟠 World Cup  |
 
 The biggest single gap is **no backups**. Everything else is recoverable. Lost postgres
 data is not.
@@ -388,13 +388,13 @@ timer now active, triggers daily.
 
 ## The Team
 
-| Name      | Role            | Interaction                                              |
-| --------- | --------------- | -------------------------------------------------------- |
-| **Orel**  | CTO             | Infrastructure decisions, AWS account owner              |
-| **Clodi** | PM              | Task assignments, sprint planning                        |
-| **Soni**  | Senior Backend  | DB migrations, Redis config, server deployment           |
-| **Joni**  | Junior Frontend | Vite config, PWA manifest, build optimization            |
-| **Mark**  | QA              | E2E tests in CI, test artifact uploads                   |
+| Name      | Role            | Interaction                                    |
+| --------- | --------------- | ---------------------------------------------- |
+| **Orel**  | CTO             | Infrastructure decisions, AWS account owner    |
+| **Clodi** | PM              | Task assignments, sprint planning              |
+| **Soni**  | Senior Backend  | DB migrations, Redis config, server deployment |
+| **Joni**  | Junior Frontend | Vite config, PWA manifest, build optimization  |
+| **Mark**  | QA              | E2E tests in CI, test artifact uploads         |
 
 ---
 

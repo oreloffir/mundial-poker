@@ -60,7 +60,14 @@ export function startBetTimer(
   const startedAt = Date.now()
 
   if (tableId) {
-    const timerState: TimerState = { tableId, roundId, playerId: userId, startedAt, durationMs: BET_TIMEOUT_MS, allowedActions }
+    const timerState: TimerState = {
+      tableId,
+      roundId,
+      playerId: userId,
+      startedAt,
+      durationMs: BET_TIMEOUT_MS,
+      allowedActions,
+    }
     const ttlSeconds = Math.ceil((BET_TIMEOUT_MS + 5_000) / 1_000)
     stateSet(TIMER_PREFIX, tableId, timerState, ttlSeconds).catch((err) =>
       console.error('BettingService - persistTimer - failed', { tableId, roundId, error: err }),

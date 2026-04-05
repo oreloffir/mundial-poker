@@ -26,18 +26,21 @@ Sprint 7 is NOT about new features. It's about making what we have **reliable, t
 ## Sprint Structure
 
 **Phase 1 (Day 1-2): Unblock & Protect**
+
 - Mark fixes E2E suite (test gate back to green)
 - Devsi deploys DB backups + monitoring (existential risk removed)
 - Joni fixes BUG-MP-01 (30 min)
 - Doni delivers fixture-card link + match ticket specs (before Joni starts UI work)
 
 **Phase 2 (Day 3-5): Harden & Polish**
+
 - Joni builds fixture-card visual link + match ticket cards (with Doni's spec)
 - Soni builds timer recovery + Prettier hook
 - Mark runs manual device QA + retests full suite
 - Devsi sets up health check + deploy rollback
 
 **Phase 3 (Day 6-7): Sound & Growth**
+
 - Joni adds 3 sound effects (bet placed, score reveal, winner)
 - Joni gets her first backend task (table stats endpoint, Soni mentors)
 - Mark shifts to beta coordination prep
@@ -46,13 +49,13 @@ Sprint 7 is NOT about new features. It's about making what we have **reliable, t
 
 ## Task Files
 
-| Team Member | File | Focus |
-|-------------|------|-------|
-| **Mark** | [`mark-tasks.md`](./mark-tasks.md) | E2E suite fixes, manual device QA, beta coordination prep |
-| **Devsi** | [`devsi-tasks.md`](./devsi-tasks.md) | DB backups, monitoring, Prettier hook, health check |
-| **Joni** | [`joni-tasks.md`](./joni-tasks.md) | BUG-MP-01, fixture-card link, match tickets, sound, backend task |
-| **Soni** | [`soni-tasks.md`](./soni-tasks.md) | Timer recovery, PR reviews, mentor Joni on backend |
-| **Doni** | [`doni-tasks.md`](./doni-tasks.md) | Fixture-card link spec, match ticket spec, design review |
+| Team Member | File                                 | Focus                                                            |
+| ----------- | ------------------------------------ | ---------------------------------------------------------------- |
+| **Mark**    | [`mark-tasks.md`](./mark-tasks.md)   | E2E suite fixes, manual device QA, beta coordination prep        |
+| **Devsi**   | [`devsi-tasks.md`](./devsi-tasks.md) | DB backups, monitoring, Prettier hook, health check              |
+| **Joni**    | [`joni-tasks.md`](./joni-tasks.md)   | BUG-MP-01, fixture-card link, match tickets, sound, backend task |
+| **Soni**    | [`soni-tasks.md`](./soni-tasks.md)   | Timer recovery, PR reviews, mentor Joni on backend               |
+| **Doni**    | [`doni-tasks.md`](./doni-tasks.md)   | Fixture-card link spec, match ticket spec, design review         |
 
 ---
 

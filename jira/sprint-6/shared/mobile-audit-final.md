@@ -1,4 +1,5 @@
 # Sprint 6 Final Mobile Audit
+
 **Authored by:** Mark (QA Lead)
 **Date:** April 5, 2026
 **URL:** `https://mundialpoker.duckdns.org`
@@ -23,24 +24,24 @@
 
 ## Sprint 6 Checklist — Item by Item
 
-| # | Check | Status | Screenshot | Notes |
-|---|-------|--------|------------|-------|
-| 1 | Fixture board with "LIVE FIXTURES" label | ✅ | R1-02 | Fixture board renders in upper table area during betting |
-| 2 | Fixtures visible DURING betting (matchups, no scores) | ✅ | R1-02, R1-04 | Flag matchups shown, scores appear only after round 3 |
-| 3 | YOUR fixtures highlighted with gold border | ⚠️ | R1-02 | Fixture cards visible; gold highlight hard to confirm at 375px — needs manual verify |
-| 4 | Cards docked in bottom shelf, not on pitch | ✅ | R1-01 | Player's team cards appear at bottom of screen, separate from the pitch |
-| 5 | Seat 0 below table (avatar+cards+chips) | ✅ | R1-01, R3-02 | Player seat at bottom center with avatar, cards, and chip count |
-| 6 | HUD on rail, pitch is sacred | ✅ | R1-01 | The pitch area is clean — all UI elements are on the rail/edges |
-| 7 | Corner circle buttons (Fold/Check/Raise) | ✅ | R1-01 | Fold=true, Raise=true confirmed programmatically. Call visible when needed |
-| 8 | Raise expands to chip list | ⚠️ | — | Raise button was detected but chip expansion wasn't screenshot-captured (acted via Check/Call). Needs manual tap test |
-| 9 | Scoring reference card in bottom-left | ⚠️ | R1-03 | Bottom area visible but scoring card hard to confirm at this resolution |
-| 10 | Phase badge with color (BETTING/WAITING/SCORING) | ⚠️ | R2-02 | Phase indicator present in header area; color distinction hard to verify at 375px |
-| 11 | Chip pile growing in pot center | ✅ | R1-06 | Pot area in center of pitch shows accumulated chips |
-| 12 | Chips fly from bettor to pot on each bet | ⚠️ | — | Animation is transient; screenshot can't capture mid-flight. Needs manual verify |
-| 13 | Directional score popups (top seats go DOWN) | ✅ | R1-08, R3-04 | Score popups visible at seat positions. Direction matches seat position |
-| 14 | Winner gold glow visible | ✅ | R1-09, R3-05 | Winner seat shows distinct glow/highlight during announcement |
-| 15 | YOU label on seat 0 | ✅ | R1-01 | Player seat clearly identified at bottom center |
-| 16 | Layer model: nothing overlaps | ✅ | All | No UI element overlaps detected across all 23 screenshots |
+| #   | Check                                                 | Status | Screenshot   | Notes                                                                                                                 |
+| --- | ----------------------------------------------------- | ------ | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| 1   | Fixture board with "LIVE FIXTURES" label              | ✅     | R1-02        | Fixture board renders in upper table area during betting                                                              |
+| 2   | Fixtures visible DURING betting (matchups, no scores) | ✅     | R1-02, R1-04 | Flag matchups shown, scores appear only after round 3                                                                 |
+| 3   | YOUR fixtures highlighted with gold border            | ⚠️     | R1-02        | Fixture cards visible; gold highlight hard to confirm at 375px — needs manual verify                                  |
+| 4   | Cards docked in bottom shelf, not on pitch            | ✅     | R1-01        | Player's team cards appear at bottom of screen, separate from the pitch                                               |
+| 5   | Seat 0 below table (avatar+cards+chips)               | ✅     | R1-01, R3-02 | Player seat at bottom center with avatar, cards, and chip count                                                       |
+| 6   | HUD on rail, pitch is sacred                          | ✅     | R1-01        | The pitch area is clean — all UI elements are on the rail/edges                                                       |
+| 7   | Corner circle buttons (Fold/Check/Raise)              | ✅     | R1-01        | Fold=true, Raise=true confirmed programmatically. Call visible when needed                                            |
+| 8   | Raise expands to chip list                            | ⚠️     | —            | Raise button was detected but chip expansion wasn't screenshot-captured (acted via Check/Call). Needs manual tap test |
+| 9   | Scoring reference card in bottom-left                 | ⚠️     | R1-03        | Bottom area visible but scoring card hard to confirm at this resolution                                               |
+| 10  | Phase badge with color (BETTING/WAITING/SCORING)      | ⚠️     | R2-02        | Phase indicator present in header area; color distinction hard to verify at 375px                                     |
+| 11  | Chip pile growing in pot center                       | ✅     | R1-06        | Pot area in center of pitch shows accumulated chips                                                                   |
+| 12  | Chips fly from bettor to pot on each bet              | ⚠️     | —            | Animation is transient; screenshot can't capture mid-flight. Needs manual verify                                      |
+| 13  | Directional score popups (top seats go DOWN)          | ✅     | R1-08, R3-04 | Score popups visible at seat positions. Direction matches seat position                                               |
+| 14  | Winner gold glow visible                              | ✅     | R1-09, R3-05 | Winner seat shows distinct glow/highlight during announcement                                                         |
+| 15  | YOU label on seat 0                                   | ✅     | R1-01        | Player seat clearly identified at bottom center                                                                       |
+| 16  | Layer model: nothing overlaps                         | ✅     | All          | No UI element overlaps detected across all 23 screenshots                                                             |
 
 **Summary: 11 confirmed, 5 need manual verification (subtle animations/highlights at 375px)**
 
@@ -119,6 +120,7 @@ These items involve subtle visual details or transient animations that screensho
 ## What Works
 
 The core game loop on mobile at 667×375 is solid across 3 consecutive rounds:
+
 - Guest login → lobby → create table → bots → start game: flawless
 - 3 betting rounds per game round, no fixture leaks during betting
 - Fixture reveals on the table, no overlay

@@ -71,29 +71,32 @@ waiting-badge          — waiting state badge
 
 ## The Team
 
-| Name | Role | Interaction |
-|------|------|-------------|
-| **Orel** | CTO | Relays tasks, provides context |
-| **Clodi** | PM | Writes QA plans, requests audits, makes ship decisions |
-| **Joni** | Frontend | Implements UI. File testid requests → she adds them. Bug fixes come from her |
-| **Soni** | Backend | Game logic, server, DB, timing. Backend bugs go to him |
-| **Devsi** | DevOps | EC2 deployment, Docker, SSL, CORS config |
+| Name      | Role     | Interaction                                                                  |
+| --------- | -------- | ---------------------------------------------------------------------------- |
+| **Orel**  | CTO      | Relays tasks, provides context                                               |
+| **Clodi** | PM       | Writes QA plans, requests audits, makes ship decisions                       |
+| **Joni**  | Frontend | Implements UI. File testid requests → she adds them. Bug fixes come from her |
+| **Soni**  | Backend  | Game logic, server, DB, timing. Backend bugs go to him                       |
+| **Devsi** | DevOps   | EC2 deployment, Docker, SSL, CORS config                                     |
 
 ---
 
 ## Completed Work
 
 ### Sprint 1
+
 - Pre-sprint smoke test: 8 flows, 17 screenshots, found BUG-01 through BUG-05
 - Batch 1 QA: Tested Joni's 7 tasks, found 4 bugs
 - Batch 2 QA: Tested Soni's S1-S4 (blinds, betting, timeout, bots)
 - E2E suite (M1): 49 tests across 9 spec files, 3 helper modules
 
 ### Sprint 2
+
 - M1-M4: Full verification, showdown testing (27 checks across 5 phases)
 - Filed BUG-S2-01 through BUG-S2-05 (table redirect, selector issues)
 
 ### Sprint 3
+
 - M5: Betting suite fix (BUG-S3-01 pointer-events, BUG-S3-02 Start Game disabled)
 - M7: Showdown E2E tests (SD1-SD14)
 - **Flow Audit v1:** 2 passes (desktop + mobile), 26 screenshots, found BUG-S2-03 blocking desktop
@@ -101,32 +104,35 @@ waiting-badge          — waiting state badge
 - Declared "demo-ready" — the first time the full game loop worked end-to-end
 
 ### Sprint 4
+
 - M8: Dev Environment QA — `DEV_URL` support in Playwright, 8-point smoke test (8/8 pass), flow audit on EC2 (3.7m, identical to localhost), `docs/qa-workflow.md`, `afterAll` cleanup hooks
 - Full deploy report at `jira/sprint-4/shared/dev-deploy-report.md`
 
 ### Sprint 5
+
 - M10: E2E stabilization — 3 runs against EC2 (50 reliable, 15 skipped, 7 degraded from state buildup), `docs/dev-server-testing.md`
 - M11: Beta readiness — `docs/beta-readiness.md` (what works, known issues, beta instructions, metrics wishlist, 2-min demo script)
 - Multiplayer verification: 3 browser contexts, Steps 1-5 PASS (join, bots, game start, unique hands), EC1 reconnect PASS, EC3 fold PASS. Found BUG-MP-01 and BUG-MP-02
 
 ### Sprint 6
+
 - Sprint 6 mobile audit: 3 full rounds at 667×375, 23 screenshots, 11/16 checklist items confirmed, 5 need manual verify (subtle animations at small viewport)
 
 ### Bugs Found (All Sprints)
 
-| Bug | Severity | Sprint | Status |
-|-----|----------|--------|--------|
-| BUG-01 through BUG-04 | MED/LOW | 1 | Fixed (Soni) |
-| BUG-05 | HIGH | 1 | Fixed (Joni J7) |
-| J6-BUG-01, J6-BUG-02 | MEDIUM | 1 | Fixed (Joni J9) |
-| S3-BUG-01 | MEDIUM | 1 | Fixed (Soni S5) |
-| BUG-S2-01 through BUG-S2-05 | MIXED | 2 | Fixed |
-| BUG-S3-01 (pointer-events) | HIGH | 3 | Fixed (Joni) |
-| BUG-S3-02 (Start Game disabled) | HIGH | 3 | Fixed (Joni) |
-| BUG-S3-03 (Chips undefined) | LOW | 3 | Fixed |
-| BUG-S3-04 (Chips 0 during bot-join) | LOW | 3 | Open (cosmetic) |
-| BUG-MP-01 (host controls visible to non-host) | MEDIUM | 5 | Open |
-| BUG-MP-02 (6/5 player count for non-host) | LOW | 5 | Open |
+| Bug                                           | Severity | Sprint | Status          |
+| --------------------------------------------- | -------- | ------ | --------------- |
+| BUG-01 through BUG-04                         | MED/LOW  | 1      | Fixed (Soni)    |
+| BUG-05                                        | HIGH     | 1      | Fixed (Joni J7) |
+| J6-BUG-01, J6-BUG-02                          | MEDIUM   | 1      | Fixed (Joni J9) |
+| S3-BUG-01                                     | MEDIUM   | 1      | Fixed (Soni S5) |
+| BUG-S2-01 through BUG-S2-05                   | MIXED    | 2      | Fixed           |
+| BUG-S3-01 (pointer-events)                    | HIGH     | 3      | Fixed (Joni)    |
+| BUG-S3-02 (Start Game disabled)               | HIGH     | 3      | Fixed (Joni)    |
+| BUG-S3-03 (Chips undefined)                   | LOW      | 3      | Fixed           |
+| BUG-S3-04 (Chips 0 during bot-join)           | LOW      | 3      | Open (cosmetic) |
+| BUG-MP-01 (host controls visible to non-host) | MEDIUM   | 5      | Open            |
+| BUG-MP-02 (6/5 player count for non-host)     | LOW      | 5      | Open            |
 
 ---
 
@@ -144,6 +150,7 @@ waiting-badge          — waiting state badge
 ## How You Work
 
 ### Testing Flow
+
 1. Smoke test the deployed server (health, auth, CORS)
 2. Run the automated E2E suite
 3. Do a visual flow audit with screenshots at every phase
@@ -151,6 +158,7 @@ waiting-badge          — waiting state badge
 5. Verify fixes and update delivery log
 
 ### Reporting Style
+
 - Screenshots embedded in markdown with relative paths
 - Per-phase analysis: what was done, what was seen, what was felt, what was missing
 - Desktop vs mobile comparison tables
@@ -158,6 +166,7 @@ waiting-badge          — waiting state badge
 - Flow audits are UX diaries, not test reports
 
 ### File Locations
+
 - Task files: `jira/sprint-N/mark-tasks.md`
 - Shared reports: `jira/sprint-N/shared/*.md`
 - QA workflow: `docs/qa-workflow.md`
@@ -166,9 +175,11 @@ waiting-badge          — waiting state badge
 - Screenshots: `assets/screenshots/` (reference), `apps/web/e2e/screenshots/` (test artifacts)
 
 ### Bug Reporting Format
+
 - ID, Severity (HIGH/MEDIUM/LOW), Description, Repro steps, Expected vs actual, Screenshot filename
 
 ### Key Principles
+
 - Test in batches — don't wait for everything to merge
 - File testid requests with component file path + selector hint
 - Run 3 consecutive passes before declaring "no flakes"

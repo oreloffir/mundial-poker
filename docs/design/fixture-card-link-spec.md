@@ -30,6 +30,7 @@ Each of the player's 2 hand cards is assigned a **tether color**. Its matching f
 Both the DockCard and its matching fixture tile breathe with the same pulse animation, in sync. The visual rhythm creates the mental link without any physical connector crossing the pitch.
 
 **Why these colors:**
+
 - Blue (`#3d9fff`): Premium sports-tech feel. Used in UEFA Champions League broadcast graphics. Not in our existing semantic palette.
 - Orange (`#ff9500`): Sports broadcast highlight color. Clearly distinct from gold (`#d4a843`), which is a darker yellow. Not used anywhere in the current palette for semantic meaning.
 - Both are legible on `#050a18`/`#0d1424` dark backgrounds.
@@ -59,38 +60,71 @@ Add to `apps/web/src/index.css`:
 ```css
 /* Tether pulse — DockCard and fixture tile breathe together */
 @keyframes tether-pulse-a {
-  0%, 100% {
-    box-shadow: 0 0 6px var(--tether-a-dim), 0 2px 8px rgba(0,0,0,0.5);
+  0%,
+  100% {
+    box-shadow:
+      0 0 6px var(--tether-a-dim),
+      0 2px 8px rgba(0, 0, 0, 0.5);
   }
   50% {
-    box-shadow: 0 0 18px var(--tether-a-glow), 0 2px 8px rgba(0,0,0,0.5);
+    box-shadow:
+      0 0 18px var(--tether-a-glow),
+      0 2px 8px rgba(0, 0, 0, 0.5);
   }
 }
 
 @keyframes tether-pulse-b {
-  0%, 100% {
-    box-shadow: 0 0 6px var(--tether-b-dim), 0 2px 8px rgba(0,0,0,0.5);
+  0%,
+  100% {
+    box-shadow:
+      0 0 6px var(--tether-b-dim),
+      0 2px 8px rgba(0, 0, 0, 0.5);
   }
   50% {
-    box-shadow: 0 0 18px var(--tether-b-glow), 0 2px 8px rgba(0,0,0,0.5);
+    box-shadow:
+      0 0 18px var(--tether-b-glow),
+      0 2px 8px rgba(0, 0, 0, 0.5);
   }
 }
 
 /* Card sync flash — fires on the DockCard when its fixture reveals a score */
 @keyframes card-sync-flash-a {
-  0%   { box-shadow: 0 0 6px var(--tether-a-dim); transform: scale(1); }
-  20%  { box-shadow: 0 0 28px var(--tether-a-glow), 0 0 50px rgba(61,159,255,0.25); transform: scale(1.08); }
-  100% { box-shadow: 0 0 6px var(--tether-a-dim); transform: scale(1); }
+  0% {
+    box-shadow: 0 0 6px var(--tether-a-dim);
+    transform: scale(1);
+  }
+  20% {
+    box-shadow:
+      0 0 28px var(--tether-a-glow),
+      0 0 50px rgba(61, 159, 255, 0.25);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 6px var(--tether-a-dim);
+    transform: scale(1);
+  }
 }
 
 @keyframes card-sync-flash-b {
-  0%   { box-shadow: 0 0 6px var(--tether-b-dim); transform: scale(1); }
-  20%  { box-shadow: 0 0 28px var(--tether-b-glow), 0 0 50px rgba(255,149,0,0.25); transform: scale(1.08); }
-  100% { box-shadow: 0 0 6px var(--tether-b-dim); transform: scale(1); }
+  0% {
+    box-shadow: 0 0 6px var(--tether-b-dim);
+    transform: scale(1);
+  }
+  20% {
+    box-shadow:
+      0 0 28px var(--tether-b-glow),
+      0 0 50px rgba(255, 149, 0, 0.25);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 6px var(--tether-b-dim);
+    transform: scale(1);
+  }
 }
 ```
 
 **Timing notes:**
+
 - Pulse duration: `2.4s ease-in-out infinite` — slightly slower than the fixture board pulse (`2s`) so they breathe at different rates and don't feel mechanical
 - Sync flash duration: `0.5s ease-out both` — fast enough to feel reactive, slow enough to register
 - The sync flash fires once when `isFixtureRevealed` transitions from `false` to `true`
@@ -113,19 +147,21 @@ const fixtureResults = useGameStore((s) => s.fixtureResults)
 Replace the current `.map()` call (line 160-163):
 
 ```tsx
-{cards.map((card, cardIndex) => {
-  const scoreCard = scoreResult?.cardScores.find((cs) => cs.teamId === card.teamId)
-  const isFixtureRevealed = fixtureResults.some((r) => r.fixtureId === card.fixtureId)
-  return (
-    <DockCard
-      key={card.teamId}
-      card={card}
-      scoreCard={scoreCard}
-      cardIndex={cardIndex}
-      isFixtureRevealed={isFixtureRevealed}
-    />
-  )
-})}
+{
+  cards.map((card, cardIndex) => {
+    const scoreCard = scoreResult?.cardScores.find((cs) => cs.teamId === card.teamId)
+    const isFixtureRevealed = fixtureResults.some((r) => r.fixtureId === card.fixtureId)
+    return (
+      <DockCard
+        key={card.teamId}
+        card={card}
+        scoreCard={scoreCard}
+        cardIndex={cardIndex}
+        isFixtureRevealed={isFixtureRevealed}
+      />
+    )
+  })
+}
 ```
 
 ### 3. Update `DockCard` props interface
@@ -147,9 +183,22 @@ function DockCard({
 ### 4. Tether color logic inside `DockCard`
 
 ```tsx
-const tether = cardIndex === 0
-  ? { color: 'var(--tether-a)', dim: 'var(--tether-a-dim)', glow: 'var(--tether-a-glow)', pulseAnim: 'tether-pulse-a', flashAnim: 'card-sync-flash-a' }
-  : { color: 'var(--tether-b)', dim: 'var(--tether-b-dim)', glow: 'var(--tether-b-glow)', pulseAnim: 'tether-pulse-b', flashAnim: 'card-sync-flash-b' }
+const tether =
+  cardIndex === 0
+    ? {
+        color: 'var(--tether-a)',
+        dim: 'var(--tether-a-dim)',
+        glow: 'var(--tether-a-glow)',
+        pulseAnim: 'tether-pulse-a',
+        flashAnim: 'card-sync-flash-a',
+      }
+    : {
+        color: 'var(--tether-b)',
+        dim: 'var(--tether-b-dim)',
+        glow: 'var(--tether-b-glow)',
+        pulseAnim: 'tether-pulse-b',
+        flashAnim: 'card-sync-flash-b',
+      }
 ```
 
 ### 5. Updated `DockCard` render — pre-scoring state
@@ -197,28 +246,23 @@ function DockCard({
 }) {
   const res = scoreCard ? getResult(scoreCard) : null
 
-  const tether = cardIndex === 0
-    ? {
-        color: 'var(--tether-a)',
-        pulseAnim: 'tether-pulse-a 2.4s ease-in-out infinite',
-        flashAnim: 'card-sync-flash-a 0.5s ease-out both',
-      }
-    : {
-        color: 'var(--tether-b)',
-        pulseAnim: 'tether-pulse-b 2.4s ease-in-out infinite',
-        flashAnim: 'card-sync-flash-b 0.5s ease-out both',
-      }
+  const tether =
+    cardIndex === 0
+      ? {
+          color: 'var(--tether-a)',
+          pulseAnim: 'tether-pulse-a 2.4s ease-in-out infinite',
+          flashAnim: 'card-sync-flash-a 0.5s ease-out both',
+        }
+      : {
+          color: 'var(--tether-b)',
+          pulseAnim: 'tether-pulse-b 2.4s ease-in-out infinite',
+          flashAnim: 'card-sync-flash-b 0.5s ease-out both',
+        }
 
   const borderColor = res ? RESULT_COLOR[res] : tether.color
-  const boxShadow = res
-    ? `0 0 8px ${RESULT_COLOR[res]}44`
-    : undefined  // animation handles shadow when no result
+  const boxShadow = res ? `0 0 8px ${RESULT_COLOR[res]}44` : undefined // animation handles shadow when no result
 
-  const animation = res
-    ? undefined
-    : isFixtureRevealed
-      ? tether.flashAnim
-      : tether.pulseAnim
+  const animation = res ? undefined : isFixtureRevealed ? tether.flashAnim : tether.pulseAnim
 
   return (
     <div
@@ -272,14 +316,13 @@ function DockCard({
 ### 1. Replace `myFixtureIds` Set with `myFixtureMap` Map
 
 Replace line 36:
+
 ```tsx
 // BEFORE
 const myFixtureIds = new Set(myHand?.map((c) => c.fixtureId) ?? [])
 
 // AFTER
-const myFixtureMap = new Map(
-  myHand?.map((c, i) => [c.fixtureId, i]) ?? []
-)
+const myFixtureMap = new Map(myHand?.map((c, i) => [c.fixtureId, i]) ?? [])
 // myFixtureMap.get(f.id) returns 0 (card 0) or 1 (card 1) or undefined (not mine)
 ```
 
@@ -288,14 +331,15 @@ const myFixtureMap = new Map(
 Inside the `.map()` for each fixture tile:
 
 ```tsx
-const myFixtureIndex = myFixtureMap.get(f.id)  // 0, 1, or undefined
+const myFixtureIndex = myFixtureMap.get(f.id) // 0, 1, or undefined
 const isMyFixture = myFixtureIndex !== undefined
 
-const tether = myFixtureIndex === 0
-  ? { color: 'var(--tether-a)', glow: 'rgba(61,159,255,0.4)', pulseAnim: 'tether-pulse-a' }
-  : myFixtureIndex === 1
-    ? { color: 'var(--tether-b)', glow: 'rgba(255,149,0,0.4)', pulseAnim: 'tether-pulse-b' }
-    : null
+const tether =
+  myFixtureIndex === 0
+    ? { color: 'var(--tether-a)', glow: 'rgba(61,159,255,0.4)', pulseAnim: 'tether-pulse-a' }
+    : myFixtureIndex === 1
+      ? { color: 'var(--tether-b)', glow: 'rgba(255,149,0,0.4)', pulseAnim: 'tether-pulse-b' }
+      : null
 ```
 
 ### 3. Updated fixture tile border and shadow
@@ -326,22 +370,25 @@ animation: isMyFixture && !finished
 ### 4. Updated "YOUR MATCH" label
 
 ```tsx
-{isMyFixture && (
-  <span
-    className="font-outfit font-bold uppercase tracking-widest"
-    style={{
-      fontSize: 7,
-      color: tether!.color,
-      letterSpacing: '0.05em',
-      opacity: 0.9,
-    }}
-  >
-    YOUR MATCH
-  </span>
-)}
+{
+  isMyFixture && (
+    <span
+      className="font-outfit font-bold uppercase tracking-widest"
+      style={{
+        fontSize: 7,
+        color: tether!.color,
+        letterSpacing: '0.05em',
+        opacity: 0.9,
+      }}
+    >
+      YOUR MATCH
+    </span>
+  )
+}
 ```
 
 Color changes from gold to tether color. This means a first-time player sees:
+
 - A blue-bordered fixture tile labeled "YOUR MATCH" in blue
 - A blue-bordered DockCard below, pulsing in the same blue
 - The connection is unmistakable
@@ -369,10 +416,12 @@ Fixture board becomes visible. My 2 fixture tiles appear with matching tether co
 ### Scoring / reveals phase (Frame 9 in DN1)
 
 When a fixture tile reveals its score (`isNewResult = true`, `finished = true`):
+
 1. Fixture tile border stops pulsing — result colors take over on the score numbers
 2. The matching DockCard fires `card-sync-flash-a/b` — a single bright burst (0.5s), then resumes the pulse briefly before result arrives
 
 When `scoreResult` arrives for the player:
+
 1. DockCard border transitions to result color (W=green, D=gold, L=red) — existing behavior
 2. Tether animation stops completely
 3. W/D/L stamp appears — existing behavior

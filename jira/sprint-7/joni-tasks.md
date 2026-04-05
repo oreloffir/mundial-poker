@@ -29,13 +29,16 @@ When a non-host player joins a table, they currently see the same controls as th
 1. **Find the buttons** — they're in `GameTable.tsx` or a child component. Look for "Start Game" and "Add Bot" button elements.
 
 2. **Add a host check** — the game store should have a `hostId` or `isHost` flag. Conditionally render these buttons:
+
    ```tsx
-   {isHost && (
-     <>
-       <button>Start Game</button>
-       <button>Add Bot</button>
-     </>
-   )}
+   {
+     isHost && (
+       <>
+         <button>Start Game</button>
+         <button>Add Bot</button>
+       </>
+     )
+   }
    ```
 
 3. **If `isHost` doesn't exist in the store:** Check if `hostId` is available from the server. The table creator's userId should be the host. If neither exists, check with Soni — he may need to add a `host` field to the `table:joined` socket event payload.
@@ -43,11 +46,13 @@ When a non-host player joins a table, they currently see the same controls as th
 4. **Non-host view:** Non-host players should see a "Waiting for host to start..." message where the buttons would be.
 
 ### Files to Check
+
 - `apps/web/src/pages/GameTable.tsx`
 - `apps/web/src/components/game/` — whichever component renders Start Game / Add Bot
 - `apps/web/src/stores/gameStore.ts` — check for hostId/isHost
 
 ### Out of Scope
+
 - Don't redesign the waiting state — just hide buttons and show text
 - Don't add "become host" functionality
 
@@ -86,15 +91,18 @@ This is the **#1 UX problem.** Players don't understand that their hand cards co
 5. **Layer model:** The connection visual stays within the dock (Layer 4) and fixture board (Layer 2). NO floating elements between them in the sacred zone. Use color/glow/opacity — not connecting lines on the pitch.
 
 ### Files to Modify
+
 - `apps/web/src/components/game/PlayerCardDock.tsx` — hand card accents
 - `apps/web/src/components/game/FixtureBoard.tsx` — fixture tile accents
 - `apps/web/src/components/game/PokerTable.tsx` — if coordination logic needed
 - `apps/web/src/stores/gameStore.ts` — if you need to track which fixtures are "mine"
 
 ### WHY This Matters
+
 The entire game concept is "your cards score based on real matches." If players can't SEE this connection, the game doesn't make sense. This is the difference between "cool concept" and "I don't get it."
 
 ### Out of Scope
+
 - Don't redesign the card layout (that's J40)
 - Don't modify fixture board container (J24 already done)
 - Don't add sound (that's J41)
@@ -142,14 +150,17 @@ Transform hand cards from generic tiles into "match tickets" that feel like you'
 6. **Compatible with J38:** The match ticket must work with the fixture-card link visual from J38. If J38 adds a color glow to the card, the ticket design must accommodate that glow.
 
 ### Files to Modify
+
 - `apps/web/src/components/game/PlayerCardDock.tsx` — main card redesign
 - May need a new `MatchTicketCard.tsx` component if the redesign is substantial
 - CSS: use existing design tokens from `index.css`
 
 ### WHY This Matters
+
 Doni's insight: "Hand cards should feel like match tickets, not hidden card backs." The card is the player's emotional anchor — it's THEIR team, THEIR match. Making it feel like a premium match ticket increases engagement and makes the game concept click faster.
 
 ### Out of Scope
+
 - Don't modify opponent cards at seats (just your cards in the dock)
 - Don't change card dealing animation
 - Don't add sound effects (that's J41)
@@ -179,15 +190,16 @@ The game feels silent. 3 sound clips would transform the experience. This is the
 
 1. **Find 3 royalty-free sound clips** (or ask Orel to provide):
 
-   | Event | Sound | Duration | Volume |
-   |-------|-------|----------|--------|
-   | Bet placed | Poker chip clack/slide | <1s | 60% |
-   | Fixture score revealed | Short whistle or score ping | <1s | 50% |
-   | Winner announced | Crowd cheer or triumphant flourish | 2-3s | 70% |
+   | Event                  | Sound                              | Duration | Volume |
+   | ---------------------- | ---------------------------------- | -------- | ------ |
+   | Bet placed             | Poker chip clack/slide             | <1s      | 60%    |
+   | Fixture score revealed | Short whistle or score ping        | <1s      | 50%    |
+   | Winner announced       | Crowd cheer or triumphant flourish | 2-3s     | 70%    |
 
    **Sources:** freesound.org, mixkit.co, pixabay.com/sound-effects (all royalty-free). Download as `.mp3` (small file size).
 
 2. **Add sounds to** `apps/web/public/sounds/`:
+
    ```
    sounds/
    ├── chip-bet.mp3
@@ -196,6 +208,7 @@ The game feels silent. 3 sound clips would transform the experience. This is the
    ```
 
 3. **Create a sound utility** — a simple `playSound(name)` function:
+
    ```typescript
    // apps/web/src/utils/sound.ts
    const sounds = {
@@ -219,12 +232,14 @@ The game feels silent. 3 sound clips would transform the experience. This is the
 5. **Mute by default on mobile** — browsers block autoplay. The first user interaction (tap "Start Game" or first bet) should unlock audio. Don't show a mute button yet — just make sure sounds play after first interaction.
 
 ### Files to Modify
+
 - Create: `apps/web/src/utils/sound.ts`
 - Create: `apps/web/public/sounds/` (3 files)
 - `apps/web/src/hooks/useGameSocket.ts` or wherever socket events are handled — add `playSound()` calls
 - `apps/web/src/components/game/BettingControls.tsx` — `playSound('bet')` on bet action
 
 ### Out of Scope
+
 - No mute/volume UI (Sprint 8)
 - No background music
 - No sound for card dealing or fold (keep it minimal — 3 clips only)
@@ -253,6 +268,7 @@ This is your first backend task. Soni will be available for questions — relay 
 ### Requirements
 
 1. **Create a new endpoint** `GET /api/tables/:tableId/stats`:
+
    ```json
    {
      "tableId": "abc-123",
@@ -284,14 +300,17 @@ This is your first backend task. Soni will be available for questions — relay 
    - What's the pattern for adding a new route?
 
 ### Files to Create/Modify
+
 - Create: `apps/server/src/modules/table/table-stats.route.ts` (or wherever routes live)
 - Modify: `apps/server/src/app.ts` — register the new route
 - Create: `apps/server/src/modules/table/__tests__/table-stats.test.ts`
 
 ### WHY This Matters
+
 You've built the entire frontend. Understanding the backend architecture makes you a stronger developer and unblocks future tasks where frontend and backend are tightly coupled. This is a growth investment.
 
 ### Out of Scope
+
 - Don't add authentication to this endpoint (public for now)
 - Don't modify game logic
 - Don't build a frontend view for this (just the API)
@@ -311,10 +330,10 @@ You've built the entire frontend. Understanding the backend architecture makes y
 
 Update after EVERY task. Clodi reads this in real-time.
 
-| Task | Status | PR | Deployed |
-|------|--------|-----|----------|
-| J37  | ⬜     |     |          |
+| Task | Status           | PR  | Deployed |
+| ---- | ---------------- | --- | -------- |
+| J37  | ⬜               |     |          |
 | J38  | ⬜ blocked (DN2) |     |          |
 | J40  | ⬜ blocked (DN3) |     |          |
-| J41  | ⬜     |     |          |
-| J42  | ⬜     |     |          |
+| J41  | ⬜               |     |          |
+| J42  | ⬜               |     |          |

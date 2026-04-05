@@ -30,7 +30,12 @@ export async function stateGet<T>(prefix: string, key: string): Promise<T | unde
   return raw ? (JSON.parse(raw) as T) : undefined
 }
 
-export async function stateSet<T>(prefix: string, key: string, value: T, ttlSeconds?: number): Promise<void> {
+export async function stateSet<T>(
+  prefix: string,
+  key: string,
+  value: T,
+  ttlSeconds?: number,
+): Promise<void> {
   const redisKey = `${prefix}:${key}`
   const serialized = JSON.stringify(value)
   const redis = getRedisClient()

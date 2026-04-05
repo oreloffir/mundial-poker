@@ -21,9 +21,11 @@ Right now, one EBS failure = all data gone. This is the single biggest risk to t
 ### Requirements
 
 1. **Create S3 bucket:**
+
    ```bash
    aws s3 mb s3://mundial-poker-backups --region eu-west-1
    ```
+
    - Enable versioning
    - Add lifecycle rule: delete backups older than 30 days
 
@@ -32,6 +34,7 @@ Right now, one EBS failure = all data gone. This is the single biggest risk to t
    - Attach to EC2 instance profile (no access keys on the box)
 
 3. **Backup script** at `/opt/mundial-poker/scripts/backup-db.sh`:
+
    ```bash
    #!/bin/bash
    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -45,6 +48,7 @@ Right now, one EBS failure = all data gone. This is the single biggest risk to t
    ```
 
 4. **Cron job:** Run daily at 03:00 UTC
+
    ```bash
    echo "0 3 * * * /opt/mundial-poker/scripts/backup-db.sh >> /var/log/backup.log 2>&1" | crontab -
    ```
@@ -54,6 +58,7 @@ Right now, one EBS failure = all data gone. This is the single biggest risk to t
 6. **Document** in `docs/devops/backup-recovery.md`: how to restore, where backups live, retention policy.
 
 ### Out of Scope
+
 - Redis backup (AOF is already enabled — good enough for now)
 - Automated restore testing (manual verify is fine for Sprint 7)
 
@@ -85,9 +90,11 @@ We're blind to outages. If the server goes down at 2am, nobody knows until someo
    - Status page: Create public status page (optional but nice)
 
 2. **Server-side health endpoint** — verify `/api/health` returns:
+
    ```json
    { "status": "ok", "db": "connected", "redis": "connected" }
    ```
+
    If it doesn't exist or doesn't check DB/Redis, ask Soni to add it (file in `jira/sprint-7/shared/`).
 
 3. **Docker health checks** — add to `docker-compose.prod.yml`:
@@ -95,19 +102,19 @@ We're blind to outages. If the server goes down at 2am, nobody knows until someo
    services:
      server:
        healthcheck:
-         test: ["CMD", "curl", "-f", "http://localhost:5174/api/health"]
+         test: ['CMD', 'curl', '-f', 'http://localhost:5174/api/health']
          interval: 30s
          timeout: 10s
          retries: 3
      postgres:
        healthcheck:
-         test: ["CMD-SHELL", "pg_isready -U postgres"]
+         test: ['CMD-SHELL', 'pg_isready -U postgres']
          interval: 30s
          timeout: 5s
          retries: 3
      redis:
        healthcheck:
-         test: ["CMD", "redis-cli", "ping"]
+         test: ['CMD', 'redis-cli', 'ping']
          interval: 30s
          timeout: 5s
          retries: 3
@@ -133,11 +140,13 @@ Soni requested this in the mid-term review. Format-fix PRs are wasting hours eve
 ### Requirements
 
 1. **Install dependencies** in the monorepo root:
+
    ```bash
    pnpm add -Dw prettier husky lint-staged
    ```
 
 2. **Configure Prettier** — create `.prettierrc` at repo root:
+
    ```json
    {
      "semi": false,
@@ -147,9 +156,11 @@ Soni requested this in the mid-term review. Format-fix PRs are wasting hours eve
      "tabWidth": 2
    }
    ```
+
    **IMPORTANT:** Check with Soni/Joni if these match existing style before committing. If the codebase already has a different convention, match that.
 
 3. **Configure lint-staged** in `package.json`:
+
    ```json
    {
      "lint-staged": {
@@ -160,6 +171,7 @@ Soni requested this in the mid-term review. Format-fix PRs are wasting hours eve
    ```
 
 4. **Setup husky:**
+
    ```bash
    pnpm exec husky init
    echo "pnpm exec lint-staged" > .husky/pre-commit
@@ -170,6 +182,7 @@ Soni requested this in the mid-term review. Format-fix PRs are wasting hours eve
 6. **Test it:** Make a messy file, stage it, commit — verify Prettier auto-formats before the commit lands.
 
 ### Out of Scope
+
 - ESLint integration (separate sprint)
 - CI format check (the hook is sufficient for now)
 
@@ -193,6 +206,7 @@ Currently, `deploy.sh` does `docker compose up -d` and hopes for the best. If th
 ### Requirements
 
 1. **Post-deploy health check** in `deploy.sh`:
+
    ```bash
    # After docker compose up -d
    echo "Waiting for services to start..."
@@ -211,13 +225,16 @@ Currently, `deploy.sh` does `docker compose up -d` and hopes for the best. If th
    ```
 
 2. **Image tagging** — before `docker compose up`, tag current images as `:rollback`:
+
    ```bash
    docker tag mundial-poker-server:latest mundial-poker-server:rollback
    docker tag mundial-poker-web:latest mundial-poker-web:rollback
    ```
+
    Rollback = swap to `:rollback` tags.
 
 3. **Rollback script** at `scripts/rollback.sh`:
+
    ```bash
    docker tag mundial-poker-server:rollback mundial-poker-server:latest
    docker tag mundial-poker-web:rollback mundial-poker-web:latest
@@ -227,6 +244,7 @@ Currently, `deploy.sh` does `docker compose up -d` and hopes for the best. If th
 4. **Test:** Deploy a known-good build, verify health check passes. Then break something intentionally (wrong env var), deploy, verify health check fails and rollback triggers.
 
 ### Out of Scope
+
 - Zero-downtime deploys (needs graceful shutdown — Sprint 8)
 - Automated rollback in CI (manual trigger is fine for now)
 
@@ -241,12 +259,12 @@ Currently, `deploy.sh` does `docker compose up -d` and hopes for the best. If th
 
 ## Delivery Log
 
-| Task | Status | PR | Deployed |
-|------|--------|-----|----------|
-| D8   | 🔄 In progress — PR open, AWS setup pending Orel | #pending | ⬜ |
-| D9   | ⬜     |     |          |
-| D10  | ⬜     |     |          |
-| D11  | ⬜     |     |          |
+| Task | Status                                           | PR       | Deployed |
+| ---- | ------------------------------------------------ | -------- | -------- |
+| D8   | 🔄 In progress — PR open, AWS setup pending Orel | #pending | ⬜       |
+| D9   | ⬜                                               |          |          |
+| D10  | ⬜                                               |          |          |
+| D11  | ⬜                                               |          |          |
 
 ### D8 Progress Log
 
