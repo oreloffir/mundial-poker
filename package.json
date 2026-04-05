@@ -16,9 +16,20 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm --filter @wpc/shared typecheck && pnpm --filter server typecheck && pnpm --filter web typecheck",
-    "test": "pnpm --filter @wpc/shared test && pnpm --filter server test && pnpm --filter web test"
+    "test": "pnpm --filter @wpc/shared test && pnpm --filter server test && pnpm --filter web test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "@eslint/js": "^9.0.0",
     "concurrently": "^9.0.0",
     "eslint": "^9.0.0",
