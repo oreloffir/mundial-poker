@@ -39,9 +39,7 @@ function DockCard({
         width: 30,
         height: 42,
         background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
-        border: res
-          ? `1.5px solid ${RESULT_COLOR[res]}`
-          : '1.5px solid rgba(212,168,67,0.3)',
+        border: res ? `1.5px solid ${RESULT_COLOR[res]}` : '1.5px solid rgba(212,168,67,0.3)',
         boxShadow: res ? `0 0 8px ${RESULT_COLOR[res]}44` : '0 2px 8px rgba(0,0,0,0.5)',
         flexShrink: 0,
         gap: 2,
@@ -113,10 +111,7 @@ export function PlayerCardDock({
     >
       {/* Team card tiles */}
       {cards && cards.length > 0 && (
-        <div
-          className="flex gap-1.5"
-          style={{ animation: 'card-deal 0.3s ease-out both' }}
-        >
+        <div className="flex gap-1.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
           {cards.map((card) => {
             const scoreCard = scoreResult?.cardScores.find((cs) => cs.teamId === card.teamId)
             return <DockCard key={card.teamId} card={card} scoreCard={scoreCard} />
@@ -167,38 +162,26 @@ export function PlayerCardDock({
                 style={{
                   fontSize: 15,
                   color: scoreResult.isWinner ? 'var(--gold-bright)' : 'var(--text)',
-                  textShadow: scoreResult.isWinner
-                    ? '0 0 10px rgba(212,168,67,0.5)'
-                    : undefined,
+                  textShadow: scoreResult.isWinner ? '0 0 10px rgba(212,168,67,0.5)' : undefined,
                 }}
               >
                 {scoreResult.totalScore}
               </span>
-              <span style={{ fontSize: 8, color: 'var(--text-muted)', fontWeight: 600 }}>
-                pts
-              </span>
+              <span style={{ fontSize: 8, color: 'var(--text-muted)', fontWeight: 600 }}>pts</span>
             </div>
             {/* Per-card compact breakdown */}
             <div className="flex items-center gap-1">
               {scoreResult.cardScores.map((card, i) => {
                 const res = getResult(card)
                 return (
-                  <span
-                    key={card.teamId}
-                    className="flex items-center"
-                    style={{ fontSize: 8 }}
-                  >
+                  <span key={card.teamId} className="flex items-center" style={{ fontSize: 8 }}>
                     {i > 0 && (
-                      <span style={{ color: 'rgba(255,255,255,0.15)', marginRight: 3 }}>
-                        |
-                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.15)', marginRight: 3 }}>|</span>
                     )}
                     <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>
                       {card.team.code}
                     </span>
-                    <span
-                      style={{ color: RESULT_COLOR[res], fontWeight: 800, marginLeft: 2 }}
-                    >
+                    <span style={{ color: RESULT_COLOR[res], fontWeight: 800, marginLeft: 2 }}>
                       {res}
                     </span>
                     <span style={{ color: 'var(--text-muted)', marginLeft: 1 }}>

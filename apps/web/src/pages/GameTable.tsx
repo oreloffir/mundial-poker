@@ -230,12 +230,8 @@ export function GameTable() {
             cards={myHand}
             chips={myPlayer.chips ?? 0}
             isInRound={!!currentRound}
-            scoreResult={
-              playerScoreReveals.find((r) => r.userId === myPlayer.userId) ?? null
-            }
-            isCurrent={
-              playerScoreReveals[currentRevealIndex]?.userId === myPlayer.userId
-            }
+            scoreResult={playerScoreReveals.find((r) => r.userId === myPlayer.userId) ?? null}
+            isCurrent={playerScoreReveals[currentRevealIndex]?.userId === myPlayer.userId}
           />
         </div>
       )}

@@ -1,0 +1,3397 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mundial Poker — 12-Frame Game UX Mockup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600&family=Outfit:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ── CSS TOKENS (exact from index.css) ─────────────────────────────── */
+      :root {
+        --bg-deep: #050a18;
+        --bg-card: #0d1424;
+        --surface: #141e35;
+        --gold: #d4a843;
+        --gold-bright: #f0cc5b;
+        --gold-dim: #8a6d1b;
+        --green-pitch: #1a6e3a;
+        --green-light: #27ae60;
+        --green-glow: #2ecc71;
+        --red: #e74c3c;
+        --blue: #3498db;
+        --purple: #9b59b6;
+        --text: #f0f0f0;
+        --text-dim: #8899b0;
+        --text-muted: #556680;
+        --border: rgba(212, 168, 67, 0.15);
+        /* Mobile landscape token values */
+        --avatar-size: 40px;
+        --card-w: 44px;
+        --card-h: 62px;
+        --fixture-tile-w: 60px;
+        --top-bar-h: 36px;
+        --chip-btn-size: 32px;
+        --ring-scale: 0.71;
+      }
+
+      /* ── PAGE CHROME ─────────────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #02050f;
+        color: var(--text);
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        padding: 0 0 60px;
+      }
+
+      .page-header {
+        background: linear-gradient(135deg, #0a1020, #0d1830);
+        border-bottom: 1px solid rgba(212, 168, 67, 0.2);
+        padding: 20px 32px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .page-header h1 {
+        font-family: 'Cinzel', serif;
+        font-size: 1rem;
+        color: var(--gold);
+        letter-spacing: 3px;
+        text-shadow: 0 0 12px rgba(212, 168, 67, 0.3);
+      }
+      .page-header p {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      .nav-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .nav-pill {
+        font-size: 0.65rem;
+        padding: 3px 10px;
+        border-radius: 99px;
+        border: 1px solid rgba(212, 168, 67, 0.2);
+        color: var(--text-dim);
+        cursor: pointer;
+        text-decoration: none;
+        background: transparent;
+        transition: all 0.2s;
+        font-family: 'Inter', sans-serif;
+      }
+      .nav-pill:hover {
+        color: var(--gold);
+        border-color: var(--gold-dim);
+        background: rgba(212, 168, 67, 0.05);
+      }
+
+      .section-divider {
+        text-align: center;
+        padding: 32px 0 12px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      /* ── FRAME WRAPPER ───────────────────────────────────────────────────── */
+      .frame-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 24px 16px 8px;
+        gap: 10px;
+      }
+
+      .frame-label {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--gold-dim);
+        align-self: flex-start;
+        margin-left: calc(50% - 333px);
+      }
+
+      /* The 667×375 canvas */
+      .frame {
+        width: 667px;
+        height: 375px;
+        position: relative;
+        overflow: hidden;
+        background: var(--bg-deep);
+        border: 1px solid rgba(212, 168, 67, 0.1);
+        border-radius: 6px;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+        flex-shrink: 0;
+      }
+
+      .frame-note {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        max-width: 667px;
+        align-self: flex-start;
+        margin-left: calc(50% - 333px);
+        line-height: 1.5;
+        padding: 0 2px;
+      }
+      .frame-note strong {
+        color: var(--text-dim);
+      }
+
+      /* ── TOP BAR ─────────────────────────────────────────────────────────── */
+      .top-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px;
+        background: rgba(5, 10, 24, 0.5);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(212, 168, 67, 0.12);
+        z-index: 30;
+      }
+      .top-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .top-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+
+      .btn-ghost-sm {
+        font-size: 10px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(212, 168, 67, 0.2);
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        min-height: 26px;
+      }
+      .btn-primary-sm {
+        font-size: 10px;
+        padding: 4px 12px;
+        border-radius: 8px;
+        border: none;
+        background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+        color: #000;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+      }
+
+      .table-title {
+        font-family: 'Cinzel', serif;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--gold);
+        letter-spacing: 2px;
+        text-shadow: 0 0 8px rgba(212, 168, 67, 0.25);
+      }
+      .chip-val {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        color: var(--green-glow);
+        font-size: 12px;
+      }
+      .round-val {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        color: white;
+        font-size: 12px;
+      }
+
+      /* ── TABLE PITCH ─────────────────────────────────────────────────────── */
+      .pitch {
+        position: absolute;
+        top: 36px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 542px;
+        height: 339px;
+        overflow: visible;
+      }
+
+      /* SVG stadium table */
+      .pitch-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      /* ── SEAT ────────────────────────────────────────────────────────────── */
+      .seat {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 4px 6px 3px;
+        border-radius: 12px;
+        background: transparent;
+        border: 1px solid transparent;
+        transition: all 0.4s ease;
+      }
+      .seat.active {
+        background: rgba(46, 204, 113, 0.05);
+      }
+      .seat.winner {
+        background: rgba(212, 168, 67, 0.08);
+        border-color: rgba(212, 168, 67, 0.35);
+      }
+
+      /* Seat positions (transform already handled inline) */
+
+      .avatar-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .avatar {
+        width: var(--avatar-size);
+        height: var(--avatar-size);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 13px;
+        border: 2.5px solid;
+        transition: all 0.3s;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .avatar.winner-av {
+        border-color: var(--gold) !important;
+        box-shadow: 0 0 24px rgba(212, 168, 67, 0.5);
+        animation: gold-burst 1.2s ease-out infinite;
+      }
+      .avatar.current-user {
+        border-color: var(--gold-dim) !important;
+      }
+      .avatar.folded {
+        opacity: 0.25;
+        filter: grayscale(1);
+      }
+      .avatar.bot {
+        border-color: rgba(155, 89, 182, 0.5) !important;
+        background: linear-gradient(
+          145deg,
+          rgba(155, 89, 182, 0.2),
+          rgba(155, 89, 182, 0.07)
+        ) !important;
+      }
+
+      .avatar-empty {
+        width: var(--avatar-size);
+        height: var(--avatar-size);
+        border-radius: 50%;
+        border: 2px dashed rgba(212, 168, 67, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        color: rgba(85, 102, 128, 0.5);
+      }
+
+      /* Timer ring */
+      .timer-ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(var(--ring-scale)) rotate(-90deg);
+        pointer-events: none;
+      }
+
+      /* Cards */
+      .cards-row {
+        display: flex;
+        gap: 2px;
+      }
+      .card-face-down {
+        width: var(--card-w);
+        height: var(--card-h);
+        border-radius: 8px;
+        overflow: hidden;
+        background: linear-gradient(145deg, #1a2540, #0d1424);
+        border: 1px solid rgba(212, 168, 67, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .card-face-up {
+        width: var(--card-w);
+        height: var(--card-h);
+        border-radius: 8px;
+        background: linear-gradient(145deg, var(--bg-card), var(--surface));
+        border: 1.5px solid rgba(212, 168, 67, 0.3);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        flex-shrink: 0;
+      }
+      .card-flag {
+        font-size: 1rem;
+        line-height: 1;
+      }
+      .card-code {
+        font-size: 7px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 0.05em;
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* Seat info */
+      .seat-name {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-dim);
+        margin-top: 4px;
+        max-width: 56px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .seat-name.you {
+        color: var(--gold-dim);
+      }
+      .seat-name.winner-name {
+        color: var(--gold);
+      }
+
+      .chip-badge {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: 99px;
+        background: rgba(5, 10, 24, 0.85);
+        border: 1px solid rgba(212, 168, 67, 0.25);
+        margin-top: 3px;
+      }
+      .chip-badge-val {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 10px;
+        color: var(--gold-bright);
+        text-shadow: 0 0 6px rgba(212, 168, 67, 0.3);
+        line-height: 1;
+      }
+      .chip-badge-val.gaining {
+        color: var(--green-glow);
+      }
+      .chip-badge-val.losing {
+        color: var(--red);
+      }
+
+      /* YOU / SB / BB badges */
+      .blind-badge {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 2px 5px;
+        border-radius: 3px;
+        margin-top: 2px;
+        font-family: 'Inter', sans-serif;
+      }
+      .blind-badge.you {
+        background: rgba(212, 168, 67, 0.12);
+        color: var(--gold-dim);
+        border: 1px solid rgba(212, 168, 67, 0.2);
+        letter-spacing: 0.08em;
+      }
+      .blind-badge.sb {
+        background: rgba(52, 152, 219, 0.25);
+        color: #5dade2;
+        border: 1px solid rgba(52, 152, 219, 0.4);
+      }
+      .blind-badge.bb {
+        background: rgba(212, 168, 67, 0.2);
+        color: var(--gold-bright);
+        border: 1px solid rgba(212, 168, 67, 0.4);
+      }
+      .blind-badge.winner-badge {
+        background: rgba(212, 168, 67, 0.15);
+        color: var(--gold-bright);
+        border: 1px solid rgba(212, 168, 67, 0.4);
+        letter-spacing: 0.05em;
+      }
+
+      /* Action badge */
+      .action-badge {
+        position: absolute;
+        top: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 9px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 8px;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        z-index: 20;
+        pointer-events: none;
+        font-family: 'Inter', sans-serif;
+      }
+      .action-badge.raise {
+        background: rgba(212, 168, 67, 0.15);
+        color: var(--gold);
+        border: 1px solid rgba(212, 168, 67, 0.3);
+      }
+      .action-badge.call {
+        background: rgba(52, 152, 219, 0.15);
+        color: var(--blue);
+        border: 1px solid rgba(52, 152, 219, 0.3);
+      }
+      .action-badge.fold {
+        background: rgba(231, 76, 60, 0.15);
+        color: var(--red);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+      }
+      .action-badge.check {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+
+      /* Folded text */
+      .folded-text {
+        font-size: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--red);
+        opacity: 0.6;
+        margin-top: 1px;
+      }
+
+      /* ── POT DISPLAY ─────────────────────────────────────────────────────── */
+      .pot-display {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        z-index: 5;
+      }
+      .pot-label {
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-family: 'Outfit', sans-serif;
+      }
+      .pot-value {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 20px;
+        color: var(--gold);
+        text-shadow: 0 0 14px rgba(212, 168, 67, 0.35);
+        line-height: 1;
+      }
+
+      /* ── FIXTURE BOARD ───────────────────────────────────────────────────── */
+      .fixture-board-container {
+        position: absolute;
+        top: 18%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(5, 10, 24, 0.55);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 5px 7px 4px;
+        z-index: 10;
+      }
+      .fixture-board-container.pulse {
+        border: 1px solid rgba(212, 168, 67, 0.45);
+        animation: fixture-board-pulse 2s ease-in-out infinite;
+      }
+      .fixture-board-container.static {
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .fixture-board-container.results {
+        border: 1px solid rgba(212, 168, 67, 0.5);
+      }
+      .fixture-board-label {
+        text-align: center;
+        font-family: 'Outfit', sans-serif;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--gold);
+        opacity: 0.7;
+        margin-bottom: 4px;
+      }
+      .fixture-tiles {
+        display: flex;
+        gap: 5px;
+      }
+      .fixture-tile {
+        width: var(--fixture-tile-w);
+        border-radius: 8px;
+        padding: 4px 3px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        transition: all 0.3s ease;
+      }
+      .fixture-tile.pending {
+        background: rgba(13, 20, 36, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .fixture-tile.finished {
+        background: rgba(13, 20, 36, 0.55);
+        border: 1px solid rgba(212, 168, 67, 0.45);
+      }
+      .fixture-tile.my-match {
+        border-color: rgba(212, 168, 67, 0.75);
+        filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.3));
+      }
+      .tile-flag {
+        font-size: 14px;
+        line-height: 1;
+      }
+      .tile-score {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 12px;
+        color: white;
+        line-height: 1;
+      }
+      .tile-score.pending {
+        color: var(--text-muted);
+        font-size: 10px;
+      }
+      .tile-team {
+        font-size: 7px;
+        font-weight: 700;
+        color: var(--text-dim);
+        font-family: 'Inter', sans-serif;
+      }
+      .tile-vs {
+        font-size: 8px;
+        color: var(--text-muted);
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      /* ── SCORE POPUP ─────────────────────────────────────────────────────── */
+      .score-popup {
+        position: absolute;
+        white-space: nowrap;
+        z-index: 25;
+        pointer-events: none;
+      }
+      .score-popup-inner {
+        background: rgba(5, 10, 24, 0.92);
+        border-radius: 10px;
+        padding: 5px 9px 5px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      }
+      .score-popup-inner.winner-pop {
+        border: 1px solid rgba(212, 168, 67, 0.5);
+        box-shadow:
+          0 6px 20px rgba(0, 0, 0, 0.6),
+          0 0 16px rgba(212, 168, 67, 0.2);
+      }
+      .score-popup-inner.loser-pop {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .score-total {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 17px;
+        line-height: 1;
+        text-align: center;
+      }
+      .score-total.winner {
+        color: var(--gold-bright);
+      }
+      .score-total.loser {
+        color: var(--text);
+      }
+      .score-breakdown {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 3px;
+        justify-content: center;
+      }
+      .score-breakdown span {
+        font-size: 10px;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-dim);
+      }
+      .score-breakdown .score-item {
+        font-weight: 600;
+      }
+      .score-breakdown .score-sep {
+        opacity: 0.4;
+      }
+
+      /* ── WAITING TEXT ─────────────────────────────────────────────────────── */
+      .waiting-text {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        color: var(--text-dim);
+        white-space: nowrap;
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        animation: blink 1.2s ease-in-out infinite;
+      }
+      .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      /* ── WINNER BANNER ───────────────────────────────────────────────────── */
+      .winner-banner {
+        position: absolute;
+        bottom: 16%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: 'Cinzel', serif;
+        font-weight: 700;
+        font-size: 17px;
+        color: var(--gold);
+        text-shadow:
+          0 0 20px rgba(212, 168, 67, 0.6),
+          0 0 40px rgba(212, 168, 67, 0.25);
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 20;
+        animation: winner-banner-pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes winner-banner-pulse {
+        0%,
+        100% {
+          text-shadow:
+            0 0 20px rgba(212, 168, 67, 0.5),
+            0 0 40px rgba(212, 168, 67, 0.2);
+        }
+        50% {
+          text-shadow:
+            0 0 30px rgba(212, 168, 67, 0.9),
+            0 0 60px rgba(212, 168, 67, 0.4);
+        }
+      }
+
+      /* ── BETTING BAR ─────────────────────────────────────────────────────── */
+      .betting-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(5, 10, 24, 0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(212, 168, 67, 0.12);
+        padding: 5px 12px 5px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .betting-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .bet-btn {
+        padding: 5px 10px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+      }
+      .bet-btn.fold {
+        background: rgba(231, 76, 60, 0.15);
+        color: var(--red);
+        border: 1px solid rgba(231, 76, 60, 0.35);
+      }
+      .bet-btn.check {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .bet-btn.call {
+        background: rgba(52, 152, 219, 0.2);
+        color: var(--blue);
+        border: 1px solid rgba(52, 152, 219, 0.4);
+        flex: 1;
+      }
+      .bet-btn.raise {
+        background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+        color: #000;
+        font-weight: 700;
+        flex: 1;
+      }
+
+      .chip-btns {
+        display: flex;
+        gap: 3px;
+      }
+      .chip-btn {
+        width: var(--chip-btn-size);
+        height: var(--chip-btn-size);
+        border-radius: 50%;
+        border: 2px solid rgba(212, 168, 67, 0.3);
+        background: rgba(5, 10, 24, 0.9);
+        color: var(--gold-bright);
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .raise-amount {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 14px;
+        color: var(--gold-bright);
+        padding: 0 6px;
+      }
+
+      .hand-preview {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .mini-card {
+        width: 26px;
+        height: 35px;
+        border-radius: 5px;
+        background: linear-gradient(145deg, var(--bg-card), var(--surface));
+        border: 1px solid rgba(212, 168, 67, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+      }
+      .mini-flag {
+        font-size: 12px;
+        line-height: 1;
+      }
+      .mini-code {
+        font-size: 5px;
+        font-weight: 700;
+        color: white;
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* ── LOADING FRAME ───────────────────────────────────────────────────── */
+      .loading-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2.5px solid var(--gold);
+        border-top-color: transparent;
+        animation: spin 0.8s linear infinite;
+      }
+
+      /* ── GAME OVER OVERLAY ───────────────────────────────────────────────── */
+      .gameover-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        background: rgba(5, 10, 24, 0.92);
+        backdrop-filter: blur(12px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px;
+      }
+      .gameover-title {
+        font-family: 'Cinzel', serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--gold);
+        text-shadow: 0 0 20px rgba(212, 168, 67, 0.5);
+        letter-spacing: 3px;
+      }
+      .gameover-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(13, 20, 36, 0.6);
+        border: 1px solid rgba(212, 168, 67, 0.15);
+        border-radius: 10px;
+        padding: 8px 14px;
+        width: 260px;
+      }
+      .gameover-rank {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 16px;
+        color: var(--text-muted);
+        width: 20px;
+        text-align: center;
+      }
+      .gameover-rank.first {
+        color: var(--gold);
+      }
+      .gameover-player {
+        flex: 1;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .gameover-chips {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 13px;
+        color: var(--gold-bright);
+      }
+
+      /* ── ANIMATIONS ──────────────────────────────────────────────────────── */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes gold-burst {
+        0% {
+          box-shadow: 0 0 0 0 rgba(212, 168, 67, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 14px rgba(212, 168, 67, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(212, 168, 67, 0);
+        }
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      @keyframes fixture-board-pulse {
+        0%,
+        100% {
+          border-color: rgba(212, 168, 67, 0.25);
+        }
+        50% {
+          border-color: rgba(212, 168, 67, 0.7);
+        }
+      }
+      @keyframes score-pop {
+        0% {
+          opacity: 0;
+          transform: scale(0.5) translateY(4px);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(1.1) translateY(-2px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-header">
+      <h1>MUNDIAL POKER — GAME UX MOCKUP</h1>
+      <p>DN1 · Mobile landscape 667×375px · All 12 frames · Doni, April 2026</p>
+      <div class="nav-pills">
+        <a class="nav-pill" href="#f1">1 Loading</a>
+        <a class="nav-pill" href="#f2">2 Waiting</a>
+        <a class="nav-pill" href="#f3">3 Dealing</a>
+        <a class="nav-pill" href="#f4">4 Betting / Not My Turn</a>
+        <a class="nav-pill" href="#f5">5 Betting / My Turn</a>
+        <a class="nav-pill" href="#f6">6 Waiting for Results</a>
+        <a class="nav-pill" href="#f7">7 Fixtures Revealing</a>
+        <a class="nav-pill" href="#f8">8 Calculating</a>
+        <a class="nav-pill" href="#f9">9 Score Reveals ★</a>
+        <a class="nav-pill" href="#f10">10 Winner ★</a>
+        <a class="nav-pill" href="#f11">11 Between Rounds</a>
+        <a class="nav-pill" href="#f12">12 Game Over</a>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 1: TABLE LOADING -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f1">
+      <div class="frame-label">Frame 1 — Table Loading</div>
+      <div class="frame">
+        <!-- Top bar -->
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">Loading...</span>
+          </div>
+        </div>
+        <!-- Center loading -->
+        <div class="loading-center">
+          <div class="spinner"></div>
+          <span style="font-size: 11px; color: var(--text-dim)">Connecting to table...</span>
+        </div>
+      </div>
+      <div class="frame-note">
+        Only frame with no pitch. Spinner keeps it alive while socket connects.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 2: WAITING FOR PLAYERS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f2">
+      <div class="frame-label">Frame 2 — Waiting for Players</div>
+      <div class="frame">
+        <!-- Top bar -->
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span style="color: var(--text-muted)">3/5</span>
+            <button class="btn-ghost-sm">+ Add Bot</button>
+            <button class="btn-primary-sm">Start Game</button>
+          </div>
+        </div>
+        <!-- Pitch -->
+        <div class="pitch">
+          <!-- Stadium table SVG -->
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- Seat 0 — bottom center (YOU) -->
+          <div
+            class="seat current-user"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap">
+              <div
+                class="avatar current-user"
+                style="
+                  background: linear-gradient(145deg, #3498db33, #3498db11);
+                  color: #3498db;
+                  border-color: var(--gold-dim);
+                "
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+            <div class="blind-badge you">YOU</div>
+          </div>
+          <!-- Seat 1 — left mid -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+          </div>
+          <!-- Seat 2 — top left -->
+          <div class="seat" style="position: absolute; top: 6%; left: 24%">
+            <div class="avatar-wrap">
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #2ecc7133, #2ecc7111);
+                  color: #2ecc71;
+                  border-color: rgba(46, 204, 113, 0.44);
+                "
+              >
+                JO
+              </div>
+            </div>
+            <div class="seat-name">joni</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+          </div>
+          <!-- Seat 3 — top right — EMPTY -->
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-empty">Empty</div>
+          </div>
+          <!-- Seat 4 — right mid — EMPTY -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; right: 5%; transform: translate(50%, -50%)"
+          >
+            <div class="avatar-empty">Empty</div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        <strong>table.status === 'WAITING'.</strong> No cards, no fixture board, no betting bar. YOU
+        badge visible on seat 0. Start Game button is active (≥2 players).
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 3: DEALING -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f3">
+      <div class="frame-label">Frame 3 — Dealing</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">950</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- Pot -->
+          <div class="pot-display">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value">50</div>
+          </div>
+          <!-- Seat 0 — bottom (YOU — face-up cards) -->
+          <div
+            class="seat current-user"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row" style="animation: card-deal 0.3s ease-out both 0s">
+                <div class="card-face-up">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div
+                class="avatar current-user"
+                style="
+                  background: linear-gradient(145deg, #3498db33, #3498db11);
+                  color: #3498db;
+                  border-color: var(--gold-dim);
+                "
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">950</span>
+            </div>
+            <div class="blind-badge you">YOU</div>
+          </div>
+          <!-- Seat 1 — face-down cards (SB) -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row" style="animation: card-deal 0.3s ease-out both 0.1s">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">975</span>
+            </div>
+            <div class="blind-badge sb">SB</div>
+          </div>
+          <!-- Seat 2 — face-down (BB) -->
+          <div class="seat" style="position: absolute; top: 6%; left: 24%">
+            <div class="avatar-wrap">
+              <div class="cards-row" style="animation: card-deal 0.3s ease-out both 0.2s">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #2ecc7133, #2ecc7111);
+                  color: #2ecc71;
+                  border-color: rgba(46, 204, 113, 0.44);
+                "
+              >
+                JO
+              </div>
+            </div>
+            <div class="seat-name">joni</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">950</span>
+            </div>
+            <div class="blind-badge bb">BB</div>
+          </div>
+          <!-- Seat 3 — Bot face-down -->
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap">
+              <div class="cards-row" style="animation: card-deal 0.3s ease-out both 0.3s">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+          </div>
+          <!-- Seat 4 — Bot face-down -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; right: 5%; transform: translate(50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+              <div class="cards-row" style="animation: card-deal 0.3s ease-out both 0.4s">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+            </div>
+            <div class="seat-name">Bot 2</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        Cards animate in staggered by seat index. YOUR cards face-up, opponents face-down. SB/BB
+        badges appear. No fixture board yet — fixtures reveal after betting.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 4: BETTING — NOT MY TURN -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f4">
+      <div class="frame-label">Frame 4 — Betting / Not My Turn</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">950</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <div class="pot-display">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value">250</div>
+          </div>
+          <!-- Seat 0 — YOU -->
+          <div
+            class="seat current-user"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div
+                class="avatar current-user"
+                style="
+                  background: linear-gradient(145deg, #3498db33, #3498db11);
+                  color: #3498db;
+                  border-color: var(--gold-dim);
+                "
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">950</span>
+            </div>
+            <div class="blind-badge you">YOU</div>
+          </div>
+          <!-- Seat 1 — ACTIVE (mark's turn) -->
+          <div
+            class="seat active"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap" style="position: relative">
+              <div class="action-badge raise">Raise 100</div>
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <!-- Timer ring SVG -->
+              <div style="position: relative">
+                <svg
+                  width="68"
+                  height="68"
+                  class="timer-ring"
+                  style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) scale(0.71) rotate(-90deg);
+                  "
+                >
+                  <circle
+                    cx="34"
+                    cy="34"
+                    r="28"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.06)"
+                    stroke-width="3"
+                  />
+                  <circle
+                    cx="34"
+                    cy="34"
+                    r="28"
+                    fill="none"
+                    stroke="#2ecc71"
+                    stroke-width="3"
+                    stroke-dasharray="175.9"
+                    stroke-dashoffset="44"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <div
+                  class="avatar"
+                  style="
+                    background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                    color: #e74c3c;
+                    border-color: rgba(231, 76, 60, 0.44);
+                  "
+                >
+                  MA
+                </div>
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">825</span>
+            </div>
+          </div>
+          <!-- Seat 2 — folded -->
+          <div class="seat" style="position: absolute; top: 6%; left: 24%">
+            <div class="avatar-wrap">
+              <div
+                class="avatar folded"
+                style="
+                  background: linear-gradient(145deg, #2ecc7133, #2ecc7111);
+                  color: #2ecc71;
+                  border-color: rgba(46, 204, 113, 0.44);
+                "
+              >
+                JO
+              </div>
+            </div>
+            <div class="seat-name" style="opacity: 0.25">joni</div>
+            <div class="chip-badge" style="opacity: 0.25">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">900</span>
+            </div>
+            <div class="folded-text">Folded</div>
+          </div>
+          <!-- Seat 3 — Bot -->
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+          </div>
+          <!-- Seat 4 — Bot folded -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; right: 5%; transform: translate(50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="avatar bot folded" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name" style="opacity: 0.25">Bot 2</div>
+            <div class="chip-badge" style="opacity: 0.25">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+            <div class="folded-text">Folded</div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        Timer ring on Mark (active seat 1, green ~75% remaining). Action badge "Raise 100" floats
+        above him. Your cards visible, no betting bar. Folded players dimmed + grayscale. Bots use
+        🤖 emoji. No fixture board.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 5: BETTING — MY TURN -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f5">
+      <div class="frame-label">Frame 5 — Betting / My Turn</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">950</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <div class="pot-display" style="top: 42%">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value">350</div>
+          </div>
+          <!-- Seat 0 — MY TURN — timer ring red (urgent) -->
+          <div
+            class="seat active"
+            style="position: absolute; bottom: 21%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap" style="position: relative">
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div style="position: relative">
+                <svg
+                  width="68"
+                  height="68"
+                  style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) scale(0.71) rotate(-90deg);
+                  "
+                >
+                  <circle
+                    cx="34"
+                    cy="34"
+                    r="28"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.06)"
+                    stroke-width="3"
+                  />
+                  <circle
+                    cx="34"
+                    cy="34"
+                    r="28"
+                    fill="none"
+                    stroke="#e74c3c"
+                    stroke-width="3"
+                    stroke-dasharray="175.9"
+                    stroke-dashoffset="140"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <div
+                  class="avatar current-user"
+                  style="
+                    background: linear-gradient(145deg, #3498db33, #3498db11);
+                    color: #3498db;
+                    border-color: var(--gold-dim);
+                  "
+                >
+                  OR
+                </div>
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">950</span>
+            </div>
+          </div>
+          <!-- Seat 1 -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">825</span>
+            </div>
+          </div>
+          <!-- Seat 3 — Bot -->
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">1000</span>
+            </div>
+          </div>
+        </div>
+        <!-- Betting bar -->
+        <div class="betting-bar">
+          <div class="betting-row" style="gap: 5px; justify-content: space-between">
+            <div class="hand-preview">
+              <div class="mini-card">
+                <span class="mini-flag">🇧🇷</span><span class="mini-code">BRA</span>
+              </div>
+              <div class="mini-card">
+                <span class="mini-flag">🇩🇪</span><span class="mini-code">GER</span>
+              </div>
+            </div>
+            <div class="betting-row" style="flex: 1; justify-content: center; gap: 5px">
+              <button class="bet-btn fold">Fold</button>
+              <button class="bet-btn call">Call 100</button>
+              <button class="bet-btn raise">Raise ▲</button>
+            </div>
+          </div>
+          <div class="betting-row" style="justify-content: center; gap: 4px">
+            <div class="chip-btns">
+              <div class="chip-btn">5</div>
+              <div class="chip-btn">10</div>
+              <div class="chip-btn">25</div>
+              <div class="chip-btn">50</div>
+              <div class="chip-btn">100</div>
+              <div class="chip-btn">200</div>
+            </div>
+            <span class="raise-amount">+200</span>
+            <button
+              style="
+                padding: 4px 12px;
+                border-radius: 8px;
+                background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+                color: #000;
+                font-weight: 700;
+                font-size: 10px;
+                border: none;
+                cursor: pointer;
+                font-family: 'Outfit', sans-serif;
+              "
+            >
+              Raise 300
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        Timer ring RED (under 5s). Betting bar slides up from bottom. Chip denomination buttons at
+        32px. Raise amount shows +200. Seat 0 lifts up to sit above betting bar.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 6: WAITING FOR RESULTS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="section-divider">★ Key Frames ★</div>
+    <div class="frame-block" id="f6">
+      <div class="frame-label">Frame 6 — Waiting for Results</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">750</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- Fixture board — pulsing, pending state -->
+          <div class="fixture-board-container pulse" style="top: 14%">
+            <div class="fixture-board-label">Live Fixtures</div>
+            <div class="fixture-tiles">
+              <div class="fixture-tile pending">
+                <span class="tile-flag">🇧🇷</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-vs">vs</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-flag">🇩🇪</span>
+                <div class="tile-team">BRA · GER</div>
+              </div>
+              <div class="fixture-tile pending">
+                <span class="tile-flag">🇫🇷</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-vs">vs</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-flag">🇦🇷</span>
+                <div class="tile-team">FRA · ARG</div>
+              </div>
+              <div class="fixture-tile pending">
+                <span class="tile-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-vs">vs</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-flag">🇪🇸</span>
+                <div class="tile-team">ENG · ESP</div>
+              </div>
+            </div>
+          </div>
+          <!-- Waiting text -->
+          <div class="waiting-text" style="top: 62%">
+            <span>Waiting for match results</span>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+          <!-- Pot -->
+          <div class="pot-display" style="top: 78%">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value">500</div>
+          </div>
+          <!-- Seats — compact, no timers -->
+          <div
+            class="seat current-user"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div
+                class="avatar current-user"
+                style="
+                  background: linear-gradient(145deg, #3498db33, #3498db11);
+                  color: #3498db;
+                  border-color: var(--gold-dim);
+                "
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">750</span>
+            </div>
+            <div class="blind-badge you">YOU</div>
+          </div>
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">875</span>
+            </div>
+          </div>
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">875</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        <strong>"LIVE FIXTURES" label is doing the UX work.</strong> Without it, players don't know
+        what they're looking at. Board pulses gold — animated in CSS. Three pending tiles show
+        dashes. Waiting dots animate below.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 7: FIXTURES REVEALING -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f7">
+      <div class="frame-label">Frame 7 — Fixtures Revealing</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">750</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- Fixture board — 1 in, 2 pending, 1 is MY fixture -->
+          <div class="fixture-board-container pulse" style="top: 14%">
+            <div class="fixture-board-label">Live Fixtures</div>
+            <div class="fixture-tiles">
+              <div
+                class="fixture-tile finished my-match"
+                style="animation: tile-reveal 0.3s ease-out both"
+              >
+                <span class="tile-flag">🇧🇷</span>
+                <span class="tile-score">2</span>
+                <span class="tile-vs">–</span>
+                <span class="tile-score">1</span>
+                <span class="tile-flag">🇩🇪</span>
+                <div class="tile-team" style="color: var(--gold-dim)">BRA · GER ★</div>
+              </div>
+              <div
+                class="fixture-tile finished"
+                style="animation: tile-reveal 0.3s ease-out both 0.15s"
+              >
+                <span class="tile-flag">🇫🇷</span>
+                <span class="tile-score">0</span>
+                <span class="tile-vs">–</span>
+                <span class="tile-score">3</span>
+                <span class="tile-flag">🇦🇷</span>
+                <div class="tile-team">FRA · ARG</div>
+              </div>
+              <div class="fixture-tile pending">
+                <span class="tile-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-vs">vs</span>
+                <span class="tile-score pending">–</span>
+                <span class="tile-flag">🇪🇸</span>
+                <div class="tile-team">ENG · ESP</div>
+              </div>
+            </div>
+          </div>
+          <div class="waiting-text" style="top: 62%">
+            <span>Waiting for results</span>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+          <div class="pot-display" style="top: 78%">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value">500</div>
+          </div>
+          <!-- Seats -->
+          <div
+            class="seat current-user"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div
+                class="avatar current-user"
+                style="
+                  background: linear-gradient(145deg, #3498db33, #3498db11);
+                  color: #3498db;
+                  border-color: var(--gold-dim);
+                "
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">750</span>
+            </div>
+            <div class="blind-badge you">YOU</div>
+          </div>
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">875</span>
+            </div>
+          </div>
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">875</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        BRA–GER came in (YOUR fixture — gold border + glow). FRA–ARG came in. ENG–ESP still pending.
+        Results animate in via tile-reveal. Your seat shows BRA and GER cards — player knows their
+        stake immediately.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 8: CALCULATING -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f8">
+      <div class="frame-label">Frame 8 — Calculating Scores</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">750</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- Fixture board — all results in, static gold border -->
+          <div class="fixture-board-container results" style="top: 14%">
+            <div class="fixture-board-label">Live Fixtures</div>
+            <div class="fixture-tiles">
+              <div class="fixture-tile finished my-match">
+                <span class="tile-flag">🇧🇷</span><span class="tile-score">2</span
+                ><span class="tile-vs">–</span><span class="tile-score">1</span
+                ><span class="tile-flag">🇩🇪</span>
+                <div class="tile-team" style="color: var(--gold-dim)">BRA · GER ★</div>
+              </div>
+              <div class="fixture-tile finished">
+                <span class="tile-flag">🇫🇷</span><span class="tile-score">0</span
+                ><span class="tile-vs">–</span><span class="tile-score">3</span
+                ><span class="tile-flag">🇦🇷</span>
+                <div class="tile-team">FRA · ARG</div>
+              </div>
+              <div class="fixture-tile finished">
+                <span class="tile-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="tile-score">1</span
+                ><span class="tile-vs">–</span><span class="tile-score">1</span
+                ><span class="tile-flag">🇪🇸</span>
+                <div class="tile-team">ENG · ESP</div>
+              </div>
+            </div>
+          </div>
+          <div class="waiting-text" style="top: 62%; gap: 6px">
+            <div class="spinner" style="width: 10px; height: 10px; border-width: 2px"></div>
+            <span>Calculating scores...</span>
+          </div>
+          <div class="pot-display" style="top: 78%">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value">500</div>
+          </div>
+          <!-- Seats -->
+          <div
+            class="seat current-user"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div
+                class="avatar current-user"
+                style="
+                  background: linear-gradient(145deg, #3498db33, #3498db11);
+                  color: #3498db;
+                  border-color: var(--gold-dim);
+                "
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">750</span>
+            </div>
+            <div class="blind-badge you">YOU</div>
+          </div>
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">875</span>
+            </div>
+          </div>
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-down">🂠</div>
+                <div class="card-face-down">🂠</div>
+              </div>
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val">875</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        All 3 fixtures resolved — board pulse stopped, static gold border. Spinner + "Calculating
+        scores..." replaces the waiting dots. Typically very short — may flash past on fast
+        connections.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 9: SCORE REVEALS ★ -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f9">
+      <div class="frame-label">Frame 9 — Score Reveals ★ Emotional Peak</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">750</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- Fixture board — all results -->
+          <div class="fixture-board-container results" style="top: 10%">
+            <div class="fixture-board-label">Live Fixtures</div>
+            <div class="fixture-tiles">
+              <div class="fixture-tile finished my-match">
+                <span class="tile-flag">🇧🇷</span><span class="tile-score">2</span
+                ><span class="tile-vs">–</span><span class="tile-score">1</span
+                ><span class="tile-flag">🇩🇪</span>
+                <div class="tile-team" style="color: var(--gold-dim)">BRA · GER ★</div>
+              </div>
+              <div class="fixture-tile finished">
+                <span class="tile-flag">🇫🇷</span><span class="tile-score">0</span
+                ><span class="tile-vs">–</span><span class="tile-score">3</span
+                ><span class="tile-flag">🇦🇷</span>
+                <div class="tile-team">FRA · ARG</div>
+              </div>
+              <div class="fixture-tile finished">
+                <span class="tile-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="tile-score">1</span
+                ><span class="tile-vs">–</span><span class="tile-score">1</span
+                ><span class="tile-flag">🇪🇸</span>
+                <div class="tile-team">ENG · ESP</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seat 0 — YOU — score popup extends UP — WINNER -->
+          <div
+            class="seat winner"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <!-- Score popup UP (seat 0 default) -->
+            <div
+              class="score-popup"
+              style="
+                bottom: calc(100% + 6px);
+                left: 50%;
+                transform: translateX(-50%);
+                animation: score-pop 0.4s ease-out both;
+              "
+            >
+              <div class="score-popup-inner winner-pop">
+                <div class="score-total winner">42 PTS</div>
+                <div class="score-breakdown">
+                  <span class="score-item" style="color: var(--green-glow)">BRA W</span
+                  ><span style="color: var(--gold)"> +18</span>
+                  <span class="score-sep">|</span>
+                  <span class="score-item" style="color: var(--red)">GER L</span
+                  ><span style="color: var(--text-dim)"> +8</span>
+                </div>
+              </div>
+            </div>
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-up" style="border-color: rgba(212, 168, 67, 0.5)">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up" style="border-color: rgba(212, 168, 67, 0.5)">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div
+                class="avatar winner-av"
+                style="background: linear-gradient(145deg, #3498db33, #3498db11); color: #3498db"
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name winner-name">orel</div>
+            <div class="chip-badge" style="border-color: rgba(212, 168, 67, 0.5)">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val gaining">750</span>
+            </div>
+            <div class="blind-badge winner-badge">YOU</div>
+          </div>
+
+          <!-- Seat 1 — mark — score popup extends RIGHT-UP (seat 1 rule) -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap" style="position: relative">
+              <!-- Popup RIGHT for seat 1 -->
+              <div
+                class="score-popup"
+                style="
+                  bottom: 60%;
+                  left: calc(100% + 4px);
+                  transform: none;
+                  animation: score-pop 0.4s ease-out both 0.2s;
+                "
+              >
+                <div class="score-popup-inner loser-pop">
+                  <div class="score-total loser">28 PTS</div>
+                  <div class="score-breakdown">
+                    <span class="score-item" style="color: var(--gold)">ARG W</span
+                    ><span style="color: var(--text-dim)"> +15</span>
+                    <span class="score-sep">|</span>
+                    <span class="score-item" style="color: var(--text-muted)">ENG D</span
+                    ><span style="color: var(--text-muted)"> +8</span>
+                  </div>
+                </div>
+              </div>
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇦🇷</span><span class="card-code">ARG</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="card-code">ENG</span>
+                </div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val losing">875</span>
+            </div>
+          </div>
+
+          <!-- Seat 3 — Bot — score popup extends DOWN (seat 3 rule) -->
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap" style="position: relative">
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇫🇷</span><span class="card-code">FRA</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🇪🇸</span><span class="card-code">ESP</span>
+                </div>
+              </div>
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <!-- Score popup DOWN for seat 3 (top-right) -->
+            <div
+              class="score-popup"
+              style="
+                top: calc(100% + 4px);
+                bottom: auto;
+                left: 50%;
+                transform: translateX(-50%);
+                animation: score-pop 0.4s ease-out both 0.4s;
+              "
+            >
+              <div class="score-popup-inner loser-pop">
+                <div class="score-total loser">22 PTS</div>
+                <div class="score-breakdown">
+                  <span class="score-item" style="color: var(--red)">FRA L</span
+                  ><span style="color: var(--text-dim)"> +5</span>
+                  <span class="score-sep">|</span>
+                  <span class="score-item" style="color: var(--text-muted)">ESP D</span
+                  ><span style="color: var(--text-muted)"> +8</span>
+                </div>
+              </div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val losing">875</span>
+            </div>
+          </div>
+
+          <div class="pot-display" style="top: 75%">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value">500</div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        <strong>Directional popups:</strong> Seat 0 (bottom) extends UP. Seat 1 (left) extends
+        RIGHT. Seat 3 (top-right) extends DOWN — critical, prevents viewport clip. Opponent cards
+        flip face-up. YOUR 42 PTS wins this round. Table always visible.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 10: WINNER ANNOUNCEMENT ★ -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f10">
+      <div class="frame-label">Frame 10 — Winner Announcement ★</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">1</span></span>
+            <span>Chips <span class="chip-val">1250</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- Winner banner — on table, NOT an overlay -->
+          <div class="winner-banner">orel wins! 🏆</div>
+          <!-- Fixture board -->
+          <div class="fixture-board-container results" style="top: 10%">
+            <div class="fixture-board-label">Live Fixtures</div>
+            <div class="fixture-tiles">
+              <div class="fixture-tile finished my-match">
+                <span class="tile-flag">🇧🇷</span><span class="tile-score">2</span
+                ><span class="tile-vs">–</span><span class="tile-score">1</span
+                ><span class="tile-flag">🇩🇪</span>
+                <div class="tile-team" style="color: var(--gold-dim)">BRA · GER ★</div>
+              </div>
+              <div class="fixture-tile finished">
+                <span class="tile-flag">🇫🇷</span><span class="tile-score">0</span
+                ><span class="tile-vs">–</span><span class="tile-score">3</span
+                ><span class="tile-flag">🇦🇷</span>
+                <div class="tile-team">FRA · ARG</div>
+              </div>
+              <div class="fixture-tile finished">
+                <span class="tile-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="tile-score">1</span
+                ><span class="tile-vs">–</span><span class="tile-score">1</span
+                ><span class="tile-flag">🇪🇸</span>
+                <div class="tile-team">ENG · ESP</div>
+              </div>
+            </div>
+          </div>
+          <!-- Seat 0 — WINNER -->
+          <div
+            class="seat winner"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <!-- Score popup still visible -->
+            <div
+              class="score-popup"
+              style="bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%)"
+            >
+              <div class="score-popup-inner winner-pop">
+                <div class="score-total winner">42 PTS</div>
+                <div class="score-breakdown">
+                  <span class="score-item" style="color: var(--green-glow)">BRA W</span
+                  ><span style="color: var(--gold)"> +18</span>
+                  <span class="score-sep">|</span>
+                  <span class="score-item" style="color: var(--red)">GER L</span
+                  ><span style="color: var(--text-dim)"> +8</span>
+                </div>
+              </div>
+            </div>
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-up" style="border-color: rgba(212, 168, 67, 0.5)">
+                  <span class="card-flag">🇧🇷</span><span class="card-code">BRA</span>
+                </div>
+                <div class="card-face-up" style="border-color: rgba(212, 168, 67, 0.5)">
+                  <span class="card-flag">🇩🇪</span><span class="card-code">GER</span>
+                </div>
+              </div>
+              <div
+                class="avatar winner-av"
+                style="background: linear-gradient(145deg, #3498db33, #3498db11); color: #3498db"
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name winner-name">orel</div>
+            <div class="chip-badge" style="border-color: rgba(212, 168, 67, 0.5)">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val gaining">1250</span>
+            </div>
+            <div class="blind-badge winner-badge">YOU</div>
+          </div>
+          <!-- Seat 1 — mark, loser visible -->
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div class="cards-row">
+                <div class="card-face-up">
+                  <span class="card-flag">🇦🇷</span><span class="card-code">ARG</span>
+                </div>
+                <div class="card-face-up">
+                  <span class="card-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="card-code">ENG</span>
+                </div>
+              </div>
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val losing">625</span>
+            </div>
+          </div>
+          <div class="pot-display" style="top: 75%">
+            <div class="pot-label">Pot</div>
+            <div class="pot-value" style="color: var(--green-glow)">→ Orel</div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        <strong>No full-screen overlay.</strong> Winner banner is inline on the table — Cinzel font,
+        gold glow, pulsing. Winner chip count already updated (1250). Loser chips already deducted
+        (625). Table stays visible throughout.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 11: BETWEEN ROUNDS -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f11">
+      <div class="frame-label">Frame 11 — Between Rounds</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+          <div class="top-bar-right">
+            <span>Round <span class="round-val">—</span></span>
+            <span>Chips <span class="chip-val">1250</span></span>
+          </div>
+        </div>
+        <div class="pitch">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="210"
+              ry="115"
+              fill="none"
+              stroke="rgba(255,255,255,0.07)"
+              stroke-width="1.5"
+            />
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="60"
+              ry="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="1"
+            />
+            <line
+              x1="271"
+              y1="24"
+              x2="271"
+              y2="314"
+              stroke="rgba(255,255,255,0.05)"
+              stroke-width="1"
+            />
+          </svg>
+          <!-- No fixture board, no cards, no popups, no banner — all faded out -->
+          <div class="pot-display">
+            <div class="pot-label">Next Round</div>
+            <div
+              class="pot-value"
+              style="
+                font-size: 14px;
+                color: var(--text-dim);
+                animation: blink 1.5s ease-in-out infinite;
+              "
+            >
+              Preparing...
+            </div>
+          </div>
+          <!-- Seat 0 — YOU — chips updated green flash moment -->
+          <div
+            class="seat current-user"
+            style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%)"
+          >
+            <div class="avatar-wrap">
+              <div
+                class="avatar current-user"
+                style="
+                  background: linear-gradient(145deg, #3498db33, #3498db11);
+                  color: #3498db;
+                  border-color: var(--gold-dim);
+                "
+              >
+                OR
+              </div>
+            </div>
+            <div class="seat-name you">orel</div>
+            <div class="chip-badge" style="border-color: rgba(46, 204, 113, 0.5)">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val gaining">1250</span>
+            </div>
+            <div class="blind-badge you">YOU</div>
+          </div>
+          <div
+            class="seat"
+            style="position: absolute; top: 38%; left: 5%; transform: translate(-50%, -50%)"
+          >
+            <div class="avatar-wrap">
+              <div
+                class="avatar"
+                style="
+                  background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                  color: #e74c3c;
+                  border-color: rgba(231, 76, 60, 0.44);
+                "
+              >
+                MA
+              </div>
+            </div>
+            <div class="seat-name">mark</div>
+            <div class="chip-badge" style="border-color: rgba(231, 76, 60, 0.4)">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val losing">625</span>
+            </div>
+          </div>
+          <div class="seat" style="position: absolute; top: 6%; right: 24%">
+            <div class="avatar-wrap">
+              <div class="avatar bot" style="font-size: 21px">🤖</div>
+            </div>
+            <div class="seat-name">Bot 1</div>
+            <div class="chip-badge" style="border-color: rgba(231, 76, 60, 0.4)">
+              <svg width="12" height="12" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="30" fill="#d4a843" />
+                <circle cx="32" cy="32" r="23" fill="#050a18" />
+                <text
+                  x="32"
+                  y="37"
+                  text-anchor="middle"
+                  font-size="14"
+                  fill="#f0d060"
+                  font-family="Georgia"
+                  font-weight="700"
+                >
+                  MP
+                </text></svg
+              ><span class="chip-badge-val losing">625</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">
+        Cards cleared. Fixture board gone. Score popups + winner banner faded out. Chip badges show
+        post-round balances — green border on winner, red border on losers (0.8s flash).
+        "Preparing..." pulses while server queues next deal.
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- FRAME 12: GAME OVER -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="frame-block" id="f12">
+      <div class="frame-label">Frame 12 — Game Over (COMPLETED)</div>
+      <div class="frame">
+        <div class="top-bar">
+          <div class="top-bar-left">
+            <button class="btn-ghost-sm">← Leave</button>
+            <span class="table-title">HIGH STAKES</span>
+          </div>
+        </div>
+        <div class="pitch" style="opacity: 0.2">
+          <svg class="pitch-svg" viewBox="0 0 542 339" preserveAspectRatio="none">
+            <ellipse
+              cx="271"
+              cy="169"
+              rx="250"
+              ry="145"
+              fill="#1a6e3a"
+              stroke="#27ae60"
+              stroke-width="2"
+              opacity="0.85"
+            />
+          </svg>
+        </div>
+        <!-- GameOverOverlay — only full-screen cover in the entire spec -->
+        <div class="gameover-overlay">
+          <div class="gameover-title">GAME OVER</div>
+          <div
+            style="font-size: 11px; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 1px"
+          >
+            FINAL STANDINGS
+          </div>
+          <div
+            class="gameover-row"
+            style="border-color: rgba(212, 168, 67, 0.35); background: rgba(212, 168, 67, 0.05)"
+          >
+            <div class="gameover-rank first">1</div>
+            <div
+              class="avatar"
+              style="
+                width: 28px;
+                height: 28px;
+                background: linear-gradient(145deg, #3498db33, #3498db11);
+                color: #3498db;
+                border-color: var(--gold);
+                font-size: 9px;
+                font-family: 'Outfit', sans-serif;
+                font-weight: 900;
+              "
+            >
+              OR
+            </div>
+            <div class="gameover-player" style="color: var(--gold)">orel</div>
+            <div class="gameover-chips" style="color: var(--gold-bright)">2500</div>
+          </div>
+          <div class="gameover-row">
+            <div class="gameover-rank">2</div>
+            <div
+              class="avatar"
+              style="
+                width: 28px;
+                height: 28px;
+                background: linear-gradient(145deg, #e74c3c33, #e74c3c11);
+                color: #e74c3c;
+                border-color: rgba(231, 76, 60, 0.44);
+                font-size: 9px;
+                font-family: 'Outfit', sans-serif;
+                font-weight: 900;
+              "
+            >
+              MA
+            </div>
+            <div class="gameover-player">mark</div>
+            <div class="gameover-chips" style="color: var(--text-dim)">0</div>
+          </div>
+          <div class="gameover-row">
+            <div class="gameover-rank">3</div>
+            <div
+              class="avatar"
+              style="
+                width: 28px;
+                height: 28px;
+                background: linear-gradient(
+                  145deg,
+                  rgba(155, 89, 182, 0.2),
+                  rgba(155, 89, 182, 0.07)
+                );
+                border-color: rgba(155, 89, 182, 0.5);
+                font-size: 16px;
+              "
+            >
+              🤖
+            </div>
+            <div class="gameover-player">Bot 1</div>
+            <div class="gameover-chips" style="color: var(--text-dim)">0</div>
+          </div>
+          <button class="btn-ghost-sm" style="margin-top: 8px; padding: 6px 20px; font-size: 11px">
+            ← Back to Lobby
+          </button>
+        </div>
+      </div>
+      <div class="frame-note">
+        <strong>Only frame with full-screen overlay.</strong> GameOverOverlay is the existing
+        component — not modified. Table is over; no reason to see it. Bot avatar renders 🤖 in the
+        standings too.
+      </div>
+    </div>
+
+    <div
+      style="text-align: center; padding: 40px 16px; font-size: 0.65rem; color: var(--text-muted)"
+    >
+      Mundial Poker — DN1 Mockup · Doni, April 2026 · For implementation reference only
+    </div>
+  </body>
+</html>
