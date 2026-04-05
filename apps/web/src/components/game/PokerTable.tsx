@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { TablePlayer, TeamCard } from '@wpc/shared'
+import type { TablePlayer } from '@wpc/shared'
 import { useGameStore } from '@/stores/gameStore'
 import type { RoundWinnerData } from '@/stores/gameStore'
 import { PlayerSeat } from './PlayerSeat'
@@ -19,7 +19,6 @@ interface PokerTableProps {
   readonly activeTurn: ActiveTurn | null
   readonly fixtures: readonly unknown[]
   readonly pot: number
-  readonly myHand: readonly TeamCard[] | null
   readonly waitingForResults: boolean
   readonly isInRound: boolean
 }
@@ -178,7 +177,6 @@ export function PokerTable({
   activeTurn,
   fixtures,
   pot,
-  myHand,
   waitingForResults,
   isInRound,
 }: PokerTableProps) {
@@ -307,7 +305,6 @@ export function PokerTable({
             const isWinner =
               isWinnerPhase && !!player && (winnerData?.winnerIds ?? []).includes(player.userId)
             const isMe = player?.userId === currentUserId
-            const playerCards = isMe ? myHand : null
             const hasCards = isInRound && !!player && !player.isEliminated
             const blindPosition = index === sbSeatIndex ? 'SB' : index === bbSeatIndex ? 'BB' : null
 
@@ -338,7 +335,6 @@ export function PokerTable({
                     !!player && playerScoreReveals[currentRevealIndex]?.userId === player.userId
                   }
                   isWinner={isWinner}
-                  cards={playerCards}
                   hasCards={hasCards}
                   blindPosition={blindPosition}
                 />
