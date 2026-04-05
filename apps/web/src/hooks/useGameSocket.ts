@@ -12,6 +12,7 @@ import type {
 } from '@wpc/shared'
 import type { RoundCardPayload, FixtureResultPayload, PlayerScoredPayload } from '@wpc/shared'
 import type { ShowdownPhase } from '@/stores/gameStore'
+import { playSound } from '@/utils/sound'
 
 // C1 fix: use confederation from payload; falls back to 'UEFA' until Soni adds the field (TODO S4)
 function toTeamCard(c: RoundCardPayload): TeamCard {
@@ -236,6 +237,7 @@ export function useGameSocket(tableId: string) {
     })
 
     socket.on('bet:update', (payload) => {
+      playSound('bet')
       store.getState().setPlayerAction(payload.userId, {
         action: payload.action,
         amount: payload.amount,
@@ -280,6 +282,7 @@ export function useGameSocket(tableId: string) {
 
     // J12: S6 progressive showdown events
     socket.on('fixture:result', (result) => {
+      playSound('score')
       store.getState().addFixtureResult(result)
       store.getState().setShowdownPhase('fixtures')
     })
@@ -299,6 +302,7 @@ export function useGameSocket(tableId: string) {
     })
 
     socket.on('round:winner', (data) => {
+      playSound('winner')
       store.getState().setWinnerData(data)
       store.getState().setShowdownPhase('winner')
       winnerShownAtRef.current = Date.now()
