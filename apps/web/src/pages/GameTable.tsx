@@ -98,6 +98,11 @@ export function GameTable() {
 
   useEffect(() => {
     resetShowdownPhase()
+    // Attempt landscape lock — browser may deny on desktop or non-fullscreen; swallow silently
+    // lock() is a non-standard extension not in TypeScript's lib — cast to access it safely
+    ;(screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> })
+      ?.lock?.('landscape')
+      ?.catch(() => {})
     return () => {
       reset()
     }
@@ -105,6 +110,9 @@ export function GameTable() {
 
   const [botLoading, setBotLoading] = useState(false)
   const [portraitHintDismissed, setPortraitHintDismissed] = useState(false)
+  const [a2hsDismissed, setA2hsDismissed] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem('wpc-a2hs-dismissed') === '1',
+  )
 
   if (!tableId) {
     navigate('/lobby')
@@ -114,6 +122,11 @@ export function GameTable() {
   const handleLeave = () => {
     leaveTable()
     navigate('/lobby')
+  }
+
+  const handleA2hsDismiss = () => {
+    localStorage.setItem('wpc-a2hs-dismissed', '1')
+    setA2hsDismissed(true)
   }
 
   const handleAddBot = async () => {
@@ -162,6 +175,29 @@ export function GameTable() {
             className="wpc-btn-ghost text-xs py-1 px-4 mt-2"
           >
             Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Add to Home Screen banner — shown once, dismissed persistently via localStorage */}
+      {!a2hsDismissed && (
+        <div
+          className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2"
+          style={{
+            background: 'rgba(5,10,24,0.92)',
+            backdropFilter: 'blur(12px)',
+            borderTop: '1px solid rgba(212,168,67,0.25)',
+          }}
+        >
+          <span className="text-xs font-outfit" style={{ color: 'var(--text-dim)' }}>
+            Add to Home Screen for the full-screen experience
+          </span>
+          <button
+            onClick={handleA2hsDismiss}
+            className="wpc-btn-ghost text-xs py-1 px-3 ml-3"
+            style={{ flexShrink: 0 }}
+          >
+            Got it
           </button>
         </div>
       )}
