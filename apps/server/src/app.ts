@@ -87,9 +87,6 @@ async function start(): Promise<void> {
     ensureBotsExist().catch((err) =>
       console.error('App - ensureBotsExist - failed', { error: err }),
     )
-    cleanupStaleTables().catch((err) =>
-      console.error('App - cleanupStaleTables - failed', { error: err }),
-    )
   })
 }
 
