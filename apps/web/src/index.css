@@ -380,7 +380,7 @@ input {
 
 @media (max-height: 500px) and (orientation: landscape) {
   :root {
-    --avatar-size: 40px;
+    --avatar-size: 32px;
     --card-w: 44px;
     --card-h: 62px;
     --card-flag-size: 1rem;
