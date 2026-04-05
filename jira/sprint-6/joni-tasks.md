@@ -38,6 +38,7 @@ The fixture board is invisible on mobile. It blends into the pitch. This is the 
 4. The container is a NEW wrapper div — don't modify `FixtureBoard.tsx` internals.
 
 ### Deliverables
+
 - [x] Glassmorphism container with "LIVE FIXTURES" label
 - [x] Positioned in upper pitch, not overlapping any seat
 - [x] Border pulses gold during fixture:result phase
@@ -56,6 +57,7 @@ Player cards currently sit on the pitch overlapping fixtures. Move them to a fix
 ### Requirements
 
 1. Create a fixed-height bottom dock (above betting controls):
+
    ```
    ┌─────────────────────────────────────┐
    │   [🇰🇷 KOR]  [🇦🇺 AUS]  │ 💰 490  │
@@ -75,6 +77,7 @@ Player cards currently sit on the pitch overlapping fixtures. Move them to a fix
 6. Mobile: dock is ~44px for cards + ~44px for controls = ~88px total bottom area.
 
 ### Deliverables
+
 - [x] Player cards in fixed bottom shelf
 - [x] Cards never overlap pitch/fixtures
 - [x] Chip count visible next to cards
@@ -108,6 +111,7 @@ Avatars, names, chip counts, and badges currently draw on the pitch. Move them t
 4. Mobile: reduce avatar size if needed (40px → 32px) to fit on rail.
 
 ### Deliverables
+
 - [x] All player info on rail/outside pitch
 - [x] Pitch is sacred — only fixtures + pot
 - [x] Badge priority system (1 secondary max)
@@ -126,6 +130,7 @@ Replace the static "Round N" text with a phase-aware badge.
 ### Requirements
 
 1. Replace `Round {N}` in `GameTable.tsx` top bar with:
+
    ```
    ┌──────────────────┐
    │ Round 1           │
@@ -145,6 +150,7 @@ Replace the static "Round N" text with a phase-aware badge.
 4. Compact on mobile: single line `"R1 · BETTING"` if space is tight.
 
 ### Deliverables
+
 - [x] Phase badge with color-coded state
 - [x] Updates in real-time as phase transitions
 - [x] Readable on mobile
@@ -176,6 +182,7 @@ Score popups clip above viewport for top seats. Fix with directional positioning
    `"W+5 HS+4 CS+2 = 11"`
 
 ### Deliverables
+
 - [x] No viewport clipping on any seat
 - [x] Correct direction per seat position
 - [x] Readable at 100px on mobile
@@ -194,6 +201,7 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
 ### Requirements
 
 1. Create `apps/web/public/manifest.json`:
+
    ```json
    {
      "name": "Mundial Poker",
@@ -208,21 +216,25 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
    ```
 
 2. Add to `index.html`:
+
    ```html
-   <link rel="manifest" href="/manifest.json">
-   <meta name="apple-mobile-web-app-capable" content="yes">
-   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+   <link rel="manifest" href="/manifest.json" />
+   <meta name="apple-mobile-web-app-capable" content="yes" />
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
    ```
 
 3. Screen orientation lock on game pages:
+
    ```typescript
    screen.orientation?.lock('landscape').catch(() => {})
    ```
+
    Call this in `GameTable.tsx` on mount.
 
 4. "Add to Home Screen" banner: show a dismissible prompt on first visit suggesting users add to home screen for full-screen experience.
 
 ### Deliverables
+
 - [x] PWA manifest with landscape orientation
 - [x] Full-screen mode when launched from home screen
 - [x] Orientation lock attempt on game pages
@@ -245,6 +257,7 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
 3. Remove the timer bar from `BettingControls.tsx` on mobile. Keep just the countdown text "12s" in the controls.
 
 ### Deliverables
+
 - [x] YOU label on seat 0, always visible
 - [x] One timer display only (ring on seat)
 - [x] Timer text in controls (no bar on mobile)
@@ -255,7 +268,7 @@ Chrome address bar eats precious vertical space. PWA mode fixes this.
 
 Update after EVERY task. Clodi reads this in real-time.
 
-| Task | Status | PR  | Deployed |
+| Task | Status | PR | Deployed |
 |------|--------|-----|----------|\
 | J24 | ✅ PR open | #11 | pending merge |
 | J25 | ✅ PR open | #15 | pending merge |
