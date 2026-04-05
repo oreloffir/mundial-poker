@@ -17,7 +17,7 @@
     "format:check": "prettier --check .",
     "typecheck": "pnpm --filter @wpc/shared typecheck && pnpm --filter server typecheck && pnpm --filter web typecheck",
     "test": "pnpm --filter @wpc/shared test && pnpm --filter server test && pnpm --filter web test",
-    "prepare": "husky"
+    "prepare": "[ \"$NODE_ENV\" = \"production\" ] || husky"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
