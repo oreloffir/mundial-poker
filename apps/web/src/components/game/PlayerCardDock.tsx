@@ -2,6 +2,7 @@ import type { TeamCard } from '@wpc/shared'
 import { PokerChip } from '@/components/shared/PokerChip'
 import { getAvatarColor } from '@/utils/avatarColor'
 import type { PlayerScoredData, CardScoreData } from '@/stores/gameStore'
+import { useGameStore } from '@/stores/gameStore'
 
 interface PlayerCardDockProps {
   readonly cards: readonly TeamCard[] | null
@@ -30,11 +31,33 @@ const RESULT_COLOR: Record<string, string> = {
 function DockCard({
   card,
   scoreCard,
+  cardIndex,
+  isFixtureRevealed,
 }: {
   readonly card: TeamCard
   readonly scoreCard?: CardScoreData
+  readonly cardIndex: number
+  readonly isFixtureRevealed: boolean
 }) {
   const res = scoreCard ? getResult(scoreCard) : null
+
+  const tether =
+    cardIndex === 0
+      ? {
+          color: 'var(--tether-a)',
+          pulseAnim: 'tether-pulse-a 2.4s ease-in-out infinite',
+          flashAnim: 'card-sync-flash-a 0.5s ease-out both',
+        }
+      : {
+          color: 'var(--tether-b)',
+          pulseAnim: 'tether-pulse-b 2.4s ease-in-out infinite',
+          flashAnim: 'card-sync-flash-b 0.5s ease-out both',
+        }
+
+  const borderColor = res ? RESULT_COLOR[res] : tether.color
+  const boxShadow = res ? `0 0 8px ${RESULT_COLOR[res]}44` : undefined
+  const animation = res ? undefined : isFixtureRevealed ? tether.flashAnim : tether.pulseAnim
+
   return (
     <div
       className="flex flex-col items-center justify-center rounded-lg overflow-hidden relative"
@@ -42,11 +65,12 @@ function DockCard({
         width: 30,
         height: 42,
         background: 'linear-gradient(145deg, var(--bg-card), var(--surface))',
-        border: res ? `1.5px solid ${RESULT_COLOR[res]}` : '1.5px solid rgba(212,168,67,0.3)',
-        boxShadow: res ? `0 0 8px ${RESULT_COLOR[res]}44` : '0 2px 8px rgba(0,0,0,0.5)',
+        border: `1.5px solid ${borderColor}`,
+        boxShadow,
         flexShrink: 0,
         gap: 2,
         transition: 'border-color 0.3s ease',
+        animation,
       }}
     >
       <span style={{ fontSize: '1rem', lineHeight: 1 }}>{card.team.flagUrl}</span>
@@ -54,7 +78,7 @@ function DockCard({
         style={{
           fontSize: 7,
           fontWeight: 700,
-          color: res ? RESULT_COLOR[res] : 'white',
+          color: res ? RESULT_COLOR[res] : tether.color,
           lineHeight: 1,
           letterSpacing: '0.05em',
           transition: 'color 0.3s ease',
@@ -88,6 +112,7 @@ export function PlayerCardDock({
   isActive,
 }: PlayerCardDockProps) {
   const avatarColor = getAvatarColor(username)
+  const fixtureResults = useGameStore((s) => s.fixtureResults)
   const isWinner = scoreResult?.isWinner ?? false
 
   const borderColor = isWinner
@@ -157,9 +182,18 @@ export function PlayerCardDock({
       {/* Team card tiles — only during a round */}
       {isInRound && cards && cards.length > 0 && (
         <div className="flex gap-1.5" style={{ animation: 'card-deal 0.3s ease-out both' }}>
-          {cards.map((card) => {
+          {cards.map((card, cardIndex) => {
             const scoreCard = scoreResult?.cardScores.find((cs) => cs.teamId === card.teamId)
-            return <DockCard key={card.teamId} card={card} scoreCard={scoreCard} />
+            const isFixtureRevealed = fixtureResults.some((r) => r.fixtureId === card.fixtureId)
+            return (
+              <DockCard
+                key={card.teamId}
+                card={card}
+                scoreCard={scoreCard}
+                cardIndex={cardIndex}
+                isFixtureRevealed={isFixtureRevealed}
+              />
+            )
           })}
         </div>
       )}
