@@ -274,8 +274,8 @@ export function PlayerCardDock({
               fixture?.homeTeamId === card.teamId
                 ? fixture.awayTeam.code
                 : fixture?.awayTeam.code
-                    ? fixture.homeTeam.code
-                    : undefined
+                  ? fixture.homeTeam.code
+                  : undefined
             return (
               <DockCard
                 key={card.teamId}

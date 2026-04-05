@@ -136,13 +136,14 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                 boxShadow: isMyFixture
                   ? `0 0 14px ${tether!.glow}, 0 8px 24px rgba(0,0,0,0.5)`
                   : '0 8px 24px rgba(0,0,0,0.5)',
-                animation: isMyFixture && !finished
-                  ? `${tether!.pulseAnim} 2.4s ease-in-out infinite`
-                  : isNewResult
-                    ? 'tile-reveal 0.4s ease-out both'
-                    : !inShowdownPhase && !showAll
-                      ? 'tile-reveal 0.3s ease-out both'
-                      : undefined,
+                animation:
+                  isMyFixture && !finished
+                    ? `${tether!.pulseAnim} 2.4s ease-in-out infinite`
+                    : isNewResult
+                      ? 'tile-reveal 0.4s ease-out both'
+                      : !inShowdownPhase && !showAll
+                        ? 'tile-reveal 0.3s ease-out both'
+                        : undefined,
               }}
             >
               {/* Home team row */}
