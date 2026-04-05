@@ -36,11 +36,11 @@ const seatStyles: readonly React.CSSProperties[] = [
 // Denomination tiers: [minPot, chipColor, rimColor]
 // Chips stack bottom-to-top: highest denominations on the bottom row
 const DENOM_TIERS: ReadonlyArray<[number, string, string]> = [
-  [1, '#e8e8e8', '#bbb'],      // White  — small bets
-  [50, '#3498db', '#1a6fa0'],  // Blue   — medium
+  [1, '#e8e8e8', '#bbb'], // White  — small bets
+  [50, '#3498db', '#1a6fa0'], // Blue   — medium
   [150, '#e74c3c', '#a93226'], // Red
   [400, '#2ecc71', '#1a8a4a'], // Green
-  [800, '#2c2c2c', '#555'],    // Black
+  [800, '#2c2c2c', '#555'], // Black
   [1500, '#9b59b6', '#6c3483'], // Purple
 ]
 
