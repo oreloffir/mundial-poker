@@ -16,27 +16,36 @@ function formatChips(chips: number): string {
 
 type ShowdownPhase = 'idle' | 'waiting' | 'fixtures' | 'calculating' | 'reveals' | 'winner'
 
-const PHASE_CONFIG: Record<ShowdownPhase, { label: string; color: string; pulse: boolean; glow?: boolean }> = {
-  idle:        { label: 'BETTING',  color: 'var(--green-glow)',  pulse: true },
-  waiting:     { label: 'WAITING',  color: 'var(--gold)',        pulse: false },
-  fixtures:    { label: 'WAITING',  color: 'var(--gold)',        pulse: false },
-  calculating: { label: 'SCORING',  color: 'var(--gold-bright)', pulse: false },
-  reveals:     { label: 'SCORING',  color: 'var(--gold-bright)', pulse: false },
-  winner:      { label: 'WINNER',   color: 'var(--gold)',        pulse: false, glow: true },
+const PHASE_CONFIG: Record<
+  ShowdownPhase,
+  { label: string; color: string; pulse: boolean; glow?: boolean }
+> = {
+  idle: { label: 'BETTING', color: 'var(--green-glow)', pulse: true },
+  waiting: { label: 'WAITING', color: 'var(--gold)', pulse: false },
+  fixtures: { label: 'WAITING', color: 'var(--gold)', pulse: false },
+  calculating: { label: 'SCORING', color: 'var(--gold-bright)', pulse: false },
+  reveals: { label: 'SCORING', color: 'var(--gold-bright)', pulse: false },
+  winner: { label: 'WINNER', color: 'var(--gold)', pulse: false, glow: true },
 }
 
-function PhaseBadge({ roundNumber, phase }: { readonly roundNumber: number; readonly phase: ShowdownPhase }) {
+function PhaseBadge({
+  roundNumber,
+  phase,
+}: {
+  readonly roundNumber: number
+  readonly phase: ShowdownPhase
+}) {
   const config = PHASE_CONFIG[phase]
   return (
-    <div
-      className="flex flex-col items-end leading-none"
-      style={{ gap: 2 }}
-    >
+    <div className="flex flex-col items-end leading-none" style={{ gap: 2 }}>
       <span
         className="font-cinzel font-bold"
         style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.05em' }}
       >
-        Round <span data-testid="round-counter" style={{ color: 'var(--text)' }}>{roundNumber}</span>
+        Round{' '}
+        <span data-testid="round-counter" style={{ color: 'var(--text)' }}>
+          {roundNumber}
+        </span>
       </span>
       <span
         className="font-outfit font-black flex items-center gap-1"
