@@ -151,7 +151,13 @@ export function SeatScorePopup({ result, isCurrent, seatIndex }: SeatScorePopupP
           >
             {result.totalScore}
           </span>
-          <span style={{ fontSize: 8, color: isWinner ? 'var(--gold)' : 'var(--text-muted)', fontWeight: 600 }}>
+          <span
+            style={{
+              fontSize: 8,
+              color: isWinner ? 'var(--gold)' : 'var(--text-muted)',
+              fontWeight: 600,
+            }}
+          >
             pts
           </span>
         </div>
@@ -165,13 +171,20 @@ export function SeatScorePopup({ result, isCurrent, seatIndex }: SeatScorePopupP
                 {i > 0 && (
                   <span style={{ color: 'rgba(255,255,255,0.15)', marginRight: 4 }}>|</span>
                 )}
-                <span style={{ color: isWinner ? 'var(--gold-dim)' : 'rgba(255,255,255,0.6)', fontWeight: 700 }}>
+                <span
+                  style={{
+                    color: isWinner ? 'var(--gold-dim)' : 'rgba(255,255,255,0.6)',
+                    fontWeight: 700,
+                  }}
+                >
                   {card.team.code}
                 </span>
                 <span style={{ color: RESULT_COLOR[res], fontWeight: 700, marginLeft: 2 }}>
                   {res}
                 </span>
-                <span style={{ color: isWinner ? 'var(--gold)' : 'var(--text-muted)', marginLeft: 1 }}>
+                <span
+                  style={{ color: isWinner ? 'var(--gold)' : 'var(--text-muted)', marginLeft: 1 }}
+                >
                   +{card.totalScore}
                 </span>
               </span>

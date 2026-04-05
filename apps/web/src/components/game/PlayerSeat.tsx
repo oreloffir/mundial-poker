@@ -212,7 +212,9 @@ export function PlayerSeat({
       }}
     >
       {/* Score popup — directional per seat position (J28); extends inward to avoid viewport clip */}
-      {inShowdown && <SeatScorePopup result={scoreResult} isCurrent={isCurrent} seatIndex={player.seatIndex} />}
+      {inShowdown && (
+        <SeatScorePopup result={scoreResult} isCurrent={isCurrent} seatIndex={player.seatIndex} />
+      )}
 
       {/* Action badge */}
       {lastAction && !inShowdown && <ActionBadge {...lastAction} />}
