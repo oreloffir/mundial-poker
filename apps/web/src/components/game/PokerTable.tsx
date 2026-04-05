@@ -1,10 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { TablePlayer } from '@wpc/shared'
 import { useGameStore } from '@/stores/gameStore'
 import type { RoundWinnerData } from '@/stores/gameStore'
 import { PlayerSeat } from './PlayerSeat'
 import { FixtureBoard } from './FixtureBoard'
-import { PokerChip } from '@/components/shared/PokerChip'
 import type { RawFixture } from './FixtureBoard'
 
 interface ActiveTurn {
@@ -34,6 +33,92 @@ const seatStyles: readonly React.CSSProperties[] = [
   { top: '38%', right: '4%', transform: 'translate(50%, -50%)' },
 ]
 
+// Denomination tiers: [minPot, chipColor, rimColor]
+// Chips stack bottom-to-top: highest denominations on the bottom row
+const DENOM_TIERS: ReadonlyArray<[number, string, string]> = [
+  [1, '#e8e8e8', '#bbb'], // White  — small bets
+  [50, '#3498db', '#1a6fa0'], // Blue   — medium
+  [150, '#e74c3c', '#a93226'], // Red
+  [400, '#2ecc71', '#1a8a4a'], // Green
+  [800, '#2c2c2c', '#555'], // Black
+  [1500, '#9b59b6', '#6c3483'], // Purple
+]
+
+function getDenomColor(pot: number): string {
+  let color = DENOM_TIERS[0]![1]
+  for (const [threshold, c] of DENOM_TIERS) {
+    if (pot >= threshold) color = c
+  }
+  return color
+}
+
+function ChipPile({ pot }: { readonly pot: number }) {
+  // Build up to 8 chips across two rows based on pot size
+  const chipCount = pot > 0 ? Math.min(8, Math.max(1, Math.ceil(pot / 80))) : 0
+  if (chipCount === 0) return null
+
+  // Split into two rows: bottom row has larger chips, top row has smaller
+  const bottomCount = Math.min(chipCount, 5)
+  const topCount = chipCount - bottomCount
+
+  const getChipColor = (index: number, total: number): string => {
+    // Higher-index chips (bottom of pile) use higher denominations
+    const tierIndex = Math.floor((index / total) * (DENOM_TIERS.length - 1))
+    return DENOM_TIERS[tierIndex]?.[1] ?? DENOM_TIERS[0]![1]
+  }
+
+  return (
+    <div className="flex flex-col items-center" style={{ gap: -2 }}>
+      {/* Top row (smaller chips, overflow) */}
+      {topCount > 0 && (
+        <div className="flex" style={{ marginBottom: -4 }}>
+          {Array.from({ length: topCount }).map((_, i) => {
+            const color = getChipColor(i, topCount)
+            return (
+              <div
+                key={`top-${i}`}
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle at 35% 30%, ${color}dd, ${color}88)`,
+                  border: `1.5px solid ${color}`,
+                  boxShadow: `0 1px 3px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2)`,
+                  marginLeft: i > 0 ? -4 : 0,
+                  transform: `rotate(${(i - Math.floor(topCount / 2)) * 8}deg)`,
+                  flexShrink: 0,
+                }}
+              />
+            )
+          })}
+        </div>
+      )}
+      {/* Bottom row (main chips) */}
+      <div className="flex" style={{ zIndex: 1 }}>
+        {Array.from({ length: bottomCount }).map((_, i) => {
+          const color = getChipColor(i, bottomCount)
+          return (
+            <div
+              key={`bot-${i}`}
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                background: `radial-gradient(circle at 35% 30%, ${color}dd, ${color}88)`,
+                border: `2px solid ${color}`,
+                boxShadow: `0 2px 6px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25)`,
+                marginLeft: i > 0 ? -5 : 0,
+                transform: `rotate(${(i - Math.floor(bottomCount / 2)) * 10}deg)`,
+                flexShrink: 0,
+              }}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function PotDisplay({
   pot,
   isAnimatingOut,
@@ -42,26 +127,42 @@ function PotDisplay({
   readonly isAnimatingOut: boolean
 }) {
   const potFlashKey = useGameStore((s) => s.potFlashKey)
-  const chipCount = pot > 0 ? Math.min(5, Math.ceil(pot / 100)) : 0
+  const displayRef = useRef(pot)
+  const [displayPot, setDisplayPot] = useState(pot)
+
+  // Count-up animation when pot changes
+  useEffect(() => {
+    const from = displayRef.current
+    const to = pot
+    if (from === to) return
+    const diff = to - from
+    const duration = Math.min(600, Math.abs(diff) * 2)
+    const start = Date.now()
+
+    const tick = () => {
+      const elapsed = Date.now() - start
+      const progress = Math.min(1, elapsed / duration)
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplayPot(Math.round(from + diff * eased))
+      if (progress < 1) requestAnimationFrame(tick)
+      else {
+        setDisplayPot(to)
+        displayRef.current = to
+      }
+    }
+    requestAnimationFrame(tick)
+  }, [pot])
 
   if (pot <= 0 && !isAnimatingOut) return null
 
+  const activeColor = getDenomColor(pot)
+
   return (
     <div
-      className={`flex flex-col items-center gap-1 transition-all duration-500 ${isAnimatingOut ? 'opacity-0 scale-75' : 'opacity-100'}`}
+      className={`flex flex-col items-center gap-1.5 transition-all duration-500 ${isAnimatingOut ? 'opacity-0 scale-75' : 'opacity-100'}`}
     >
-      <div className="flex -space-x-1.5">
-        {Array.from({ length: chipCount }).map((_, i) => (
-          <PokerChip
-            key={i}
-            size={20}
-            style={{
-              transform: `rotate(${(i - 2) * 12}deg)`,
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-            }}
-          />
-        ))}
-      </div>
+      <ChipPile pot={pot} />
       {/* key={potFlashKey} forces React to remount this element each time the pot changes,
           resetting the CSS animation from frame 0 without an animation library. */}
       <span
@@ -69,12 +170,12 @@ function PotDisplay({
         data-testid="pot-total"
         className="font-outfit font-extrabold text-base"
         style={{
-          color: 'var(--gold-bright)',
-          textShadow: '0 0 20px rgba(212,168,67,0.5)',
+          color: activeColor,
+          textShadow: `0 0 20px ${activeColor}88`,
           ...(potFlashKey > 0 ? { animation: 'pot-flash 0.6s ease-in-out' } : {}),
         }}
       >
-        {pot}
+        {displayPot}
       </span>
     </div>
   )
@@ -253,10 +354,10 @@ export function PokerTable({
             </div>
           </div>
 
-          {/* Fixture board container — glassmorphism backing, visible from 'waiting' phase onward */}
-          {showdownPhase !== 'idle' && (
+          {/* Fixture board container — visible whenever fixtures exist (idle=VS state, showdown=scores) */}
+          {fixtures.length > 0 && (
             <div
-              className="absolute pointer-events-auto"
+              className="absolute pointer-events-auto fixture-board-container"
               style={{
                 top: '18%',
                 left: '50%',
@@ -307,6 +408,9 @@ export function PokerTable({
             const isMe = player?.userId === currentUserId
             const hasCards = isInRound && !!player && !player.isEliminated
             const blindPosition = index === sbSeatIndex ? 'SB' : index === bbSeatIndex ? 'BB' : null
+
+            // Seat 0 for current user lives in PlayerCardDock (J34) — skip rendering on pitch
+            if (index === 0 && isMe) return null
 
             return (
               <div

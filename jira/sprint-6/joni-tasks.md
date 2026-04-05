@@ -278,3 +278,8 @@ Update after EVERY task. Clodi reads this in real-time.
 | J29 | ✅ PR open | #20 | pending merge |
 | J30 | ✅ PR open | #21 | pending merge |
 | J31 | ✅ PR open | #14 | pending merge |
+| J34 | ✅ PR open | #22 | pending merge |
+| J35 | ✅ PR open | #23 | pending merge |
+| J32 | ✅ PR open | #24 | pending merge |
+| J33 | ✅ PR open | #25 | pending merge |
+| J36 | ✅ PR open | #26 | pending merge |
