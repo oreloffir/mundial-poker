@@ -33,7 +33,9 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
   const fixtureResults = useGameStore((s) => s.fixtureResults)
   const showdownPhase = useGameStore((s) => s.showdownPhase)
   const myHand = useGameStore((s) => s.myHand)
-  const myFixtureIds = new Set(myHand?.map((c) => c.fixtureId) ?? [])
+
+  // J43: Map fixtureId → my teamId so we can highlight just my team's row
+  const myTeamByFixture = new Map(myHand?.map((c) => [c.fixtureId, c.teamId]) ?? [])
 
   if (fixtures.length === 0) return null
 
@@ -62,7 +64,11 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         const result = resultMap.get(f.id)
         const isNewResult =
           result !== undefined && fixtureResults[fixtureResults.length - 1]?.fixtureId === f.id
-        const isMyFixture = myFixtureIds.has(f.id)
+
+        // J43: track which team is mine (home or away), not just whether fixture is mine
+        const myTeamId = myTeamByFixture.get(f.id)
+        const isMyHomeTeam = myTeamId !== undefined && myTeamId === f.homeTeamId
+        const isMyAwayTeam = myTeamId !== undefined && myTeamId === f.awayTeamId
 
         const homeGoals = result?.homeGoals ?? f.homeGoals ?? null
         const awayGoals = result?.awayGoals ?? f.awayGoals ?? null
@@ -83,6 +89,18 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
         const hasPenalties = result?.hasPenalties ?? false
         const events = finished ? getEventIcons(homeGoals!, awayGoals!, hasPenalties) : []
 
+        // Goal score color per team
+        const homeScoreColor = homeWin
+          ? 'var(--green-glow)'
+          : isDraw
+            ? 'var(--gold)'
+            : 'var(--text-muted)'
+        const awayScoreColor = awayWin
+          ? 'var(--green-glow)'
+          : isDraw
+            ? 'var(--gold)'
+            : 'var(--text-muted)'
+
         return (
           <div key={f.id} className="flex flex-col items-center gap-0.5">
             <div
@@ -92,16 +110,12 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                 background: finished ? 'rgba(13, 20, 36, 0.55)' : 'rgba(13, 20, 36, 0.4)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: isMyFixture
-                  ? '2px solid var(--gold)'
-                  : finished
-                    ? '1px solid rgba(212, 168, 67, 0.45)'
-                    : '1px solid rgba(255, 255, 255, 0.07)',
+                // J43: plain border on all tiles — no whole-tile gold highlight
+                border: finished
+                  ? '1px solid rgba(212, 168, 67, 0.45)'
+                  : '1px solid rgba(255, 255, 255, 0.07)',
                 width: 'var(--fixture-tile-w)',
-                boxShadow: isMyFixture
-                  ? '0 0 8px rgba(212,168,67,0.3), 0 8px 24px rgba(0,0,0,0.5)'
-                  : '0 8px 24px rgba(0,0,0,0.5)',
-                // Animate tile when a new result just arrived OR during old board:reveal flow
+                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                 animation: isNewResult
                   ? 'tile-reveal 0.4s ease-out both'
                   : !inShowdownPhase && !showAll
@@ -109,87 +123,101 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                     : undefined,
               }}
             >
-              {/* Home team */}
-              <div className="flex flex-col items-center pt-2 pb-1 w-full">
-                <span className="text-lg leading-none">{homeTeamFlag || '🏳️'}</span>
-                <span
-                  className="text-[8px] font-bold mt-0.5"
-                  style={{
-                    color: homeWin
-                      ? 'var(--green-glow)'
-                      : isDraw
-                        ? 'var(--gold)'
-                        : finished
-                          ? 'var(--text-muted)'
-                          : 'var(--text)',
-                  }}
-                >
-                  {homeCode}
-                </span>
-              </div>
-
-              {/* Score / VS */}
+              {/* Home team — J43: goals inline, highlight row if this is MY team */}
               <div
-                className="w-full py-1 flex items-center justify-center"
-                style={{ background: 'rgba(0,0,0,0.2)' }}
+                className="flex items-center justify-between w-full px-1.5 pt-2 pb-1"
+                style={{
+                  background: isMyHomeTeam ? 'rgba(212,168,67,0.1)' : undefined,
+                  borderLeft: isMyHomeTeam
+                    ? '2px solid rgba(212,168,67,0.6)'
+                    : '2px solid transparent',
+                }}
               >
-                {finished ? (
-                  <div className="flex items-center gap-1">
-                    <span
-                      className="font-outfit font-black text-sm"
-                      style={{
-                        color: homeWin
-                          ? 'var(--green-glow)'
-                          : isDraw
-                            ? 'var(--gold)'
-                            : 'var(--text-muted)',
-                      }}
-                    >
-                      {homeGoals}
-                    </span>
-                    <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>
-                      -
-                    </span>
-                    <span
-                      className="font-outfit font-black text-sm"
-                      style={{
-                        color: awayWin
-                          ? 'var(--green-glow)'
-                          : isDraw
-                            ? 'var(--gold)'
-                            : 'var(--text-muted)',
-                      }}
-                    >
-                      {awayGoals}
-                    </span>
-                  </div>
-                ) : (
+                <div className="flex flex-col items-center flex-1">
+                  <span className="text-lg leading-none">{homeTeamFlag || '🏳️'}</span>
                   <span
-                    className="font-outfit font-black text-[10px]"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-[8px] font-bold mt-0.5"
+                    style={{
+                      color: finished
+                        ? homeScoreColor
+                        : isMyHomeTeam
+                          ? 'var(--gold)'
+                          : 'var(--text)',
+                    }}
                   >
-                    VS
+                    {homeCode}
+                  </span>
+                </div>
+                {/* J43: goal score inline with team row */}
+                {finished && (
+                  <span
+                    className="font-outfit font-black"
+                    style={{
+                      fontSize: 13,
+                      color: homeScoreColor,
+                      minWidth: 14,
+                      textAlign: 'right',
+                    }}
+                  >
+                    {homeGoals}
                   </span>
                 )}
               </div>
 
-              {/* Away team */}
-              <div className="flex flex-col items-center pt-1 pb-2 w-full">
-                <span className="text-lg leading-none">{awayTeamFlag || '🏳️'}</span>
-                <span
-                  className="text-[8px] font-bold mt-0.5"
-                  style={{
-                    color: awayWin
-                      ? 'var(--green-glow)'
-                      : isDraw
-                        ? 'var(--gold)'
-                        : finished
-                          ? 'var(--text-muted)'
-                          : 'var(--text)',
-                  }}
+              {/* VS divider — only shown when not finished */}
+              {!finished && (
+                <div
+                  className="w-full flex items-center justify-center py-0.5"
+                  style={{ background: 'rgba(0,0,0,0.2)' }}
                 >
-                  {awayCode}
-                </span>
+                  <span
+                    className="font-outfit font-black text-[9px]"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    VS
+                  </span>
+                </div>
+              )}
+
+              {/* Away team — J43: goals inline, highlight row if this is MY team */}
+              <div
+                className="flex items-center justify-between w-full px-1.5 pt-1 pb-2"
+                style={{
+                  background: isMyAwayTeam ? 'rgba(212,168,67,0.1)' : undefined,
+                  borderLeft: isMyAwayTeam
+                    ? '2px solid rgba(212,168,67,0.6)'
+                    : '2px solid transparent',
+                }}
+              >
+                <div className="flex flex-col items-center flex-1">
+                  <span className="text-lg leading-none">{awayTeamFlag || '🏳️'}</span>
+                  <span
+                    className="text-[8px] font-bold mt-0.5"
+                    style={{
+                      color: finished
+                        ? awayScoreColor
+                        : isMyAwayTeam
+                          ? 'var(--gold)'
+                          : 'var(--text)',
+                    }}
+                  >
+                    {awayCode}
+                  </span>
+                </div>
+                {/* J43: goal score inline with team row */}
+                {finished && (
+                  <span
+                    className="font-outfit font-black"
+                    style={{
+                      fontSize: 13,
+                      color: awayScoreColor,
+                      minWidth: 14,
+                      textAlign: 'right',
+                    }}
+                  >
+                    {awayGoals}
+                  </span>
+                )}
               </div>
 
               {/* Event icons */}
@@ -203,14 +231,7 @@ export function FixtureBoard({ fixtures, revealedCount }: FixtureBoardProps) {
                 </div>
               )}
             </div>
-            {isMyFixture && (
-              <span
-                className="font-outfit font-bold uppercase tracking-widest"
-                style={{ fontSize: 7, color: 'var(--gold)', letterSpacing: '0.05em' }}
-              >
-                YOUR MATCH
-              </span>
-            )}
+            {/* J43: "YOUR MATCH" label removed — gold border was enough, now team row highlight */}
           </div>
         )
       })}
