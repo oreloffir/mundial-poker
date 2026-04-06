@@ -120,12 +120,20 @@ Currently deploy.sh does `docker compose up -d` and hopes for the best. Add a po
 
 ## Delivery Log
 
-| Task | Status                                                                     | PR  | Deployed                |
-| ---- | -------------------------------------------------------------------------- | --- | ----------------------- |
-| D8   | ✅ Done (my side) — blocked on Orel (AWS setup + EC2 cron)                 | #34 | ⬜ pending merge + Orel |
-| D9   | ✅ Done (my side) — blocked on Orel (UptimeRobot) + Soni (health endpoint) | #38 | ⬜ pending merge        |
-| D10  | ✅ Done                                                                    | #39 | ⬜ pending merge        |
-| D11  | ✅ Done                                                                    | #41 | ⬜ pending merge        |
+| Task | Status                                                                     | PR         | Deployed   |
+| ---- | -------------------------------------------------------------------------- | ---------- | ---------- |
+| D8   | ✅ Done (my side) — blocked on Orel (EC2 cron)                             | #34 → main | ✅ April 6 |
+| D9   | ✅ Done (my side) — blocked on Orel (UptimeRobot) + Soni (health endpoint) | #38 → main | ✅ April 6 |
+| D10  | ✅ Done                                                                    | #39 → main | ✅ April 6 |
+| D11  | ✅ Done                                                                    | #41 → main | ✅ April 6 |
+
+**CD pipeline fixes (unblocked deploys):**
+
+| Fix | Root Cause                                                   | PR  | Deployed   |
+| --- | ------------------------------------------------------------ | --- | ---------- |
+| F1  | `git pull` aborting on EC2 local changes (since PR #25)      | #43 | ✅ April 5 |
+| F2  | `sh: husky: not found` — ENV NODE_ENV set after install      | #46 | ✅ April 6 |
+| F3  | Health check: curl through nginx gets 301, never hits server | #47 | ✅ April 6 |
 
 ### D8 Progress Log — April 5, 2026
 
@@ -153,3 +161,13 @@ Currently deploy.sh does `docker compose up -d` and hopes for the best. Add a po
 - Auto-rollback: if health check fails → restore `:rollback` images → restart → exit 1 (CI marks red)
 - `scripts/rollback.sh` written — manual rollback with pre-flight checks and post-rollback health verify
 - Rollback images survive `docker system prune -f` (tagged, not dangling)
+
+### CD Pipeline Fix Log — April 6, 2026
+
+**F1 (PR #43):** `git pull origin main` was aborting on EC2 because `docker-compose.production.yml` and `nginx.conf` had local modifications from a Sprint 5 incident. Fixed: replaced `git pull` with `git fetch origin main && git reset --hard origin/main`. Root cause of every failed deploy since PR #25.
+
+**F2 (PR #46):** `sh: husky: not found` in Docker build. The `prepare` script (`[ "$NODE_ENV" = "production" ] || husky`) was evaluating to false because `ENV NODE_ENV=production` was declared AFTER `RUN pnpm install` in the production stage of `apps/server/Dockerfile`. Fix: moved ENV declarations before the install step.
+
+**F3 (PR #47):** CD health check (`curl -sf http://localhost/api/health`) always returned empty. `nginx.conf` redirects port 80 → HTTPS (301), but `curl -sf` doesn't follow redirects. Fixed: replaced curl check with `docker inspect --format='{{.State.Health.Status}}'` on the server container, leveraging the D9 Docker healthcheck. Wait time increased 10s → 30s to allow `start_period: 15s` to elapse.
+
+**First successful deploy: April 6, 2026** — CD run #24022585043 passed after all 3 fixes were in main. EC2 now on latest main code (Sprint 7 complete).
