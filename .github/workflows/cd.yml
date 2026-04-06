@@ -102,10 +102,11 @@ jobs:
               psql -U wpc -d world_poker_cup
 
             echo "--- Health check ---"
-            sleep 10
-            HEALTH=$(curl -sf http://localhost/api/health | grep -o '"status":"ok"' || echo "failed")
-            if [ "$HEALTH" != '"status":"ok"' ]; then
-              echo "DEPLOY FAILED — health check returned: $HEALTH"
+            sleep 30
+            SERVER_ID=$(docker-compose -f docker-compose.production.yml ps -q server)
+            HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "$SERVER_ID" 2>/dev/null || echo "failed")
+            if [ "$HEALTH" != "healthy" ]; then
+              echo "DEPLOY FAILED — server container health: $HEALTH"
               echo "Rolling back to previous images..."
               docker tag mundial-poker-server:rollback mundial-poker-server:latest 2>/dev/null || true
               docker tag mundial-poker-web:rollback mundial-poker-web:latest 2>/dev/null || true
