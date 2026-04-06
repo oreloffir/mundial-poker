@@ -1,28 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { Request, Response, NextFunction } from 'express'
+import type { Request, Response } from 'express'
 import { NotFoundError } from '../../../shared/errors.js'
 
-// Mock DB and bot service before importing the route handler
 vi.mock('../../../db/index.js', () => ({ db: { select: vi.fn() } }))
 vi.mock('../../game/bot.service.js', () => ({ isBotUser: (id: string) => id === 'bot-user-1' }))
 
 const { db } = await import('../../../db/index.js')
-
-// Import the route to extract the handler — we test it directly (no HTTP layer needed)
-// The handler is the async fn passed to router.get; we call it directly with mock req/res/next
-import { tableStatsRouter } from '../table-stats.route.js'
-
-function getHandler() {
-  // Express Router stores routes in router.stack; pull the GET /:tableId/stats handler
-  const layer = (
-    tableStatsRouter as unknown as { stack: { route: { stack: { handle: unknown }[] } }[] }
-  ).stack.find((l) => l.route?.stack?.[0])
-  return layer!.route.stack[0].handle as (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => Promise<void>
-}
+const { getTableStats } = await import('../table-stats.route.js')
 
 function makeRes() {
   const res = {
@@ -43,7 +27,6 @@ function makeRes() {
 function makeSelectChain(returnValue: unknown) {
   const resolved = Promise.resolve(returnValue)
   const chain: Record<string, unknown> = {
-    // Make the chain itself awaitable (Drizzle queries implement .then())
     then: resolved.then.bind(resolved),
     catch: resolved.catch.bind(resolved),
     finally: resolved.finally.bind(resolved),
@@ -83,7 +66,7 @@ describe('GET /api/tables/:tableId/stats', () => {
     const res = makeRes()
     const next = vi.fn()
 
-    await getHandler()(req, res as unknown as Response, next)
+    await getTableStats(req, res as unknown as Response, next)
 
     expect(next).not.toHaveBeenCalled()
     expect(res.statusCode).toBe(200)
@@ -111,7 +94,7 @@ describe('GET /api/tables/:tableId/stats', () => {
     const res = makeRes()
     const next = vi.fn()
 
-    await getHandler()(req, res as unknown as Response, next)
+    await getTableStats(req, res as unknown as Response, next)
 
     expect(next).toHaveBeenCalledWith(expect.any(NotFoundError))
     const err = next.mock.calls[0][0] as NotFoundError

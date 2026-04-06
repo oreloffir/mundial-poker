@@ -6,9 +6,7 @@ import { tables, tablePlayers, rounds, users } from '../../db/schema.js'
 import { NotFoundError } from '../../shared/errors.js'
 import { isBotUser } from '../game/bot.service.js'
 
-export const tableStatsRouter = Router()
-
-tableStatsRouter.get('/:tableId/stats', async (req: Request, res: Response, next: NextFunction) => {
+export async function getTableStats(req: Request, res: Response, next: NextFunction) {
   try {
     const { tableId } = req.params
 
@@ -66,11 +64,14 @@ tableStatsRouter.get('/:tableId/stats', async (req: Request, res: Response, next
         roundsPlayed: roundAgg?.roundsPlayed ?? 0,
         currentRound: roundAgg?.currentRound ?? 0,
         players,
-        totalPot: 0,
+        totalPot: 0, // TODO: join active round pot (rounds.pot where status != COMPLETED)
         createdAt: table.createdAt.toISOString(),
       },
     })
   } catch (error) {
     next(error)
   }
-})
+}
+
+export const tableStatsRouter = Router()
+tableStatsRouter.get('/:tableId/stats', getTableStats)
