@@ -75,7 +75,12 @@ describe('GET /api/tables/:tableId/stats', () => {
     expect(data.roundsPlayed).toBe(7)
     expect(data.currentRound).toBe(8)
     expect(data.createdAt).toBe('2026-04-05T10:00:00.000Z')
-    const players = data.players as { name: string; chips: number; roundsWon: number; isBot?: boolean }[]
+    const players = data.players as {
+      name: string
+      chips: number
+      roundsWon: number
+      isBot?: boolean
+    }[]
     expect(players).toHaveLength(2)
     expect(players[0]).toMatchObject({ name: 'Player1', chips: 1200, roundsWon: 3 })
     expect(players[0].isBot).toBeUndefined()
