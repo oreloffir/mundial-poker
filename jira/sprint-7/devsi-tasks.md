@@ -120,20 +120,20 @@ Currently deploy.sh does `docker compose up -d` and hopes for the best. Add a po
 
 ## Delivery Log
 
-| Task | Status                                                                     | PR         | Deployed              |
-| ---- | -------------------------------------------------------------------------- | ---------- | --------------------- |
-| D8   | ✅ Done (my side) — blocked on Orel (EC2 cron)                             | #34 → main | ✅ April 6            |
-| D9   | ✅ Done (my side) — blocked on Orel (UptimeRobot) + Soni (health endpoint) | #38 → main | ✅ April 6            |
-| D10  | ✅ Done                                                                    | #39 → main | ✅ April 6            |
-| D11  | ✅ Done                                                                    | #41 → main | ✅ April 6            |
+| Task | Status                                                                     | PR         | Deployed   |
+| ---- | -------------------------------------------------------------------------- | ---------- | ---------- |
+| D8   | ✅ Done (my side) — blocked on Orel (EC2 cron)                             | #34 → main | ✅ April 6 |
+| D9   | ✅ Done (my side) — blocked on Orel (UptimeRobot) + Soni (health endpoint) | #38 → main | ✅ April 6 |
+| D10  | ✅ Done                                                                    | #39 → main | ✅ April 6 |
+| D11  | ✅ Done                                                                    | #41 → main | ✅ April 6 |
 
 **CD pipeline fixes (unblocked deploys):**
 
-| Fix  | Root Cause                                              | PR  | Deployed   |
-| ---- | ------------------------------------------------------- | --- | ---------- |
-| F1   | `git pull` aborting on EC2 local changes (since PR #25) | #43 | ✅ April 5 |
-| F2   | `sh: husky: not found` — ENV NODE_ENV set after install | #46 | ✅ April 6 |
-| F3   | Health check: curl through nginx gets 301, never hits server | #47 | ✅ April 6 |
+| Fix | Root Cause                                                   | PR  | Deployed   |
+| --- | ------------------------------------------------------------ | --- | ---------- |
+| F1  | `git pull` aborting on EC2 local changes (since PR #25)      | #43 | ✅ April 5 |
+| F2  | `sh: husky: not found` — ENV NODE_ENV set after install      | #46 | ✅ April 6 |
+| F3  | Health check: curl through nginx gets 301, never hits server | #47 | ✅ April 6 |
 
 ### D8 Progress Log — April 5, 2026
 
