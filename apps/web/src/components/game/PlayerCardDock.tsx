@@ -272,10 +272,8 @@ export function PlayerCardDock({
             const fixture = fixtures.find((fx) => fx.id === card.fixtureId)
             const opponentCode =
               fixture?.homeTeamId === card.teamId
-                ? fixture.awayTeam.code
-                : fixture?.awayTeam.code
-                  ? fixture.homeTeam.code
-                  : undefined
+                ? (fixture?.awayTeam?.code ?? fixture?.awayTeamId)
+                : (fixture?.homeTeam?.code ?? fixture?.homeTeamId)
             return (
               <DockCard
                 key={card.teamId}
