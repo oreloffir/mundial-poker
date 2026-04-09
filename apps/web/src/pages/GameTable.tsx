@@ -189,8 +189,8 @@ export function GameTable() {
         </div>
       )}
 
-      {/* Add to Home Screen banner — shown once, dismissed persistently via localStorage */}
-      {!a2hsDismissed && (
+      {/* Add to Home Screen banner — auto-dismiss when round starts, persisted via localStorage */}
+      {!a2hsDismissed && !currentRound && (
         <div
           className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2"
           style={{
